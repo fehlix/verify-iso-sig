@@ -1,0 +1,1657 @@
+# Greek translation of verify-iso-sig's GUI strings.
+# Copyright (C) 2026 the verify-iso-sig authors.
+# This file is distributed under the same license as the verify-iso-sig package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: verify-iso-sig\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-11 14:26+0200\n"
+"PO-Revision-Date: 2026-07-30 16:10+0200\n"
+"Last-Translator: \n"
+"Language-Team: Greek\n"
+"Language: el\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: verify-iso-sig-gui.sh:180
+msgid "Verify ISO signature"
+msgstr "Επαλήθευση υπογραφής ISO"
+
+#: verify-iso-sig-gui.sh:184
+msgid "Trust this key"
+msgstr "Εμπιστοσύνη σε αυτό το κλειδί"
+
+#: verify-iso-sig-gui.sh:185
+msgid "Check Another File"
+msgstr "Έλεγχος άλλου αρχείου"
+
+#: verify-iso-sig-gui.sh:260 verify-iso-sig-gui.sh:277
+#: verify-iso-sig-gui.sh:1730
+msgid "OK"
+msgstr "Εντάξει"
+
+#: verify-iso-sig-gui.sh:295 verify-iso-sig.desktop.in:3
+msgid "ISO Signature Verifier"
+msgstr "Επαληθευτής υπογραφής ISO"
+
+#: verify-iso-sig-gui.sh:296 verify-iso-sig.desktop.in:4
+msgid ""
+"Check the GPG signature of a downloaded ISO (built-in support for MX Linux/"
+"antiX signing keys)"
+msgstr ""
+"Ελέγχει την υπογραφή GPG ενός ληφθέντος ISO (με ενσωματωμένη υποστήριξη για "
+"τα κλειδιά υπογραφής MX Linux/antiX)"
+
+#: verify-iso-sig-gui.sh:325
+msgid ""
+"Check the GPG signature of a downloaded ISO\\n(built-in support for MX Linux/"
+"antiX signing keys)"
+msgstr ""
+"Ελέγχει την υπογραφή GPG ενός ληφθέντος ISO\\n(με ενσωματωμένη υποστήριξη "
+"για τα κλειδιά υπογραφής MX Linux/antiX)"
+
+#: verify-iso-sig-gui.sh:329
+msgid "License: GNU GPL v3 or later"
+msgstr "Άδεια χρήσης: GNU GPL v3 ή νεότερη"
+
+#: verify-iso-sig-gui.sh:332
+#, sh-format
+msgid "About ${ABOUT_TITLE}"
+msgstr "Σχετικά με ${ABOUT_TITLE}"
+
+#: verify-iso-sig-gui.sh:340 verify-iso-sig-gui.sh:467
+msgid "Close"
+msgstr "Κλείσιμο"
+
+#: verify-iso-sig-gui.sh:407 verify-iso-sig-gui.sh:934
+#: verify-iso-sig-gui.sh:1018 verify-iso-sig.desktop.in:16
+msgid "Manage Trusted Keys"
+msgstr "Διαχείριση έμπιστων κλειδιών"
+
+#: verify-iso-sig-gui.sh:408
+msgid "Forget Selected"
+msgstr "Λήθη επιλεγμένων"
+
+#: verify-iso-sig-gui.sh:409
+msgid "Import Selected"
+msgstr "Εισαγωγή επιλεγμένων"
+
+#: verify-iso-sig-gui.sh:415
+msgid "Could not read the list of trusted keys:"
+msgstr "Δεν ήταν δυνατή η ανάγνωση της λίστας έμπιστων κλειδιών:"
+
+#: verify-iso-sig-gui.sh:418
+msgid "No signing keys are currently saved in trustedkeys.gpg."
+msgstr ""
+"Δεν υπάρχουν αποθηκευμένα κλειδιά υπογραφής αυτή τη στιγμή στο "
+"trustedkeys.gpg."
+
+#. TRANSLATORS: "Trust"/"Keep" here are informal short references to
+#. the main GUI's "Trust this key"/"Keep this key" button labels, not
+#. verbatim quotes - no need to match those translated labels exactly.
+#. The straight quotes around each word are just English's own
+#. convention - please use your language's own quotation marks
+#. instead (e.g. « », „", etc.) if that reads more naturally.
+#: verify-iso-sig-gui.sh:425
+msgid ""
+"A key ends up there after you choose to \"Trust\"/\"Keep\" it while "
+"verifying an ISO."
+msgstr ""
+"Ένα κλειδί καταλήγει εκεί αφού επιλέξετε να το «εμπιστευτείτε»/«διατηρήσετε» "
+"κατά την επαλήθευση ενός ISO."
+
+#: verify-iso-sig-gui.sh:450
+msgid "Remove"
+msgstr "Αφαίρεση"
+
+#: verify-iso-sig-gui.sh:451 verify-iso-sig-gui.sh:601
+msgid "Fingerprint"
+msgstr "Αποτύπωμα"
+
+#: verify-iso-sig-gui.sh:452 verify-iso-sig-gui.sh:602
+msgid "Key ID"
+msgstr "Αναγνωριστικό κλειδιού"
+
+#: verify-iso-sig-gui.sh:453 verify-iso-sig-gui.sh:603
+msgid "User ID"
+msgstr "Αναγνωριστικό χρήστη"
+
+#: verify-iso-sig-gui.sh:454 verify-iso-sig-gui.sh:604
+msgid "Status"
+msgstr "Κατάσταση"
+
+#: verify-iso-sig-gui.sh:455 verify-iso-sig-gui.sh:605
+msgid "Expiration Date"
+msgstr "Ημερομηνία λήξης"
+
+#. TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:465
+#, sh-format
+msgid ""
+"Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then "
+"click \"${BTN_FORGET_SELECTED}\"."
+msgstr ""
+"Κλειδιά αποθηκευμένα στο ~/.gnupg/trustedkeys.gpg - επιλέξτε όσα θέλετε να "
+"ξεχάσετε, και έπειτα κάντε κλικ στο «${BTN_FORGET_SELECTED}»."
+
+#: verify-iso-sig-gui.sh:471
+msgid "Export Selected"
+msgstr "Εξαγωγή επιλεγμένων"
+
+#: verify-iso-sig-gui.sh:472
+msgid "Import from File"
+msgstr "Εισαγωγή από αρχείο"
+
+#. TRANSLATORS: shown as-is in the list's "Status" column (a
+#. gpg key's trust validity), one word each.
+#: verify-iso-sig-gui.sh:486 verify-iso-sig-gui.sh:620
+msgid "valid"
+msgstr "έγκυρο"
+
+#. TRANSLATORS: same "Status" column as "valid" above.
+#: verify-iso-sig-gui.sh:488 verify-iso-sig-gui.sh:621
+msgid "expired"
+msgstr "ληγμένο"
+
+#. TRANSLATORS: same "Status" column as "valid" above.
+#: verify-iso-sig-gui.sh:490 verify-iso-sig-gui.sh:622
+msgid "revoked"
+msgstr "ανακληθέν"
+
+#. TRANSLATORS: shown in the "Expires" column when the key has
+#. no expiration date set.
+#: verify-iso-sig-gui.sh:498 verify-iso-sig-gui.sh:635
+msgid "never"
+msgstr "ποτέ"
+
+#: verify-iso-sig-gui.sh:515
+msgid "No key was checked - nothing to export."
+msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς εξαγωγή."
+
+#: verify-iso-sig-gui.sh:528
+msgid "Export Trusted Keys"
+msgstr "Εξαγωγή έμπιστων κλειδιών"
+
+#: verify-iso-sig-gui.sh:545
+#, sh-format
+msgid "Exported ${EXPORT_COUNT} key(s) to ${EXPORT_PATH_SAFE}."
+msgstr "Έγινε εξαγωγή ${EXPORT_COUNT} κλειδιού/-ών στο ${EXPORT_PATH_SAFE}."
+
+#: verify-iso-sig-gui.sh:547
+msgid "Could not export keys:"
+msgstr "Δεν ήταν δυνατή η εξαγωγή κλειδιών:"
+
+#. TRANSLATORS: ${BTN_IMPORT_SELECTED} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:557 verify-iso-sig-gui.sh:594
+#: verify-iso-sig-gui.sh:611
+msgid "Import Trusted Keys"
+msgstr "Εισαγωγή έμπιστων κλειδιών"
+
+#: verify-iso-sig-gui.sh:562
+msgid "OpenPGP key files"
+msgstr "Αρχεία κλειδιών OpenPGP"
+
+#: verify-iso-sig-gui.sh:563
+msgid "All files"
+msgstr "Όλα τα αρχεία"
+
+#: verify-iso-sig-gui.sh:573
+msgid "Could not read that key file:"
+msgstr "Δεν ήταν δυνατή η ανάγνωση αυτού του αρχείου κλειδιού:"
+
+#: verify-iso-sig-gui.sh:576
+msgid "No keys were found in that file."
+msgstr "Δεν βρέθηκαν κλειδιά σε αυτό το αρχείο."
+
+#: verify-iso-sig-gui.sh:600
+msgid "Import"
+msgstr "Εισαγωγή"
+
+#: verify-iso-sig-gui.sh:611
+#, sh-format
+msgid ""
+"Keys found in this file - check any you want to import, then click "
+"\"${BTN_IMPORT_SELECTED}\"."
+msgstr ""
+"Κλειδιά που βρέθηκαν σε αυτό το αρχείο - επιλέξτε όσα θέλετε να εισαγάγετε, "
+"και κάντε κλικ στο «${BTN_IMPORT_SELECTED}»."
+
+#: verify-iso-sig-gui.sh:614 verify-iso-sig-gui.sh:728
+#: verify-iso-sig-gui.sh:933 verify-iso-sig-gui.sh:1017
+#: verify-iso-sig-gui.sh:1217 verify-iso-sig-gui.sh:1436
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+#. TRANSLATORS: appended to the Status cell in the
+#. import preview when this key is already present in
+#. trustedkeys.gpg - lets the user tell "already
+#. trusted" apart from "genuinely new" at a glance.
+#: verify-iso-sig-gui.sh:630
+msgid "(already trusted)"
+msgstr "(ήδη έμπιστο)"
+
+#: verify-iso-sig-gui.sh:648
+msgid "No key was checked - nothing to import."
+msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς εισαγωγή."
+
+#: verify-iso-sig-gui.sh:673
+#, sh-format
+msgid ""
+"Processed ${IMPORT_PROCESSED} key(s): ${IMPORT_NEW} new, ${IMPORT_UPDATED} "
+"updated, ${IMPORT_UNCHANGED} unchanged."
+msgstr ""
+"Έγινε επεξεργασία ${IMPORT_PROCESSED} κλειδιού/-ών: ${IMPORT_NEW} νέο(-α), "
+"${IMPORT_UPDATED} ενημερωμένο(-α), ${IMPORT_UNCHANGED} αμετάβλητο(-α)."
+
+#: verify-iso-sig-gui.sh:677
+msgid "Could not import keys:"
+msgstr "Δεν ήταν δυνατή η εισαγωγή κλειδιών:"
+
+#: verify-iso-sig-gui.sh:684
+msgid "No key was checked - nothing to forget."
+msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς λήθη."
+
+#. TRANSLATORS: ${COUNT}/${CMD_LIST_KNOWN_KEYS} are literal - keep placeholders as-is.
+#: verify-iso-sig-gui.sh:726
+#, sh-format
+msgid "Forget ${COUNT} selected key(s) from trustedkeys.gpg?"
+msgstr "Λήθη ${COUNT} επιλεγμένου/-ων κλειδιού/-ών από το trustedkeys.gpg;"
+
+#: verify-iso-sig-gui.sh:726
+#, sh-format
+msgid ""
+"If any of them is also one of this tool's built-in recognized keys (run "
+"'${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized "
+"automatically next time - this only removes the local cache entry, not that "
+"recognition."
+msgstr ""
+"Αν κάποιο από αυτά είναι επίσης ένα από τα ενσωματωμένα κλειδιά που "
+"αναγνωρίζει αυτό το εργαλείο (εκτελέστε '${CMD_LIST_KNOWN_KEYS}' για να "
+"δείτε την πλήρη λίστα), αυτό το εργαλείο θα το αναγνωρίσει και πάλι αυτόματα "
+"την επόμενη φορά - αυτό αφαιρεί μόνο την τοπική καταχώριση προσωρινής "
+"μνήμης, όχι αυτή την αναγνώριση."
+
+#: verify-iso-sig-gui.sh:727
+msgid "Forget"
+msgstr "Λήθη"
+
+#: verify-iso-sig-gui.sh:743
+msgid "Some keys could not be removed:"
+msgstr "Ορισμένα κλειδιά δεν ήταν δυνατό να αφαιρεθούν:"
+
+#: verify-iso-sig-gui.sh:886
+msgid ""
+"Pick the .iso file, or its .sig/.asc/.gpg/.sign signature file directly."
+msgstr ""
+"Επιλέξτε το αρχείο .iso ή απευθείας το αρχείο υπογραφής .sig/.asc/.gpg/.sign."
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render as
+#. bold text, not literal characters).
+#: verify-iso-sig-gui.sh:889
+msgid ""
+"The other one is found automatically - <b>but only if it's in the same "
+"folder</b>."
+msgstr ""
+"Το άλλο αρχείο εντοπίζεται αυτόματα - <b>αλλά μόνο αν βρίσκεται στον ίδιο "
+"φάκελο</b>."
+
+#: verify-iso-sig-gui.sh:930 verify-iso-sig-gui.sh:958
+msgid "ISO or signature file"
+msgstr "Αρχείο ISO ή υπογραφής"
+
+#: verify-iso-sig-gui.sh:932 verify-iso-sig-gui.sh:1016
+#: verify-iso-sig-gui.sh:1435
+msgid "Verify"
+msgstr "Επαλήθευση"
+
+#: verify-iso-sig-gui.sh:935 verify-iso-sig-gui.sh:1023
+msgid "About"
+msgstr "Σχετικά"
+
+#: verify-iso-sig-gui.sh:972
+msgid "Or drag a .iso or signature file here"
+msgstr "Ή σύρετε εδώ ένα αρχείο .iso ή υπογραφής"
+
+#: verify-iso-sig-gui.sh:1001
+msgid "Pick Files"
+msgstr "Επιλογή αρχείων"
+
+#: verify-iso-sig-gui.sh:1002
+msgid "Drag a File"
+msgstr "Σύρσιμο αρχείου"
+
+#: verify-iso-sig-gui.sh:1088
+#, sh-format
+msgid ""
+"Drop at most two files (the ISO and its signature file) - ${DROP_COUNT} were "
+"dropped."
+msgstr ""
+"Αφήστε το πολύ δύο αρχεία (το ISO και το αρχείο υπογραφής του) - αφέθηκαν "
+"${DROP_COUNT}."
+
+#: verify-iso-sig-gui.sh:1307 verify-iso-sig-gui.sh:1318
+msgid ""
+"That's a folder, not a file - pick the .iso file itself (or "
+"its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+"Αυτό είναι φάκελος, όχι αρχείο - επιλέξτε το ίδιο το αρχείο .iso (ή "
+"απευθείας το αρχείο υπογραφής του .sig/.asc/.gpg/.sign)."
+
+#: verify-iso-sig-gui.sh:1352
+msgid "No ISO or signature file was selected."
+msgstr "Δεν επιλέχθηκε αρχείο ISO ή υπογραφής."
+
+#: verify-iso-sig-gui.sh:1358
+msgid "Cannot read ISO file:"
+msgstr "Δεν είναι δυνατή η ανάγνωση του αρχείου ISO:"
+
+#: verify-iso-sig-gui.sh:1369
+msgid "Cannot find the matching signature file:"
+msgstr "Δεν βρέθηκε το αντίστοιχο αρχείο υπογραφής:"
+
+#: verify-iso-sig-gui.sh:1374
+msgid "Cannot read the checksum-listing file:"
+msgstr "Δεν είναι δυνατή η ανάγνωση του αρχείου αθροισμάτων ελέγχου:"
+
+#: verify-iso-sig-gui.sh:1386 verify-iso-sig-gui.sh:1537
+#: verify-iso-sig-gui.sh:1550 verify-iso-sig-gui.sh:1665
+#: verify-iso-sig-gui.sh:1670
+msgid "ISO:"
+msgstr "ISO:"
+
+#: verify-iso-sig-gui.sh:1390 verify-iso-sig-gui.sh:1551
+#: verify-iso-sig-gui.sh:1665
+msgid "SHA:"
+msgstr "SHA:"
+
+#: verify-iso-sig-gui.sh:1392 verify-iso-sig-gui.sh:1405
+msgid "About to verify:"
+msgstr "Προς επαλήθευση:"
+
+#: verify-iso-sig-gui.sh:1396 verify-iso-sig-gui.sh:1403
+#: verify-iso-sig-gui.sh:1538 verify-iso-sig-gui.sh:1561
+#: verify-iso-sig-gui.sh:1668 verify-iso-sig-gui.sh:1670
+msgid "SIG:"
+msgstr "SIG:"
+
+#: verify-iso-sig-gui.sh:1465
+msgid "Verifying signature - this can take a while for a large ISO..."
+msgstr ""
+"Γίνεται επαλήθευση της υπογραφής - αυτό μπορεί να διαρκέσει αρκετή ώρα για "
+"ένα μεγάλο αρχείο ISO..."
+
+#: verify-iso-sig-gui.sh:1467
+msgid "Verifying signature - this can take a few seconds"
+msgstr ""
+"Γίνεται επαλήθευση της υπογραφής - αυτό μπορεί να διαρκέσει μερικά "
+"δευτερόλεπτα"
+
+#. TRANSLATORS: continues the previous line's sentence ("Verifying
+#. signature - this can take a few seconds") onto a second line -
+#. the two need to read as one continuous sentence together.
+#: verify-iso-sig-gui.sh:1471
+msgid "if the signing key needs to be fetched from a keyserver..."
+msgstr ""
+"αν χρειαστεί να ανακτηθεί το κλειδί υπογραφής από έναν διακομιστή κλειδιών..."
+
+#. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1529
+#, sh-format
+msgid ""
+"By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID "
+"or fingerprint yourself and want to trust and remember this key for future "
+"checks."
+msgstr ""
+"Κάνοντας κλικ στο «${BTN_TRUST_THIS_KEY}» επιβεβαιώνετε ότι έχετε ελέγξει οι "
+"ίδιοι το αναγνωριστικό κλειδιού ή το αποτύπωμα και ότι θέλετε να "
+"εμπιστευτείτε και να απομνημονεύσετε αυτό το κλειδί για μελλοντικούς "
+"ελέγχους."
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
+#. as bold text, not literal characters).
+#: verify-iso-sig-gui.sh:1535
+msgid "Signature check: <b>GOOD</b> - the ISO exactly matches this key."
+msgstr ""
+"Έλεγχος υπογραφής: <b>ΕΓΚΥΡΗ</b> - το ISO ταιριάζει ακριβώς με αυτό το "
+"κλειδί."
+
+#: verify-iso-sig-gui.sh:1536
+msgid ""
+"Note: that identity is self-declared by whoever created the key - it is NOT "
+"independently verified, unlike the Key ID or fingerprint. Only trust this "
+"key if you've confirmed the Key ID or fingerprint yourself (e.g. from the "
+"respin/distro's own official site, or its keyserver listing)."
+msgstr ""
+"Σημείωση: αυτή η ταυτότητα δηλώνεται από το άτομο που δημιούργησε το κλειδί "
+"- ΔΕΝ έχει επαληθευτεί ανεξάρτητα, σε αντίθεση με το αναγνωριστικό κλειδιού "
+"ή το αποτύπωμα. Εμπιστευτείτε αυτό το κλειδί μόνο αν έχετε επαληθεύσει οι "
+"ίδιοι το αναγνωριστικό κλειδιού ή το αποτύπωμα (π.χ. από την επίσημη "
+"ιστοσελίδα του respin/της διανομής, ή από καταχώριση διακομιστή κλειδιών)."
+
+#: verify-iso-sig-gui.sh:1544
+msgid "This ISO's signing key isn't one this tool already recognizes."
+msgstr ""
+"Το κλειδί υπογραφής αυτού του ISO δεν είναι κλειδί που αναγνωρίζει ήδη αυτό "
+"το εργαλείο."
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Key ID:"
+msgstr "Αναγνωριστικό κλειδιού:"
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Claimed identity:"
+msgstr "Δηλωμένη ταυτότητα:"
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Fingerprint:"
+msgstr "Αποτύπωμα:"
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
+#. as bold text, not literal characters).
+#: verify-iso-sig-gui.sh:1548
+msgid ""
+"Signature check: <b>GOOD</b> - the checksum listing exactly matches this key "
+"(the ISO's own hash is checked separately, next)."
+msgstr ""
+"Έλεγχος υπογραφής: <b>ΕΓΚΥΡΗ</b> - η λίστα αθροισμάτων ελέγχου ταιριάζει "
+"ακριβώς με αυτό το κλειδί (το άθροισμα ελέγχου του ίδιου του ISO ελέγχεται "
+"ξεχωριστά, στη συνέχεια)."
+
+#: verify-iso-sig-gui.sh:1549
+msgid ""
+"Note: that identity is self-declared by whoever created the key - it is NOT "
+"independently verified, unlike the Key ID or fingerprint. Only trust this "
+"key if you've confirmed it yourself (e.g. from the distro's own official "
+"website or keyserver listing)."
+msgstr ""
+"Σημείωση: αυτή η ταυτότητα δηλώνεται από το άτομο που δημιούργησε το κλειδί "
+"- ΔΕΝ έχει επαληθευτεί ανεξάρτητα, σε αντίθεση με το αναγνωριστικό κλειδιού "
+"ή το αποτύπωμα. Εμπιστευτείτε αυτό το κλειδί μόνο αν το έχετε επαληθεύσει οι "
+"ίδιοι (π.χ. από την επίσημη ιστοσελίδα της διανομής ή από καταχώριση "
+"διακομιστή κλειδιών)."
+
+#: verify-iso-sig-gui.sh:1566
+msgid ""
+"This checksum-listing file's signing key isn't one this tool already "
+"recognizes."
+msgstr ""
+"Το κλειδί υπογραφής αυτού του αρχείου λίστας αθροισμάτων ελέγχου δεν είναι "
+"κλειδί που αναγνωρίζει ήδη αυτό το εργαλείο."
+
+#: verify-iso-sig-gui.sh:1592
+msgid ""
+"This signing key currently only lives in your personal keyring (pubring.kbx)."
+msgstr ""
+"Αυτό το κλειδί υπογραφής βρίσκεται προς το παρόν μόνο στην προσωπική σας "
+"κλειδοθήκη (pubring.kbx)."
+
+#: verify-iso-sig-gui.sh:1592
+msgid ""
+"Copy it into ~/.gnupg/trustedkeys.gpg so future checks don't depend on it "
+"staying there?"
+msgstr ""
+"Να αντιγραφεί στο ~/.gnupg/trustedkeys.gpg ώστε οι μελλοντικοί έλεγχοι να "
+"μην εξαρτώνται από την παραμονή του εκεί;"
+
+#: verify-iso-sig-gui.sh:1594
+msgid "This signing key was just fetched from a keyserver."
+msgstr ""
+"Αυτό το κλειδί υπογραφής μόλις ανακτήθηκε από έναν διακομιστή κλειδιών."
+
+#: verify-iso-sig-gui.sh:1594
+msgid ""
+"Remember it locally, in ~/.gnupg/trustedkeys.gpg, so future checks don't "
+"need the network again?"
+msgstr ""
+"Να απομνημονευτεί τοπικά, στο ~/.gnupg/trustedkeys.gpg, ώστε οι μελλοντικοί "
+"έλεγχοι να μη χρειάζονται ξανά δίκτυο;"
+
+#: verify-iso-sig-gui.sh:1610
+msgid "Keep this key"
+msgstr "Διατήρηση αυτού του κλειδιού"
+
+#: verify-iso-sig-gui.sh:1611
+msgid "No thanks"
+msgstr "Όχι, ευχαριστώ"
+
+#: verify-iso-sig-gui.sh:1623
+msgid "key saved locally - future checks won't need the network"
+msgstr ""
+"το κλειδί αποθηκεύτηκε τοπικά - οι μελλοντικοί έλεγχοι δεν θα χρειάζονται "
+"δίκτυο"
+
+#: verify-iso-sig-gui.sh:1625
+msgid "used an already-cached key, no network needed"
+msgstr "χρησιμοποιήθηκε ήδη αποθηκευμένο κλειδί, δεν χρειάστηκε δίκτυο"
+
+#: verify-iso-sig-gui.sh:1627
+msgid "used a key from your personal keyring (pubring.kbx)"
+msgstr "χρησιμοποιήθηκε κλειδί από την προσωπική σας κλειδοθήκη (pubring.kbx)"
+
+#: verify-iso-sig-gui.sh:1629
+msgid "fetched the signing key from a keyserver"
+msgstr "το κλειδί υπογραφής ανακτήθηκε από διακομιστή κλειδιών"
+
+#: verify-iso-sig-gui.sh:1638
+msgid "this key has expired - worth confirming independently"
+msgstr "αυτό το κλειδί έχει λήξει - αξίζει ανεξάρτητη επιβεβαίωση"
+
+#: verify-iso-sig-gui.sh:1655
+msgid "Verified OK"
+msgstr "Επιτυχής επαλήθευση"
+
+#: verify-iso-sig-gui.sh:1657
+msgid "Verification FAILED"
+msgstr "Η επαλήθευση ΑΠΕΤΥΧΕ"
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
+#: verify-iso-sig-gui.sh:1685
+#, sh-format
+msgid ""
+"This only shows as FAILED because you didn't trust this signing key - the "
+"cryptographic check itself already came back GOOD (see the technical details "
+"below). If you're confident this is the genuine key (e.g. you've checked its "
+"fingerprint against the distro's own official site or keyserver listing), "
+"click \"${BTN_CHECK_ANOTHER_FILE}\" and choose \"${BTN_TRUST_THIS_KEY}\" "
+"this time."
+msgstr ""
+"Αυτό εμφανίζεται ως ΑΠΟΤΥΧΙΑ μόνο επειδή δεν εμπιστευτήκατε αυτό το κλειδί "
+"υπογραφής - ο κρυπτογραφικός έλεγχος αυτός καθαυτός ήταν ήδη ΕΓΚΥΡΟΣ (δείτε "
+"τις τεχνικές λεπτομέρειες παρακάτω). Αν είστε βέβαιοι ότι πρόκειται για το "
+"γνήσιο κλειδί (π.χ. έχετε ελέγξει το αποτύπωμά του στην επίσημη ιστοσελίδα "
+"της διανομής ή σε καταχώριση διακομιστή κλειδιών), κάντε κλικ στο "
+"«${BTN_CHECK_ANOTHER_FILE}» και επιλέξτε αυτή τη φορά "
+"«${BTN_TRUST_THIS_KEY}»."
+
+#: verify-iso-sig-gui.sh:1687
+msgid ""
+"The cryptographic check itself already came back GOOD (see the technical "
+"details below) - this only shows as FAILED because the key couldn't be saved "
+"for future trust (see the technical details for why). Feel free to try again."
+msgstr ""
+"Ο κρυπτογραφικός έλεγχος αυτός καθαυτός ήταν ήδη ΕΓΚΥΡΟΣ (δείτε τις τεχνικές "
+"λεπτομέρειες παρακάτω) - αυτό εμφανίζεται ως ΑΠΟΤΥΧΙΑ μόνο επειδή το κλειδί "
+"δεν μπόρεσε να αποθηκευτεί για μελλοντική εμπιστοσύνη (δείτε τις τεχνικές "
+"λεπτομέρειες για τον λόγο). Δοκιμάστε ξανά ελεύθερα."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1690
+#, sh-format
+msgid ""
+"You pointed this tool at a checksum-listing file, not a single ISO - it can "
+"cover many ISOs at once, so there's no one file to check unless exactly one "
+"of the ones it mentions is actually present here (see the technical details "
+"below for which). Use \"${BTN_CHECK_ANOTHER_FILE}\" and point at the "
+"actual .iso file instead."
+msgstr ""
+"Κατευθύνατε αυτό το εργαλείο σε ένα αρχείο λίστας αθροισμάτων ελέγχου, όχι "
+"σε ένα μεμονωμένο ISO - ένα τέτοιο αρχείο μπορεί να καλύπτει πολλά ISO "
+"ταυτόχρονα, οπότε δεν υπάρχει ένα συγκεκριμένο αρχείο προς έλεγχο, εκτός αν "
+"ακριβώς ένα από τα αναφερόμενα ISO βρίσκεται πράγματι εδώ (δείτε τις "
+"τεχνικές λεπτομέρειες παρακάτω για το ποιο). Χρησιμοποιήστε το "
+"«${BTN_CHECK_ANOTHER_FILE}» και υποδείξτε απευθείας το πραγματικό "
+"αρχείο .iso."
+
+#: verify-iso-sig-gui.sh:1692
+msgid ""
+"This is a checksum file for an ISO that isn't present in this folder - "
+"nothing to check. Point this tool at the actual .iso file (or a checksum/"
+"signature file that's actually next to it) instead."
+msgstr ""
+"Αυτό είναι ένα αρχείο αθροίσματος ελέγχου για ένα ISO που δεν υπάρχει σε "
+"αυτόν τον φάκελο - τίποτα να ελεγχθεί. Κατευθύνετε αυτό το εργαλείο στο "
+"πραγματικό αρχείο .iso (ή σε ένα αρχείο αθροίσματος ελέγχου/υπογραφής που "
+"βρίσκεται πράγματι δίπλα του)."
+
+#: verify-iso-sig-gui.sh:1694
+msgid ""
+"This checksum file isn't signed, and the ISO it describes has no signature "
+"of its own either - there's nothing here this tool can cryptographically "
+"verify. Check whether the distro provides a signed checksum listing or a "
+"direct .sig/.asc/.gpg file for this ISO."
+msgstr ""
+"Αυτό το αρχείο αθροίσματος ελέγχου δεν είναι υπογεγραμμένο, και το ISO που "
+"περιγράφει δεν έχει ούτε αυτό δική του υπογραφή - δεν υπάρχει τίποτα εδώ που "
+"αυτό το εργαλείο να μπορεί να επαληθεύσει κρυπτογραφικά. Ελέγξτε αν η "
+"διανομή παρέχει μια υπογεγραμμένη λίστα αθροισμάτων ελέγχου ή ένα άμεσο "
+"αρχείο .sig/.asc/.gpg για αυτό το ISO."
+
+#: verify-iso-sig-gui.sh:1696
+msgid ""
+"The checksum file that lists this ISO's hash failed its own verification "
+"(bad/untrusted signature, or its key couldn't be confirmed) - nothing in it "
+"can be trusted. Re-download the checksum/signature files (and probably the "
+"ISO too), ideally from a different mirror."
+msgstr ""
+"Το αρχείο αθροισμάτων ελέγχου που αναφέρει το άθροισμα ελέγχου αυτού του ISO "
+"απέτυχε στη δική του επαλήθευση (μη έγκυρη/μη έμπιστη υπογραφή, ή το κλειδί "
+"του δεν μπόρεσε να επιβεβαιωθεί) - τίποτα σε αυτό δεν μπορεί να θεωρηθεί "
+"έμπιστο. Κατεβάστε ξανά τα αρχεία αθροισμάτων ελέγχου/υπογραφής (και πιθανώς "
+"και το ISO), κατά προτίμηση από διαφορετικό διακομιστή αντικατοπτρισμού."
+
+#. TRANSLATORS: ${CHECKSUM_INFO_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1700
+#, sh-format
+msgid ""
+"This ISO was checked against a signed checksum listing "
+"(${CHECKSUM_INFO_SAFE}) that IS validly signed - but the ISO's own hash "
+"doesn't match what's listed. The checksum list itself is trustworthy; this "
+"particular download is not. Re-download the ISO, ideally from a different "
+"mirror."
+msgstr ""
+"Αυτό το ISO ελέγχθηκε σε σχέση με μια υπογεγραμμένη λίστα αθροισμάτων "
+"ελέγχου (${CHECKSUM_INFO_SAFE}) η οποία ΕΙΝΑΙ έγκυρα υπογεγραμμένη - όμως το "
+"άθροισμα ελέγχου του ίδιου του ISO δεν ταιριάζει με αυτό που αναφέρεται. Η "
+"ίδια η λίστα αθροισμάτων ελέγχου είναι έμπιστη· αυτή η συγκεκριμένη λήψη δεν "
+"είναι. Κατεβάστε ξανά το ISO, κατά προτίμηση από διαφορετικό διακομιστή "
+"αντικατοπτρισμού."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1703
+#, sh-format
+msgid ""
+"No direct signature file was found for this ISO, and none of the checksum-"
+"listing files found nearby mention this exact ISO filename either. If this "
+"distro uses a different naming convention, use \"${BTN_CHECK_ANOTHER_FILE}\" "
+"and point at the right file directly."
+msgstr ""
+"Δεν βρέθηκε άμεσο αρχείο υπογραφής για αυτό το ISO, και κανένα από τα αρχεία "
+"λίστας αθροισμάτων ελέγχου που βρέθηκαν κοντά δεν αναφέρει επίσης ακριβώς "
+"αυτό το όνομα αρχείου ISO. Αν αυτή η διανομή χρησιμοποιεί διαφορετική "
+"σύμβαση ονοματοδοσίας, χρησιμοποιήστε το «${BTN_CHECK_ANOTHER_FILE}» και "
+"υποδείξτε απευθείας το σωστό αρχείο."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1706
+#, sh-format
+msgid ""
+"The file names don't match, so this signature file may simply not belong to "
+"this .iso. Use \"${BTN_CHECK_ANOTHER_FILE}\" and pick the signature file "
+"named exactly like the ISO plus .sig/.asc/.gpg."
+msgstr ""
+"Τα ονόματα αρχείων δεν ταιριάζουν, οπότε αυτό το αρχείο υπογραφής μπορεί "
+"απλώς να μην ανήκει σε αυτό το .iso. Χρησιμοποιήστε το "
+"«${BTN_CHECK_ANOTHER_FILE}» και επιλέξτε το αρχείο υπογραφής που ονομάζεται "
+"ακριβώς όπως το ISO συν .sig/.asc/.gpg."
+
+#: verify-iso-sig-gui.sh:1708
+msgid ""
+"On top of the signature not matching, this signing key also isn't one this "
+"tool already recognizes - treat this file as untrustworthy and re-download "
+"from an official source."
+msgstr ""
+"Εκτός από το ότι η υπογραφή δεν ταιριάζει, αυτό το κλειδί υπογραφής δεν "
+"είναι επίσης ένα από τα κλειδιά που αναγνωρίζει ήδη αυτό το εργαλείο - "
+"θεωρήστε αυτό το αρχείο μη έμπιστο και κατεβάστε το ξανά από επίσημη πηγή."
+
+#: verify-iso-sig-gui.sh:1710
+msgid ""
+"The ISO may be corrupted, or the download was incomplete or tampered with - "
+"try re-downloading it, ideally from a different mirror."
+msgstr ""
+"Το ISO ενδέχεται να είναι κατεστραμμένο, ή η λήψη ήταν ημιτελής ή έχει "
+"παραποιηθεί - δοκιμάστε να το κατεβάσετε ξανά, κατά προτίμηση από "
+"διαφορετικό διακομιστή αντικατοπτρισμού."
+
+#: verify-iso-sig:166
+msgid "Usage:"
+msgstr "Χρήση:"
+
+#. TRANSLATORS: keep the distro names (Debian, Ubuntu, Linux Mint) exactly as-is.
+#: verify-iso-sig:168
+msgid ""
+"Verify the GPG signature of an ISO image (any distro - built-in recognition "
+"of the documented MX Linux/antiX signing keys, plus a checksum-listing "
+"convention for distros that sign a checksum listing instead of the ISO "
+"directly, e.g. Debian, Ubuntu, Linux Mint)."
+msgstr ""
+"Επαληθεύει την υπογραφή GPG μιας εικόνας ISO (οποιαδήποτε διανομή - με "
+"ενσωματωμένη αναγνώριση των τεκμηριωμένων κλειδιών υπογραφής MX Linux/antiX, "
+"καθώς και μια σύμβαση λίστας αθροισμάτων ελέγχου για διανομές που υπογράφουν "
+"μια λίστα αθροισμάτων ελέγχου αντί για το ίδιο το ISO, π.χ. Debian, Ubuntu, "
+"Linux Mint)."
+
+#: verify-iso-sig:169
+msgid "this help"
+msgstr "αυτή η βοήθεια"
+
+#: verify-iso-sig:170
+msgid "show version and exit"
+msgstr "εμφάνιση έκδοσης και έξοδος"
+
+#: verify-iso-sig:171
+msgid ""
+"full manual: every option, recognition rules, the checksum-listing "
+"convention, and more"
+msgstr ""
+"πλήρες εγχειρίδιο: όλες οι επιλογές, οι κανόνες αναγνώρισης, η σύμβαση "
+"λίστας αθροισμάτων ελέγχου και άλλα"
+
+#: verify-iso-sig:172
+msgid "verify once even if the key isn't recognized"
+msgstr "επαλήθευση μία φορά ακόμη κι αν το κλειδί δεν αναγνωρίζεται"
+
+#. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:174
+#, sh-format
+msgid "like ${FLAG_ALLOW_UNKNOWN}, and remembers the key too"
+msgstr "όπως το ${FLAG_ALLOW_UNKNOWN}, αλλά απομνημονεύει και το κλειδί"
+
+#: verify-iso-sig:175
+msgid "list this tool's built-in recognized signing keys"
+msgstr ""
+"λίστα των ενσωματωμένων κλειδιών υπογραφής που αναγνωρίζει αυτό το εργαλείο"
+
+#: verify-iso-sig:176 verify-iso-sig:371
+msgid "list every key saved in trustedkeys.gpg"
+msgstr "λίστα όλων των κλειδιών που είναι αποθηκευμένα στο trustedkeys.gpg"
+
+#. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:178
+#, sh-format
+msgid "For every other option (scripting/automation flags) see ${FLAG_MAN}."
+msgstr ""
+"Για κάθε άλλη επιλογή (σημαίες σεναρίων/αυτοματισμού) δείτε το ${FLAG_MAN}."
+
+#: verify-iso-sig:215
+msgid "could not generate the man page (pandoc failed)"
+msgstr ""
+"δεν ήταν δυνατή η δημιουργία της σελίδας εγχειριδίου (το pandoc απέτυχε)"
+
+#. TRANSLATORS: ${man_src} is a file path, ${FLAG_MAN} a literal flag name.
+#: verify-iso-sig:219
+#, sh-format
+msgid ""
+"man page not built yet and pandoc isn't installed - see ${man_src} directly, "
+"or install pandoc and re-run ${FLAG_MAN}"
+msgstr ""
+"η σελίδα εγχειριδίου δεν έχει δημιουργηθεί ακόμη και το pandoc δεν είναι "
+"εγκατεστημένο - δείτε απευθείας το ${man_src}, ή εγκαταστήστε το pandoc και "
+"εκτελέστε ξανά το ${FLAG_MAN}"
+
+#: verify-iso-sig:225
+msgid "warning:"
+msgstr "προειδοποίηση:"
+
+#: verify-iso-sig:226
+msgid "error:"
+msgstr "σφάλμα:"
+
+#. TRANSLATORS: ${flag}/${FLAG_MAN} are literal names - keep placeholders as-is.
+#: verify-iso-sig:240
+#, sh-format
+msgid "${flag} requires a value (see ${FLAG_MAN})"
+msgstr "το ${flag} απαιτεί τιμή (δείτε ${FLAG_MAN})"
+
+#: verify-iso-sig:364
+msgid "Manage trusted keys from the command line:"
+msgstr "Διαχειριστείτε τα έμπιστα κλειδιά από τη γραμμή εντολών:"
+
+#. TRANSLATORS: ${ENV_DISPLAY}/${ENV_WAYLAND_DISPLAY} are literal env-var names - keep placeholders as-is.
+#: verify-iso-sig:367
+#, sh-format
+msgid ""
+"no graphical session detected (neither ${ENV_DISPLAY} nor "
+"${ENV_WAYLAND_DISPLAY} is set) - the trusted-keys manager needs a desktop to "
+"show its window."
+msgstr ""
+"δεν εντοπίστηκε γραφική συνεδρία (ούτε το ${ENV_DISPLAY} ούτε το "
+"${ENV_WAYLAND_DISPLAY} έχει οριστεί) - ο διαχειριστής έμπιστων κλειδιών "
+"χρειάζεται γραφικό περιβάλλον για να εμφανίσει το παράθυρό του."
+
+#: verify-iso-sig:369
+msgid "Manage trusted keys from the command line instead:"
+msgstr "Διαχειριστείτε τα έμπιστα κλειδιά από τη γραμμή εντολών:"
+
+#: verify-iso-sig:372
+msgid "remove <fpr> from trustedkeys.gpg"
+msgstr "αφαίρεση του <fpr> από το trustedkeys.gpg"
+
+#: verify-iso-sig:373
+msgid "export trusted key(s) to <path> (all if none given)"
+msgstr "εξαγωγή έμπιστου/-ων κλειδιού/-ών στο <path> (όλα αν δεν δοθεί κανένα)"
+
+#: verify-iso-sig:374
+msgid "list the key(s) in an external key file, read-only"
+msgstr "λίστα των κλειδιών σε εξωτερικό αρχείο κλειδιών, μόνο για ανάγνωση"
+
+#: verify-iso-sig:375
+msgid "import key(s) from an external key file (all if none given)"
+msgstr ""
+"εισαγωγή κλειδιού/-ών από εξωτερικό αρχείο κλειδιών (όλα αν δεν δοθεί κανένα)"
+
+#. TRANSLATORS: ${CMD_MAN} is a literal command - keep the placeholder as-is.
+#: verify-iso-sig:377
+#, sh-format
+msgid "See '${CMD_MAN}' for the full manual."
+msgstr "Δείτε το '${CMD_MAN}' για το πλήρες εγχειρίδιο."
+
+#. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:394
+#, sh-format
+msgid ""
+"verify-iso-sig - opens a window to pick and check an ISO or signature file "
+"by default when a graphical session is available; falls back to the plain "
+"command-line tool otherwise. This preamble covers this launcher's own "
+"behavior; a short command-line reference (used automatically whenever given "
+"arguments don't look like that window's own syntax, or no graphical session "
+"is available) follows below it - see ${FLAG_MAN} for the complete one."
+msgstr ""
+"Το verify-iso-sig ανοίγει από προεπιλογή ένα παράθυρο για να επιλέξετε και "
+"να ελέγξετε ένα αρχείο ISO ή υπογραφής, όταν υπάρχει διαθέσιμη γραφική "
+"συνεδρία· διαφορετικά επιστρέφει στο απλό εργαλείο γραμμής εντολών. Αυτή η "
+"εισαγωγή καλύπτει τη συμπεριφορά αυτού του εκκινητή· μια σύντομη αναφορά "
+"γραμμής εντολών (που χρησιμοποιείται αυτόματα όποτε τα ορίσματα δεν μοιάζουν "
+"με τη σύνταξη αυτού του παραθύρου, ή δεν υπάρχει γραφική συνεδρία) ακολουθεί "
+"αμέσως παρακάτω - δείτε το ${FLAG_MAN} για την πλήρη έκδοση."
+
+#: verify-iso-sig:395
+msgid ""
+"open that window if a display is available (default), otherwise this same "
+"help"
+msgstr ""
+"ανοίγει αυτό το παράθυρο αν υπάρχει διαθέσιμη οθόνη (προεπιλογή), "
+"διαφορετικά την ίδια βοήθεια"
+
+#: verify-iso-sig:396
+msgid "(default) the graphical main program"
+msgstr "(προεπιλογή) το κύριο γραφικό πρόγραμμα"
+
+#: verify-iso-sig:397
+msgid "plain command-line mode"
+msgstr "λειτουργία απλής γραμμής εντολών"
+
+#. TRANSLATORS: ${FLAG_HELP} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:399
+#, sh-format
+msgid ""
+"trusted-keys manager GUI (add ${FLAG_HELP} for its own flags), or with no "
+"display, print the CLI flags that cover the same ground"
+msgstr ""
+"γραφικό περιβάλλον διαχείρισης έμπιστων κλειδιών (προσθέστε ${FLAG_HELP} για "
+"τις δικές του επιλογές), ή χωρίς οθόνη, εκτύπωση των επιλογών CLI που "
+"καλύπτουν το ίδιο έδαφος"
+
+#. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${algo} are literal - keep placeholders as-is.
+#: verify-iso-sig:715
+#, sh-format
+msgid ""
+"unknown ${FLAG_CHECKSUM_ALGO} '${algo}' (expected sha256, sha512, sha1, or "
+"md5)"
+msgstr ""
+"άγνωστο ${FLAG_CHECKSUM_ALGO} '${algo}' (αναμένεται sha256, sha512, sha1, ή "
+"md5)"
+
+#. TRANSLATORS: ${opt}/${FLAG_MAN} are literal - keep placeholders as-is.
+#: verify-iso-sig:723
+#, sh-format
+msgid "unknown option '${opt}' (see ${FLAG_MAN})"
+msgstr "άγνωστη επιλογή '${opt}' (δείτε ${FLAG_MAN})"
+
+#. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:734
+#, sh-format
+msgid "exactly one fingerprint argument is required for ${FLAG_KEEP_KEY}"
+msgstr "για το ${FLAG_KEEP_KEY} απαιτείται ακριβώς ένα όρισμα αποτυπώματος"
+
+#. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:740 verify-iso-sig:1936
+#, sh-format
+msgid ""
+"${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex "
+"fingerprint, not '${FPR}'"
+msgstr ""
+"Το ${FLAG_KEEP_KEY} απαιτεί πλήρες δεκαεξαδικό αποτύπωμα 40 χαρακτήρων (ή 64 "
+"χαρακτήρων), όχι '${FPR}'"
+
+#: verify-iso-sig:745
+msgid "this option takes no extra arguments"
+msgstr "αυτή η επιλογή δεν δέχεται επιπλέον ορίσματα"
+
+#: verify-iso-sig:747
+msgid "expected an ISO or signature file to check"
+msgstr "αναμενόταν ένα αρχείο ISO ή υπογραφής για έλεγχο"
+
+#: verify-iso-sig:776 verify-iso-sig:780
+#, sh-format
+msgid ""
+"'${ISO}' is a directory, not a file - point this at the actual .iso file (or "
+"its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+"Το '${ISO}' είναι φάκελος, όχι αρχείο - υποδείξτε το ίδιο το αρχείο .iso (ή "
+"απευθείας το αρχείο υπογραφής του .sig/.asc/.gpg/.sign)."
+
+#: verify-iso-sig:777
+#, sh-format
+msgid ""
+"'${SIG}' is a directory, not a file - point this at the actual signature "
+"file directly."
+msgstr ""
+"Το '${SIG}' είναι φάκελος, όχι αρχείο - υποδείξτε απευθείας το ίδιο το "
+"αρχείο υπογραφής."
+
+#: verify-iso-sig:942
+msgid ""
+"this key has expired - the signature check below still runs, but an expired "
+"key is worth confirming independently before you decide to trust it"
+msgstr ""
+"αυτό το κλειδί έχει λήξει - ο παρακάτω έλεγχος υπογραφής εκτελείται ούτως ή "
+"άλλως, αλλά ένα ληγμένο κλειδί αξίζει να επιβεβαιωθεί ανεξάρτητα πριν "
+"αποφασίσετε να το εμπιστευτείτε"
+
+#: verify-iso-sig:976 verify-iso-sig:1016
+msgid "this key's expiry was renewed - updated local copy automatically"
+msgstr ""
+"η ισχύς αυτού του κλειδιού ανανεώθηκε - το τοπικό αντίγραφο ενημερώθηκε "
+"αυτόματα"
+
+#: verify-iso-sig:989
+#, sh-format
+msgid "checking ${ks} for a renewed copy of this key..."
+msgstr "έλεγχος του ${ks} για ανανεωμένο αντίγραφο αυτού του κλειδιού..."
+
+#: verify-iso-sig:1030
+msgid "no renewal found - continuing with the existing (expired) key"
+msgstr "δεν βρέθηκε ανανέωση - συνέχεια με το υπάρχον (ληγμένο) κλειδί"
+
+#: verify-iso-sig:1177
+#, sh-format
+msgid "'${UNTRUST_KEY}' is not in ${TRUSTED_GPG}"
+msgstr "Το '${UNTRUST_KEY}' δεν βρίσκεται στο ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1181
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr "αφαιρέθηκε το ${UNTRUST_KEY} από το ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1186
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
+msgstr ""
+"δεν ήταν δυνατή η αφαίρεση του '${UNTRUST_KEY}' από το ${TRUSTED_GPG}: ${out}"
+
+#: verify-iso-sig:1199
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr ""
+"δεν έχουν αποθηκευτεί ακόμη έμπιστα κλειδιά (το ${TRUSTED_GPG} δεν υπάρχει)"
+
+#: verify-iso-sig:1213
+#, sh-format
+msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
+msgstr ""
+"προειδοποίηση: το αποτύπωμα '${fpr}' δεν βρέθηκε στο ${TRUSTED_GPG}, "
+"παράλειψη"
+
+#: verify-iso-sig:1216 verify-iso-sig:1402
+#, sh-format
+msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
+msgstr ""
+"σημείωση: το '${fpr}' είναι υποκλειδί - επιλύθηκε στο κύριο κλειδί του "
+"'${resolved}'"
+
+#: verify-iso-sig:1224
+msgid "no matching trusted key(s) to export"
+msgstr "δεν υπάρχουν αντίστοιχα έμπιστα κλειδιά προς εξαγωγή"
+
+#: verify-iso-sig:1233
+#, sh-format
+msgid "could not export to '${EXPORT_TRUSTED_KEYS}': ${ERR}"
+msgstr "δεν ήταν δυνατή η εξαγωγή στο '${EXPORT_TRUSTED_KEYS}': ${ERR}"
+
+#: verify-iso-sig:1237
+#, sh-format
+msgid "exported ${EXPORTED_COUNT} key(s) to ${EXPORT_TRUSTED_KEYS}"
+msgstr ""
+"έγινε εξαγωγή ${EXPORTED_COUNT} κλειδιού/-ών στο ${EXPORT_TRUSTED_KEYS}"
+
+#: verify-iso-sig:1248
+#, sh-format
+msgid "cannot read '${INSPECT_KEY_FILE}'"
+msgstr "δεν είναι δυνατή η ανάγνωση του '${INSPECT_KEY_FILE}'"
+
+#: verify-iso-sig:1251
+#, sh-format
+msgid ""
+"'${INSPECT_KEY_FILE}' does not look like a valid OpenPGP key file: "
+"${SHOW_OUT}"
+msgstr ""
+"Το '${INSPECT_KEY_FILE}' δεν μοιάζει με έγκυρο αρχείο κλειδιού OpenPGP: "
+"${SHOW_OUT}"
+
+#: verify-iso-sig:1253
+#, sh-format
+msgid ""
+"'${INSPECT_KEY_FILE}' contains private/secret key material - refusing to "
+"treat it as a public trusted-signing key"
+msgstr ""
+"Το '${INSPECT_KEY_FILE}' περιέχει ιδιωτικό/μυστικό υλικό κλειδιού - άρνηση "
+"μεταχείρισής του ως δημόσιο έμπιστο κλειδί υπογραφής"
+
+#: verify-iso-sig:1311
+#, sh-format
+msgid "warning: could not export key from ${ring}: ${out}"
+msgstr ""
+"προειδοποίηση: δεν ήταν δυνατή η εξαγωγή κλειδιού από το ${ring}: ${out}"
+
+#: verify-iso-sig:1372
+#, sh-format
+msgid "cannot read '${IMPORT_TRUSTED_KEYS}'"
+msgstr "δεν είναι δυνατή η ανάγνωση του '${IMPORT_TRUSTED_KEYS}'"
+
+#: verify-iso-sig:1375
+#, sh-format
+msgid ""
+"'${IMPORT_TRUSTED_KEYS}' does not look like a valid OpenPGP key file: "
+"${SHOW_OUT}"
+msgstr ""
+"Το '${IMPORT_TRUSTED_KEYS}' δεν μοιάζει με έγκυρο αρχείο κλειδιού OpenPGP: "
+"${SHOW_OUT}"
+
+#: verify-iso-sig:1377
+#, sh-format
+msgid ""
+"'${IMPORT_TRUSTED_KEYS}' contains private/secret key material - refusing to "
+"import it as a public trusted-signing key"
+msgstr ""
+"Το '${IMPORT_TRUSTED_KEYS}' περιέχει ιδιωτικό/μυστικό υλικό κλειδιού - "
+"άρνηση εισαγωγής του ως δημόσιο έμπιστο κλειδί υπογραφής"
+
+#: verify-iso-sig:1379
+#, sh-format
+msgid "no OpenPGP keys found in '${IMPORT_TRUSTED_KEYS}'"
+msgstr "δεν βρέθηκαν κλειδιά OpenPGP στο '${IMPORT_TRUSTED_KEYS}'"
+
+#: verify-iso-sig:1388
+#, sh-format
+msgid "could not import '${IMPORT_TRUSTED_KEYS}' into a scratch keyring"
+msgstr ""
+"δεν ήταν δυνατή η εισαγωγή του '${IMPORT_TRUSTED_KEYS}' σε προσωρινή "
+"κλειδοθήκη"
+
+#: verify-iso-sig:1399
+#, sh-format
+msgid ""
+"warning: fingerprint '${fpr}' not found in '${IMPORT_TRUSTED_KEYS}', skipping"
+msgstr ""
+"προειδοποίηση: το αποτύπωμα '${fpr}' δεν βρέθηκε στο "
+"'${IMPORT_TRUSTED_KEYS}', παράλειψη"
+
+#: verify-iso-sig:1409
+msgid "no matching key(s) to import"
+msgstr "δεν υπάρχουν αντίστοιχα κλειδιά προς εισαγωγή"
+
+#: verify-iso-sig:1427
+#, sh-format
+msgid "warning: could not import '${FPR}' into ${TRUSTED_GPG}"
+msgstr ""
+"προειδοποίηση: δεν ήταν δυνατή η εισαγωγή του '${FPR}' στο ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1431
+#, sh-format
+msgid "no key(s) were actually imported into ${TRUSTED_GPG}"
+msgstr "δεν εισήχθη τελικά κανένα κλειδί στο ${TRUSTED_GPG}"
+
+#. TRANSLATORS: this exact line is also parsed by the GUI's own
+#. --status-fd tag right after it (IMPORT_SUMMARY, never localized) -
+#. translate freely, the numbers/word order can differ per language,
+#. only this line's own display text changes.
+#: verify-iso-sig:1436
+#, sh-format
+msgid ""
+"${PROCESSED} key(s) processed: ${IMPORTED} new, ${CHANGED} updated, "
+"${UNCHANGED_COUNT} unchanged"
+msgstr ""
+"${PROCESSED} κλειδί/-ά υποβλήθηκαν σε επεξεργασία: ${IMPORTED} νέο(-α), "
+"${CHANGED} ενημερωμένο(-α), ${UNCHANGED_COUNT} αμετάβλητο(-α)"
+
+#: verify-iso-sig:1487
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum file for '${candidate_base}', but that file "
+"isn't present here - nothing to verify."
+msgstr ""
+"Το '${iso_base}' είναι αρχείο αθροίσματος ελέγχου για το "
+"'${candidate_base}', όμως αυτό το αρχείο δεν υπάρχει εδώ - τίποτα προς "
+"επαλήθευση."
+
+#: verify-iso-sig:1497 verify-iso-sig:1513 verify-iso-sig:1608
+#, sh-format
+msgid "resolved ISO: ${resolved_base}"
+msgstr "επιλυμένο ISO: ${resolved_base}"
+
+#: verify-iso-sig:1508
+#, sh-format
+msgid ""
+"'${iso_base}' is an unsigned per-file checksum - not used for verification. "
+"Using '${candidate_sig_base}' instead, the ISO's own direct signature."
+msgstr ""
+"Το '${iso_base}' είναι ανυπόγραφο άθροισμα ελέγχου ανά αρχείο - δεν "
+"χρησιμοποιείται για επαλήθευση. Χρησιμοποιείται αντ' αυτού το "
+"'${candidate_sig_base}', η άμεση υπογραφή του ίδιου του ISO."
+
+#: verify-iso-sig:1525
+#, sh-format
+msgid ""
+"'${iso_base}' is an unsigned checksum file, and '${candidate_base}' has no "
+"direct .sig/.asc/.gpg/.sign of its own either - nothing here can be "
+"cryptographically verified."
+msgstr ""
+"Το '${iso_base}' είναι ανυπόγραφο αρχείο αθροίσματος ελέγχου, και το "
+"'${candidate_base}' δεν έχει ούτε αυτό δικό του άμεσο .sig/.asc/.gpg/.sign - "
+"τίποτα εδώ δεν μπορεί να επαληθευτεί κρυπτογραφικά."
+
+#: verify-iso-sig:1588 verify-iso-sig:1615
+#, sh-format
+msgid "using checksum file: ${iso_base} (${algo})"
+msgstr "χρήση αρχείου αθροίσματος ελέγχου: ${iso_base} (${algo})"
+
+#: verify-iso-sig:1593 verify-iso-sig:1620 verify-iso-sig:1820
+#, sh-format
+msgid "checksum file signature: ${sigfile_base}"
+msgstr "υπογραφή αρχείου αθροίσματος ελέγχου: ${sigfile_base}"
+
+#: verify-iso-sig:1598
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum listing (it can cover many ISOs), not a single "
+"ISO to verify directly - none of the .iso files it mentions are present in "
+"'${dir}'. Point this tool at the actual .iso file instead (its checksum/"
+"signature will be found and checked automatically)."
+msgstr ""
+"Το '${iso_base}' είναι λίστα αθροισμάτων ελέγχου (μπορεί να καλύπτει πολλά "
+"ISO), όχι ένα μεμονωμένο ISO προς άμεση επαλήθευση - κανένα από τα "
+"αρχεία .iso που αναφέρει δεν υπάρχει στο '${dir}'. Κατευθύνετε αυτό το "
+"εργαλείο στο πραγματικό αρχείο .iso (το άθροισμα ελέγχου/η υπογραφή του θα "
+"εντοπιστούν και θα ελεγχθούν αυτόματα)."
+
+#: verify-iso-sig:1626
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum listing covering multiple ISOs present in "
+"'${dir}': ${candidates_joined} - point this tool at the specific .iso file "
+"you want to check instead."
+msgstr ""
+"Το '${iso_base}' είναι λίστα αθροισμάτων ελέγχου που καλύπτει πολλαπλά ISO "
+"που υπάρχουν στο '${dir}': ${candidates_joined} - κατευθύνετε αυτό το "
+"εργαλείο στο συγκεκριμένο αρχείο .iso που θέλετε να ελέγξετε."
+
+#. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
+#: verify-iso-sig:1699
+#, sh-format
+msgid ""
+"${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file "
+"not in the built-in list (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)"
+msgstr ""
+"Το ${FLAG_CHECKSUM_ALGO} απαιτείται όταν το ${FLAG_CHECKSUM_FILE} αναφέρεται "
+"σε αρχείο που δεν βρίσκεται στην ενσωματωμένη λίστα (SHA512SUMS, SHA256SUMS, "
+"sha256sum.txt, ...)"
+
+#: verify-iso-sig:1759 verify-iso-sig:1865
+#, sh-format
+msgid ""
+"the checksum file '${name_base}' failed its own signature check - it cannot "
+"be trusted, so the ISO hash inside it cannot be trusted either. Re-download "
+"the ISO and the checksum/signature files, ideally from a different mirror."
+msgstr ""
+"Το αρχείο αθροίσματος ελέγχου '${name_base}' απέτυχε στη δική του επαλήθευση "
+"υπογραφής - δεν μπορεί να θεωρηθεί έμπιστο, οπότε ούτε το άθροισμα ελέγχου "
+"του ISO που περιέχει μπορεί να θεωρηθεί έμπιστο. Κατεβάστε ξανά το ISO και "
+"τα αρχεία αθροισμάτων ελέγχου/υπογραφής, κατά προτίμηση από διαφορετικό "
+"διακομιστή αντικατοπτρισμού."
+
+#: verify-iso-sig:1771
+#, sh-format
+msgid ""
+"checksum file '${name_base}' uses an unsupported hash algorithm "
+"('${hashcmd}' not found)"
+msgstr "το αρχείο αθροίσματος ελέγχου '${name_base}' χρησιμοποιεί μη υποστηριζόμενο αλγόριθμο κατακερματισμού ('${hashcmd}' δεν βρέθηκε)"
+
+#: verify-iso-sig:1774 verify-iso-sig:1816
+#, sh-format
+msgid "using checksum file: ${name_base} (${algo})"
+msgstr "χρήση αρχείου αθροίσματος ελέγχου: ${name_base} (${algo})"
+
+#: verify-iso-sig:1793 verify-iso-sig:1878
+#, sh-format
+msgid ""
+"'${name_base}' is validly signed, but '${base}' does not match the recorded "
+"${algo} checksum - this download is likely corrupted, incomplete, or was "
+"tampered with after the checksum file was signed. Re-download the ISO, "
+"ideally from a different mirror. (The checksum/signature files themselves "
+"are fine - no need to re-fetch those.)"
+msgstr ""
+"Το '${name_base}' είναι έγκυρα υπογεγραμμένο, όμως το '${base}' δεν "
+"ταιριάζει με το καταγεγραμμένο άθροισμα ελέγχου ${algo} - αυτή η λήψη είναι "
+"πιθανώς κατεστραμμένη, ημιτελής, ή έχει παραποιηθεί μετά την υπογραφή του "
+"αρχείου αθροισμάτων ελέγχου. Κατεβάστε ξανά το ISO, κατά προτίμηση από "
+"διαφορετικό διακομιστή αντικατοπτρισμού. (Τα ίδια τα αρχεία αθροισμάτων "
+"ελέγχου/υπογραφής είναι εντάξει - δεν χρειάζεται να τα ανακτήσετε ξανά.)"
+
+#: verify-iso-sig:1796 verify-iso-sig:1881
+msgid "OK - signature and checksum both verified"
+msgstr "OK - επαληθεύτηκαν τόσο η υπογραφή όσο και το άθροισμα ελέγχου"
+
+#: verify-iso-sig:1886
+#, sh-format
+msgid "'${base}' is not listed in '${CHECKSUM_FILE_OVERRIDE}'"
+msgstr "Το '${base}' δεν αναφέρεται στο '${CHECKSUM_FILE_OVERRIDE}'"
+
+#: verify-iso-sig:1890
+#, sh-format
+msgid ""
+"no signature file found for '${base}', and none of the checksum-listing "
+"files in its directory (${tried_joined}) contain an entry for it either"
+msgstr ""
+"δεν βρέθηκε αρχείο υπογραφής για το '${base}', και κανένα από τα αρχεία "
+"λίστας αθροισμάτων ελέγχου στον κατάλογό του (${tried_joined}) δεν περιέχει "
+"επίσης καταχώριση για αυτό"
+
+#: verify-iso-sig:1958
+#, sh-format
+msgid "cannot read ISO file '${ISO}'"
+msgstr "δεν είναι δυνατή η ανάγνωση του αρχείου ISO '${ISO}'"
+
+#: verify-iso-sig:1971
+#, sh-format
+msgid "cannot read signature file '${SIG}'"
+msgstr "δεν είναι δυνατή η ανάγνωση του αρχείου υπογραφής '${SIG}'"
+
+#: verify-iso-sig:1973
+msgid "gpgv not found"
+msgstr "το gpgv δεν βρέθηκε"
+
+#: verify-iso-sig:1974
+msgid "gpg not found"
+msgstr "το gpg δεν βρέθηκε"
+
+#: verify-iso-sig:2012
+#, sh-format
+msgid "could not extract signing key fingerprint from '${ISO}'"
+msgstr ""
+"δεν ήταν δυνατή η εξαγωγή του αποτυπώματος κλειδιού υπογραφής από το '${ISO}'"
+
+#: verify-iso-sig:2014
+#, sh-format
+msgid "could not extract signing key fingerprint from '${SIG}'"
+msgstr ""
+"δεν ήταν δυνατή η εξαγωγή του αποτυπώματος κλειδιού υπογραφής από το '${SIG}'"
+
+#: verify-iso-sig:2017
+#, sh-format
+msgid "signature made with: ${FPR}"
+msgstr "η υπογραφή έγινε με: ${FPR}"
+
+#: verify-iso-sig:2059
+#, sh-format
+msgid "recognized signing key: ${label}"
+msgstr "αναγνωρισμένο κλειδί υπογραφής: ${label}"
+
+#: verify-iso-sig:2062
+#, sh-format
+msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
+msgstr ""
+"αναγνωρίστηκε: το κλειδί είναι ήδη αποθηκευμένο και έμπιστο στο "
+"${TRUSTED_GPG}"
+
+#: verify-iso-sig:2065
+#, sh-format
+msgid ""
+"recognized: key already present in ${PUBRING_KBX} and explicitly marked "
+"trusted there"
+msgstr ""
+"αναγνωρίστηκε: το κλειδί υπάρχει ήδη στο ${PUBRING_KBX} και έχει επισημανθεί "
+"ρητά ως έμπιστο εκεί"
+
+#: verify-iso-sig:2070 verify-iso-sig:2281 verify-iso-sig:2327
+#, sh-format
+msgid ""
+"kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
+msgstr ""
+"διατηρήθηκε το ${FPR} στο ${TRUSTED_GPG} - οι μελλοντικές εκτελέσεις θα το "
+"αναγνωρίζουν αυτόματα"
+
+#: verify-iso-sig:2077 verify-iso-sig:2330
+#, sh-format
+msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
+msgstr ""
+"προειδοποίηση: δεν ήταν δυνατή η αποθήκευση του κλειδιού στο ${TRUSTED_GPG}: "
+"${out}"
+
+#: verify-iso-sig:2085
+#, sh-format
+msgid "${FPR} is not one of this tool's built-in recognized keys"
+msgstr ""
+"Το ${FPR} δεν είναι ένα από τα ενσωματωμένα κλειδιά που αναγνωρίζει αυτό το "
+"εργαλείο"
+
+#. TRANSLATORS: ${FLAG_LIST_KNOWN_KEYS} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:2087
+#, sh-format
+msgid ""
+"(run ${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's "
+"fingerprint independently before trusting it)"
+msgstr ""
+"(εκτελέστε ${FLAG_LIST_KNOWN_KEYS} για να δείτε την πλήρη λίστα, ή "
+"επαληθεύστε το αποτύπωμα αυτού του κλειδιού ανεξάρτητα πριν το εμπιστευτείτε)"
+
+#. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN}/${FLAG_TRUST_KEY} are literal flag names - keep placeholders as-is.
+#: verify-iso-sig:2094
+#, sh-format
+msgid ""
+"refusing to verify against an unrecognized signing key (pass "
+"${FLAG_ALLOW_UNKNOWN} to verify just this once, or ${FLAG_TRUST_KEY} to also "
+"remember it for next time)"
+msgstr ""
+"άρνηση επαλήθευσης έναντι μη αναγνωρισμένου κλειδιού υπογραφής "
+"(χρησιμοποιήστε ${FLAG_ALLOW_UNKNOWN} για επαλήθευση μόνο αυτή τη φορά, ή "
+"${FLAG_TRUST_KEY} για να απομνημονευτεί επίσης για την επόμενη φορά)"
+
+#. TRANSLATORS: ${FLAG_TRUST_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:2097
+#, sh-format
+msgid ""
+"verifying anyway - if the result below is GOOD and you decide you trust this "
+"key, use ${FLAG_TRUST_KEY} next time (or mark it trusted in your own GPG "
+"keyring) so future checks recognize it automatically"
+msgstr ""
+"γίνεται επαλήθευση ούτως ή άλλως - αν το αποτέλεσμα παρακάτω είναι ΕΓΚΥΡΟ "
+"και αποφασίσετε ότι εμπιστεύεστε αυτό το κλειδί, χρησιμοποιήστε το "
+"${FLAG_TRUST_KEY} την επόμενη φορά (ή επισημάνετέ το ως έμπιστο στη δική σας "
+"κλειδοθήκη GPG) ώστε οι μελλοντικοί έλεγχοι να το αναγνωρίζουν αυτόματα"
+
+#: verify-iso-sig:2113
+#, sh-format
+msgid ""
+"kept ${FPR} in ${TRUSTED_GPG} (reused the copy fetched during verification - "
+"no extra keyserver lookup needed)"
+msgstr ""
+"διατηρήθηκε το ${FPR} στο ${TRUSTED_GPG} (επαναχρησιμοποιήθηκε το αντίγραφο "
+"που ανακτήθηκε κατά την επαλήθευση - δεν χρειάστηκε επιπλέον αναζήτηση σε "
+"διακομιστή κλειδιών)"
+
+#: verify-iso-sig:2132
+#, sh-format
+msgid "key already present and valid in ${TRUSTED_GPG}"
+msgstr "το κλειδί υπάρχει ήδη και είναι έγκυρο στο ${TRUSTED_GPG}"
+
+#: verify-iso-sig:2149
+#, sh-format
+msgid "key in ${TRUSTED_GPG} is ${status}, ignoring cached copy"
+msgstr ""
+"το κλειδί στο ${TRUSTED_GPG} είναι ${status}, το αποθηκευμένο αντίγραφο "
+"αγνοείται"
+
+#: verify-iso-sig:2155
+#, sh-format
+msgid "key already present and valid in ${PUBRING_KBX}"
+msgstr "το κλειδί υπάρχει ήδη και είναι έγκυρο στο ${PUBRING_KBX}"
+
+#: verify-iso-sig:2160
+#, sh-format
+msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
+msgstr ""
+"το κλειδί στο ${PUBRING_KBX} είναι ${pr_status}, το αποθηκευμένο αντίγραφο "
+"αγνοείται"
+
+#: verify-iso-sig:2167
+#, sh-format
+msgid "fetching ${FPR} from ${ks}"
+msgstr "ανάκτηση του ${FPR} από το ${ks}"
+
+#: verify-iso-sig:2211
+#, sh-format
+msgid ""
+"${ks} returned more than one key for Key ID ${FPR} - refusing to guess which "
+"one is real"
+msgstr ""
+"Το ${ks} επέστρεψε περισσότερα από ένα κλειδιά για το αναγνωριστικό κλειδιού "
+"${FPR} - άρνηση μαντέματος ποιο είναι το πραγματικό"
+
+#: verify-iso-sig:2236
+#, sh-format
+msgid ""
+"${ks} returned ${FPR} without any usable key material (likely a user ID that "
+"was never confirmed there) - trying next..."
+msgstr ""
+"το ${ks} επέστρεψε το ${FPR} χωρίς κανένα χρησιμοποιήσιμο υλικό κλειδιού "
+"(πιθανώς αναγνωριστικό χρήστη που δεν επιβεβαιώθηκε ποτέ εκεί) - δοκιμή του "
+"επόμενου..."
+
+#: verify-iso-sig:2238
+#, sh-format
+msgid "could not fetch from ${ks}, trying next..."
+msgstr "δεν ήταν δυνατή η ανάκτηση από το ${ks}, δοκιμή του επόμενου..."
+
+#: verify-iso-sig:2245
+#, sh-format
+msgid ""
+"could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
+msgstr ""
+"δεν ήταν δυνατή η ανάκτηση του κλειδιού ${FPR} από κανέναν διακομιστή "
+"κλειδιών (δοκιμάστηκαν: ${TRIED_KEYSERVERS})"
+
+#: verify-iso-sig:2250
+#, sh-format
+msgid "keeping fetched key in ${TRUSTED_GPG} for future runs"
+msgstr ""
+"διατήρηση του ανακτημένου κλειδιού στο ${TRUSTED_GPG} για μελλοντικές "
+"εκτελέσεις"
+
+#: verify-iso-sig:2255
+#, sh-format
+msgid ""
+"warning: could not save key into ${TRUSTED_GPG} (${out}), continuing with a "
+"throw-away keyring for this run"
+msgstr ""
+"προειδοποίηση: δεν ήταν δυνατή η αποθήκευση του κλειδιού στο ${TRUSTED_GPG} "
+"(${out}), συνέχεια με προσωρινή κλειδοθήκη μίας χρήσης για αυτή την εκτέλεση"
+
+#: verify-iso-sig:2284
+#, sh-format
+msgid "could not save key into ${TRUSTED_GPG}: ${out}"
+msgstr "δεν ήταν δυνατή η αποθήκευση του κλειδιού στο ${TRUSTED_GPG}: ${out}"
+
+#: verify-iso-sig:2287
+#, sh-format
+msgid "${FPR} is already kept in ${TRUSTED_GPG}"
+msgstr "Το ${FPR} είναι ήδη αποθηκευμένο στο ${TRUSTED_GPG}"
+
+#: verify-iso-sig:2297
+#, sh-format
+msgid "verifying inline-signed checksum file '${ISO_BASE}'"
+msgstr ""
+"επαλήθευση αυτο-υπογεγραμμένου αρχείου αθροίσματος ελέγχου '${ISO_BASE}'"
+
+#: verify-iso-sig:2302
+#, sh-format
+msgid "verifying '${SIG_BASE}' against '${ISO_BASE}'"
+msgstr "επαλήθευση του '${SIG_BASE}' έναντι του '${ISO_BASE}'"
+
+#: verify-iso-sig:2309
+msgid "OK - signature verified"
+msgstr "OK - η υπογραφή επαληθεύτηκε"
+
+#: verify-iso-sig:2319
+#, sh-format
+msgid "claimed identity: ${CLAIMED_UID}"
+msgstr "δηλωμένη ταυτότητα: ${CLAIMED_UID}"
+
+#: verify-iso-sig:2334
+msgid "FAILED - signature did NOT verify"
+msgstr "ΑΠΟΤΥΧΙΑ - η υπογραφή ΔΕΝ επαληθεύτηκε"
+
+#: verify-iso-sig.desktop.in:10
+msgid "iso;sig;gpg;"
+msgstr "iso;sig;gpg;υπογραφή;"
+
+#~ msgid "Credits:"
+#~ msgstr "Συνεργάτες:"
+
+#, sh-format
+#~ msgid "About ${DISPLAY_NAME}"
+#~ msgstr "Σχετικά με ${DISPLAY_NAME}"
+
+#~ msgid "Verify ISO Signature"
+#~ msgstr "Επαλήθευση υπογραφής ISO"
+
+#~ msgid "Checksum file:"
+#~ msgstr "Αρχείο αθροισμάτων ελέγχου:"
+
+#~ msgid "Checksum signature:"
+#~ msgstr "Υπογραφή αθροισμάτων ελέγχου:"
+
+#~ msgid "error: yad is not installed"
+#~ msgstr "σφάλμα: το yad δεν είναι εγκατεστημένο"
+
+#, sh-format
+#~ msgid "error: ${VERIFY} not found or not executable"
+#~ msgstr "σφάλμα: το ${VERIFY} δεν βρέθηκε ή δεν είναι εκτελέσιμο"
+
+#, sh-format
+#~ msgid "error: ${MANAGE_KEYS} not found or not executable"
+#~ msgstr "σφάλμα: το ${MANAGE_KEYS} δεν βρέθηκε ή δεν είναι εκτελέσιμο"
+
+#~ msgid "force that window open, even with no display detected"
+#~ msgstr ""
+#~ "εξαναγκάζει το άνοιγμα αυτού του παραθύρου, ακόμη κι αν δεν εντοπιστεί "
+#~ "οθόνη"
+
+#~ msgid ""
+#~ "force plain command-line mode, even with a display available (e.g. from a "
+#~ "terminal, when you don't want a window to pop up)"
+#~ msgstr ""
+#~ "εξαναγκάζει τη λειτουργία απλής γραμμής εντολών, ακόμη κι αν υπάρχει "
+#~ "διαθέσιμη οθόνη (π.χ. από τερματικό, όταν δεν θέλετε να εμφανιστεί "
+#~ "παράθυρο)"
+
+#~ msgid "like --allow-unrecognized-key, and remembers the key too"
+#~ msgstr "όπως το --allow-unrecognized-key, αλλά απομνημονεύει και το κλειδί"
+
+#~ msgid ""
+#~ "For every other option (scripting/automation flags like --checksum-file, "
+#~ "--status-fd, --keep-key, --export-trusted-keys, --inspect-key-file, --"
+#~ "import-trusted-keys, --untrust-key, and more) see --man."
+#~ msgstr ""
+#~ "Για κάθε άλλη επιλογή (σημαίες σεναρίων/αυτοματισμού όπως --checksum-"
+#~ "file, --status-fd, --keep-key, --export-trusted-keys, --inspect-key-file, "
+#~ "--import-trusted-keys, --untrust-key και άλλες) δείτε το --man."
+
+#~ msgid "--keep-key needs exactly one fingerprint argument"
+#~ msgstr "το --keep-key απαιτεί ακριβώς ένα όρισμα αποτυπώματος"
+
+#~ msgid "show the full manual page"
+#~ msgstr "εμφάνιση της πλήρους σελίδας εγχειριδίου"
+
+#~ msgid "less chatter, only the important lines"
+#~ msgstr "λιγότερα μηνύματα, μόνο οι σημαντικές γραμμές"
+
+#~ msgid "print every gpg/gpgv command before running it"
+#~ msgstr "εκτύπωση κάθε εντολής gpg/gpgv πριν από την εκτέλεσή της"
+
+#~ msgid "print [VERIFY-ISO-SIG:] TAG lines (often with a value) to this fd"
+#~ msgstr ""
+#~ "εκτύπωση γραμμών [VERIFY-ISO-SIG:] TAG (συχνά με τιμή) σε αυτόν τον "
+#~ "περιγραφέα αρχείου"
+
+#~ msgid ""
+#~ "use these keyserver(s) instead of the built-in list (comma/space "
+#~ "separated, hkps:// assumed)"
+#~ msgstr ""
+#~ "χρήση αυτών των διακομιστών κλειδιών αντί της ενσωματωμένης λίστας "
+#~ "(διαχωρισμένα με κόμμα ή/και κενό, θεωρείται hkps://)"
+
+#~ msgid "save a fetched key locally for future runs"
+#~ msgstr "αποθήκευση ανακτημένου κλειδιού τοπικά για μελλοντικές εκτελέσεις"
+
+#~ msgid "don't fall back to a signed checksum listing"
+#~ msgstr "χωρίς εναλλακτική χρήση υπογεγραμμένης λίστας αθροισμάτων ελέγχου"
+
+#~ msgid "use this checksum-listing file instead of auto-detecting one"
+#~ msgstr ""
+#~ "χρήση αυτού του αρχείου λίστας αθροισμάτων ελέγχου αντί για αυτόματο "
+#~ "εντοπισμό"
+
+#~ msgid "sha256, sha512, sha1, or md5 (only with --checksum-file)"
+#~ msgstr "sha256, sha512, sha1, ή md5 (μόνο με το --checksum-file)"
+
+#~ msgid "cache <fpr> as trusted, without verifying anything"
+#~ msgstr "προσωρινή αποθήκευση του <fpr> ως έμπιστου, χωρίς καμία επαλήθευση"
+
+#~ msgid "with --keep-key: reuse a key already exported to <path>"
+#~ msgstr ""
+#~ "με το --keep-key: επαναχρησιμοποίηση κλειδιού που έχει ήδη εξαχθεί στο "
+#~ "<path>"
+
+#~ msgid "also export the resolved signing key to <path>"
+#~ msgstr "εξαγωγή επίσης του επιλυμένου κλειδιού υπογραφής στο <path>"
+
+#~ msgid "exit 0/1: is the signing key already cached? (no network)"
+#~ msgstr ""
+#~ "έξοδος 0/1: είναι το κλειδί υπογραφής ήδη αποθηκευμένο; (χωρίς δίκτυο)"
+
+#~ msgid "list the keyserver(s) that would actually be used for this run"
+#~ msgstr ""
+#~ "λίστα των διακομιστών κλειδιών που θα χρησιμοποιούνταν πραγματικά για "
+#~ "αυτήν την εκτέλεση"
+
+#~ msgid ""
+#~ "Options taking a value accept either --option=value or --option value."
+#~ msgstr ""
+#~ "Οι επιλογές που δέχονται τιμή, δέχονται είτε --option=value είτε --option "
+#~ "value."
+
+#~ msgid ""
+#~ "Environment: KEYSERVER=<url> use only this keyserver, not the built-in "
+#~ "fallback list (overridden by --keyserver)."
+#~ msgstr ""
+#~ "Περιβάλλον: KEYSERVER=<url> χρήση μόνο αυτού του διακομιστή κλειδιών, όχι "
+#~ "της ενσωματωμένης εναλλακτικής λίστας (παρακάμπτεται από το --keyserver)."
+
+#~ msgid ""
+#~ "Note: that identity is self-declared by whoever created the key - it is "
+#~ "NOT independently verified, unlike the Key ID or fingerprint. Only trust "
+#~ "this key if you've confirmed the Key ID or fingerprint yourself (e.g. "
+#~ "from the respin/distro's own official site). See https://mxlinux.org/wiki/"
+#~ "system/signed-iso-files/ for the officially documented MX/antiX keys."
+#~ msgstr ""
+#~ "Σημείωση: αυτή η ταυτότητα δηλώνεται από το άτομο που δημιούργησε το "
+#~ "κλειδί - ΔΕΝ έχει επαληθευτεί ανεξάρτητα, σε αντίθεση με το αναγνωριστικό "
+#~ "κλειδιού ή το αποτύπωμα. Εμπιστευτείτε αυτό το κλειδί μόνο αν έχετε "
+#~ "επαληθεύσει οι ίδιοι το αναγνωριστικό κλειδιού ή το αποτύπωμα (π.χ. από "
+#~ "την επίσημη ιστοσελίδα της διανομής). Δείτε το https://mxlinux.org/wiki/"
+#~ "system/signed-iso-files/ για τα επίσημα τεκμηριωμένα κλειδιά MX/antiX."
+
+#~ msgid "This ISO's signing key is not one of the documented MX/antiX keys."
+#~ msgstr ""
+#~ "Το κλειδί υπογραφής αυτού του ISO δεν είναι ένα από τα τεκμηριωμένα "
+#~ "κλειδιά MX/antiX."
+
+#~ msgid "list the built-in MX/antiX signing keys this tool recognizes"
+#~ msgstr ""
+#~ "λίστα των ενσωματωμένων κλειδιών υπογραφής MX/antiX που αναγνωρίζει αυτό "
+#~ "το εργαλείο"
+
+#~ msgid ""
+#~ "(check its fingerprint yourself against the distro's own official site or "
+#~ "keyserver listing)"
+#~ msgstr ""
+#~ "(ελέγξτε οι ίδιοι το αποτύπωμά του στην επίσημη ιστοσελίδα της διανομής ή "
+#~ "σε καταχώριση διακομιστή κλειδιών)"
+
+#, sh-format
+#~ msgid "${FPR} is NOT one of the documented MX/antiX signing keys"
+#~ msgstr ""
+#~ "Το ${FPR} ΔΕΝ είναι ένα από τα τεκμηριωμένα κλειδιά υπογραφής MX/antiX"
+
+#~ msgid ""
+#~ "(compare it yourself against https://mxlinux.org/wiki/system/signed-iso-"
+#~ "files/)"
+#~ msgstr ""
+#~ "(συγκρίνετέ το οι ίδιοι με το https://mxlinux.org/wiki/system/signed-iso-"
+#~ "files/)"

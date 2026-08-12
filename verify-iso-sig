@@ -1,0 +1,2394 @@
+#!/usr/bin/bash
+#
+# Copyright (C) 2026  fehlix <fehlix@mxlinux.org>
+#                     MX Linux Development Team <https://mxlinux.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# shellcheck disable=SC2034
+# Many of this file's variables (FLAG_*/CMD_MAN/ENV_* placeholders, and
+# various per-function locals) are read only via eval_gettext's own
+# envsubst-based substitution - it dynamically exports whatever variable
+# names appear in the msgid text, which shellcheck can't trace, so it
+# flags every one of them as unused. Real dead variables are still worth
+# checking for by hand.
+# Public entry point for this tool - the only one of its two scripts meant
+# to be on $PATH (the other, verify-iso-sig-gui.sh, lives in usr/lib/verify-
+# iso-sig/). Also acts as the dispatcher: decides whether to hand off to the
+# GUI or handle the request itself.
+#
+# Dispatch rules, in order:
+#   1. Bare -h/--help (no --cli/--gui) -> print a short preamble, then main --help.
+#   2. --manage-keys (+ --cli/--gui prefix) -> trusted-keys manager GUI if a
+#      display is available, else the equivalent CLI flags.
+#   3. Leading --cli/--gui forces that mode for the rest of argv.
+#   4. Args matching the picker GUI's own [--debug] [iso-file] [sig-file]
+#      syntax + a display available -> picker GUI.
+#   5. Everything else -> main() below.
+set -euo pipefail
+
+VERSION="2026.08.01"
+
+# Literal flag/command/env-var names referenced inside translatable
+# messages - kept as variables so translators only see a movable
+# ${PLACEHOLDER}, never a literal English substring to preserve by hand.
+FLAG_HELP="--help"
+FLAG_MAN="--man"
+FLAG_TRUST_KEY="--trust-key"
+FLAG_ALLOW_UNKNOWN="--allow-unrecognized-key"
+FLAG_CHECKSUM_FILE="--checksum-file"
+FLAG_CHECKSUM_ALGO="--checksum-algo"
+FLAG_KEEP_KEY="--keep-key"
+FLAG_LIST_KNOWN_KEYS="--list-known-keys"
+FLAG_GUI="--gui"
+FLAG_CLI="--cli"
+FLAG_MANAGE_KEYS="--manage-keys"
+CMD_MAN="verify-iso-sig --man"
+ENV_DISPLAY='$DISPLAY'
+ENV_WAYLAND_DISPLAY='$WAYLAND_DISPLAY'
+
+# Resolves SELF (this file's own real path, for the checksum-fallback
+# subprocess self-re-exec) and SCRIPT_DIR (where to find the sibling GUI
+# file - usr/lib/verify-iso-sig/ in a real install, even though this file
+# itself lives in usr/bin/; falls back to a flat dev-checkout layout).
+case "${BASH_SOURCE[0]}" in
+    /*) INVOKED_PATH=${BASH_SOURCE[0]} ;;
+    *)  INVOKED_PATH="$PWD/${BASH_SOURCE[0]}" ;;
+esac
+SELF=$(readlink -f -- "$INVOKED_PATH" 2>/dev/null) || SELF=$INVOKED_PATH
+INVOKED_DIR=$(dirname "$INVOKED_PATH")
+RESOLVED_DIR=$(readlink -f -- "$INVOKED_DIR" 2>/dev/null) || RESOLVED_DIR=$INVOKED_DIR
+if [ "$(basename "$RESOLVED_DIR")" = "bin" ] && [ "$(basename "$(dirname "$RESOLVED_DIR")")" = "usr" ]; then
+    USR_DIR=$(dirname "$RESOLVED_DIR")
+    SCRIPT_DIR="$USR_DIR/lib/verify-iso-sig"
+else
+    SCRIPT_DIR=$(dirname "$SELF")
+fi
+GUI="$SCRIPT_DIR/verify-iso-sig-gui.sh"
+
+# Public display name for usage()/-V output. Conditional assignment: when
+# verify-iso-sig-gui.sh sources this file, it has already set its own
+# DISPLAY_NAME first - don't clobber it.
+DISPLAY_NAME=${DISPLAY_NAME:-$(basename "$SELF")}
+
+# 0 = running directly as the CLI, die()/exit really exit. 1 = a GUI
+# script sourced this file to call functions in-process - die() must
+# return instead of exit, or it would kill the whole GUI process.
+LIB_MODE=${LIB_MODE:-0}
+
+# Shared scratch directory for this run and any sourcing GUI caller.
+SESSION_TMPDIR=${SESSION_TMPDIR:-$(mktemp -d "/tmp/verify-iso-sig-$UID.session.XXXXXXXXXX")}
+# Safety-net cleanup for an external kill mid-run (normal completion is
+# already handled by cleanup()'s own RETURN trap) - also stops any
+# dirmngr/gpg-agent left running against a homedir under here.
+session_tmpdir_cleanup() {
+    local d
+    for d in "$SESSION_TMPDIR"/gnupghome.*/; do
+        [ -d "$d" ] && gpgconf --homedir "${d%/}" --kill all >/dev/null 2>&1
+    done
+    rm -rf "$SESSION_TMPDIR"
+}
+trap session_tmpdir_cleanup EXIT
+
+. /usr/bin/gettext.sh
+export TEXTDOMAIN="verify-iso-sig"
+export TEXTDOMAINDIR="$SCRIPT_DIR/locale"
+
+# ============================================================
+# Configuration - add a new signing key, keyserver, or checksum-listing
+# naming convention here.
+# ============================================================
+
+# Known MX/antiX ISO signing key fingerprints (fingerprint|label), sourced
+# from https://mxlinux.org/wiki/system/signed-iso-files/
+KNOWN_KEYS=(
+    "F62EDEAA3AE70A9C99DAC4189B68A1E8B9B6375C|MX Xfce / Xfce-AHS - Dolphin Oracle <dolphinoracle@gmail.com>"
+    "F27753A18E92E3937E6335E770938C780679EE98|MX KDE / monthly snapshots - Adrian <adrian@mxlinux.org>"
+    "09DA59435EF8C739C8ED615613C74A22892C32F1|MX KDE (older) - Steven K Pusser <stevopusser@gmail.com>"
+    "4EB6BDCFC6CA16AE8C3471C2409C71B3BCFDED0A|MX Fluxbox - Michael Pavletich <m_pav10-4@thepavs.net.nz>"
+    "F56C15AA352A5C50A8391BA1E90429470A677B96|MX Fluxbox (signing subkey) - Michael Pavletich <m_pav10-4@thepavs.net.nz>"
+    "30AA418A0C723D937B50A986A80582E000067FDD|antiX - anticapitalista <anticapitalista@riseup.net>"
+)
+
+# Third-party MX/antiX-based respins, not on the official wiki page.
+KNOWN_THIRD_PARTY_KEYS=(
+    "81280128CAC09F2BBADB4A775DBC090C710C87B3|AV Linux - Glen MacArthur <info@bandshed.net>"
+)
+KNOWN_KEYS+=("${KNOWN_THIRD_PARTY_KEYS[@]}")
+
+# Keyservers tried in order when a key needs fetching. Overridden by $KEYSERVER.
+DEFAULT_KEYSERVERS=(
+    hkps://keys.openpgp.org
+    hkps://keyserver.ubuntu.com
+    hkps://pgpkeys.eu
+)
+
+# Known checksum-listing filenames (fingerprint|hashcmd), strongest hash first.
+CHECKSUM_FILES=(
+    "SHA512SUMS|sha512sum"
+    "sha512sum.txt|sha512sum"
+    "SHA256SUMS|sha256sum"
+    "sha256sum.txt|sha256sum"
+    "SHA1SUMS|sha1sum"
+    "sha1sum.txt|sha1sum"
+    "MD5SUMS|md5sum"
+    "md5sum.txt|md5sum"
+)
+# Checksum-listing filename patterns with no fixed hashcmd (release-specific
+# names, e.g. Fedora's "<spin>-<version>-<arch>-CHECKSUM") - hashcmd is
+# resolved per-line instead (see find_checksum_line()). Must never overlap
+# a literal CHECKSUM_FILES name above, or that candidate would be tried twice.
+CHECKSUM_FILE_GLOBS=("*-CHECKSUM" "CHECKSUM")
+# Signature suffixes tried per checksum file.
+CHECKSUM_SIG_EXTS=(sig asc gpg sign)
+
+# Unsigned, per-ISO checksum suffixes some distros ship alongside a real
+# direct signature (e.g. <iso>.sig plus a redundant <iso>.sha512).
+PLAIN_CHECKSUM_SUFFIXES=(sha512 sha256 sha1 md5)
+
+# Short usage summary; the full reference lives in man-page.md/--man.
+usage() {
+    # $1: exit code (default 1). $2: optional reason, printed before the usage block.
+    if [ -n "${2:-}" ]; then
+        printf '%s %s\n\n' "$ERROR_PREFIX" "$2" >&2
+    fi
+    USAGE_LABEL=$(gettext "Usage:")
+    # TRANSLATORS: keep the distro names (Debian, Ubuntu, Linux Mint) exactly as-is.
+    DESCRIPTION=$(gettext "Verify the GPG signature of an ISO image (any distro - built-in recognition of the documented MX Linux/antiX signing keys, plus a checksum-listing convention for distros that sign a checksum listing instead of the ISO directly, e.g. Debian, Ubuntu, Linux Mint).")
+    OPT_HELP=$(gettext "this help")
+    OPT_VERSION=$(gettext "show version and exit")
+    OPT_MAN=$(gettext "full manual: every option, recognition rules, the checksum-listing convention, and more")
+    OPT_ALLOW_UNKNOWN=$(gettext "verify once even if the key isn't recognized")
+    # TRANSLATORS: ${FLAG_ALLOW_UNKNOWN} is a literal flag name - keep the placeholder as-is.
+    OPT_TRUST_KEY=$(eval_gettext "like \${FLAG_ALLOW_UNKNOWN}, and remembers the key too")
+    OPT_LIST_KNOWN_KEYS=$(gettext "list this tool's built-in recognized signing keys")
+    OPT_LIST_TRUSTED=$(gettext "list every key saved in trustedkeys.gpg")
+    # TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+    OPT_SEE_MAN=$(eval_gettext "For every other option (scripting/automation flags) see \${FLAG_MAN}.")
+    cat <<EOF
+$USAGE_LABEL $DISPLAY_NAME [options] <iso-file> [sig-file]
+
+$DESCRIPTION
+
+  -h, --help                $OPT_HELP
+  -V, --version             $OPT_VERSION
+  --man                     $OPT_MAN
+  --allow-unrecognized-key  $OPT_ALLOW_UNKNOWN
+  --trust-key               $OPT_TRUST_KEY
+  --list-known-keys         $OPT_LIST_KNOWN_KEYS
+  --list-trusted-keys       $OPT_LIST_TRUSTED
+
+$OPT_SEE_MAN
+EOF
+    exit "${1:-1}"
+}
+
+# Shows the man page: a real installed page if present, else regenerates
+# verify-iso-sig.1 from man-page.md via pandoc (dev-checkout fallback).
+show_man() {
+    local script_dir man_src man_out
+    if man -w verify-iso-sig >/dev/null 2>&1; then
+        # exec replaces this process outright - trap ... EXIT never fires
+        # for it, so this SESSION_TMPDIR (never used for anything at
+        # this point - always empty) would otherwise leak every time
+        # --man is used on an install with the page already registered.
+        session_tmpdir_cleanup
+        exec man verify-iso-sig
+    fi
+    script_dir=$SCRIPT_DIR
+    man_src="$script_dir/man-page.md"
+    man_out="$script_dir/verify-iso-sig.1"
+    if command -v pandoc >/dev/null 2>&1; then
+        if [ ! -e "$man_out" ] || [ "$man_src" -nt "$man_out" ]; then
+            pandoc -f markdown-smart -s -t man "$man_src" -o "$man_out" \
+                || die "$(gettext "could not generate the man page (pandoc failed)")"
+        fi
+    elif [ ! -e "$man_out" ]; then
+        # TRANSLATORS: ${man_src} is a file path, ${FLAG_MAN} a literal flag name.
+        die "$(eval_gettext "man page not built yet and pandoc isn't installed - see \${man_src} directly, or install pandoc and re-run \${FLAG_MAN}")"
+    fi
+    man -l "$man_out"
+}
+
+debug_cmd() { [ "$DEBUG" -eq 1 ] && printf 'debug: %s\n' "$(printf '%q ' "$@")" >&2; true; }
+WARNING_PREFIX=$(gettext "warning:")
+ERROR_PREFIX=$(gettext "error:")
+log() { [ "$QUIET" -eq 1 ] || printf '[*] %s\n' "$*" >&2; }
+warn() { printf '%s %s\n' "$WARNING_PREFIX" "$*" >&2; }
+# Exits directly (CLI), or returns 1 (LIB_MODE=1, a sourced GUI caller).
+die() {
+    printf '%s %s\n' "$ERROR_PREFIX" "$*" >&2
+    [ "$LIB_MODE" -eq 1 ] && return 1
+    exit 1
+}
+
+# Shared "--flag requires a value" error. $1: the flag's literal name.
+require_value() {
+    local flag=$1
+    # TRANSLATORS: ${flag}/${FLAG_MAN} are literal names - keep placeholders as-is.
+    die "$(eval_gettext "\${flag} requires a value (see \${FLAG_MAN})")"
+}
+
+# Emits a machine-readable tag on $STATUS_FD (opt-in via --status-fd); a no-op otherwise.
+status_out() {
+    [ -n "$STATUS_FD" ] || return 0
+    printf '[VERIFY-ISO-SIG:] %s\n' "$*" >&"$STATUS_FD"
+}
+
+# Runs gpgv with --status-fd 3. Sets: rc, GPGV_OUTPUT (human-readable
+# stderr), STATUS_LINES (machine-readable status lines).
+run_gpgv_status() {
+    local status_file="$GNUPG_HOMEDIR/status-fd.$$"
+    set +e
+    GPGV_OUTPUT=$(gpgv --status-fd 3 "$@" 2>&1 3>"$status_file")
+    rc=$?
+    set -e
+    STATUS_LINES=$(cat "$status_file" 2>/dev/null)
+    rm -f "$status_file"
+}
+
+# Echoes field(s) $2 of the first "[GNUPG:] $1 ..." line in $STATUS_LINES.
+status_field() {
+    printf '%s\n' "$STATUS_LINES" | grep -m1 "^\[GNUPG:\] $1 " | cut -d' ' -f"$2" || true
+}
+
+# Undoes gpg's own "%" -> "%25" escaping in a status-fd UID field.
+percent_decode_uid() {
+    printf '%s' "${1//%25/%}"
+}
+
+TRUSTED_GPG="$HOME/.gnupg/trustedkeys.gpg"
+PUBRING_KBX="$HOME/.gnupg/pubring.kbx"
+
+# Sets every global the mode functions below depend on. Called from
+# main() for direct CLI execution; a library caller (LIB_MODE=1) must
+# call this itself, once, right after sourcing.
+lib_init_defaults() {
+    QUIET=0
+    DEBUG=0
+    KEEP=0
+    ALLOW_UNKNOWN=0
+    TRUST_KEY=0
+    KEEP_KEY=0
+    IS_CACHED=0
+    LIST_TRUSTED=0
+    LIST_KNOWN_KEYS=0
+    LIST_KEYSERVERS=0
+    KEYSERVER_OPT=""
+    UNTRUST_KEY=""
+    VERIFY_AS_CHECKSUM_FILE=0
+    VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE=0
+    EXTRACT_PLAINTEXT_TO=""
+    NO_CHECKSUM_FALLBACK=0
+    CHECKSUM_FILE_OVERRIDE=""
+    CHECKSUM_ALGO_OVERRIDE=""
+    EXPORT_KEY_TO=""
+    FROM_RING_OVERRIDE=""
+    EXPORT_TRUSTED_KEYS=""
+    EXPORT_TRUSTED_KEYS_FPRS=()
+    INSPECT_KEY_FILE=""
+    IMPORT_TRUSTED_KEYS=""
+    IMPORT_TRUSTED_KEYS_FPRS=()
+    STATUS_FD=""
+}
+
+# ============================================================
+# Dispatch layer - decides whether an invocation is handled here or
+# handed off to verify-iso-sig-gui.sh.
+# ============================================================
+
+# True if a graphical session (X11 or Wayland) is available.
+have_gui_session() {
+    [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
+
+# True if "$@" matches the GUI picker's own [--debug] [iso-file]
+# [sig-file] syntax - i.e. this could plausibly mean "show me the
+# picker". -h/--help/-V/--version always go to main() instead. A leading
+# --debug is stripped first, then the SAME "0/1/2 bare files" check
+# applies uniformly to what's left - previously --debug was only
+# special-cased for the 0- and 1-file cases, so "--debug <sig> <iso>"
+# (3 args total) fell through to the catch-all "*) return 1" and
+# silently dropped to CLI mode even with no --cli anywhere, which read
+# as "--debug always forces --cli" (found via real testing).
+looks_like_gui_args() {
+    if [ "$#" -ge 1 ] && [ "$1" = "--debug" ]; then
+        shift
+    fi
+    case "$#" in
+        0) return 0 ;;
+        1)
+            case "$1" in
+                -h|--help|-V|--version) return 1 ;;
+                -*) return 1 ;;
+                *) return 0 ;;
+            esac
+            ;;
+        2)
+            case "$1" in -*) return 1 ;; esac
+            case "$2" in -*) return 1 ;; esac
+            return 0
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+# Respects a --cli/--gui prefix (set via $FORCE_MODE by the dispatch
+# gate at the bottom of this file); falls back to have_gui_session otherwise.
+want_gui() {
+    case "${FORCE_MODE:-}" in
+        cli) return 1 ;;
+        gui) return 0 ;;
+        *) have_gui_session ;;
+    esac
+}
+
+# Only reached for --manage-keys with no graphical session (real or
+# forced via --cli) - prints the equivalent CLI flags instead.
+print_manage_keys_cli_usage() {
+    if [ "${FORCE_MODE:-}" = "cli" ]; then
+        # --cli was requested explicitly - the GUI not opening is exactly
+        # what was asked for, no explanation needed at all.
+        MK_LEAD=""
+        MK_INTRO=$(gettext "Manage trusted keys from the command line:")
+    else
+        # TRANSLATORS: ${ENV_DISPLAY}/${ENV_WAYLAND_DISPLAY} are literal env-var names - keep placeholders as-is.
+        MK_REASON=$(eval_gettext "no graphical session detected (neither \${ENV_DISPLAY} nor \${ENV_WAYLAND_DISPLAY} is set) - the trusted-keys manager needs a desktop to show its window.")
+        printf -v MK_LEAD '%s %s\n\n' "$ERROR_PREFIX" "$MK_REASON"
+        MK_INTRO=$(gettext "Manage trusted keys from the command line instead:")
+    fi
+    MK_LIST_TRUSTED=$(gettext "list every key saved in trustedkeys.gpg")
+    MK_UNTRUST_KEY=$(gettext "remove <fpr> from trustedkeys.gpg")
+    MK_EXPORT_TRUSTED_KEYS=$(gettext "export trusted key(s) to <path> (all if none given)")
+    MK_INSPECT_KEY_FILE=$(gettext "list the key(s) in an external key file, read-only")
+    MK_IMPORT_TRUSTED_KEYS=$(gettext "import key(s) from an external key file (all if none given)")
+    # TRANSLATORS: ${CMD_MAN} is a literal command - keep the placeholder as-is.
+    MK_SEE_MAN=$(eval_gettext "See '\${CMD_MAN}' for the full manual.")
+    cat >&2 <<EOF
+${MK_LEAD}$MK_INTRO
+  verify-iso-sig --list-trusted-keys                      $MK_LIST_TRUSTED
+  verify-iso-sig --untrust-key=<fpr>                      $MK_UNTRUST_KEY
+  verify-iso-sig --export-trusted-keys=<path> [fpr...]    $MK_EXPORT_TRUSTED_KEYS
+  verify-iso-sig --inspect-key-file=<path>                $MK_INSPECT_KEY_FILE
+  verify-iso-sig --import-trusted-keys=<path> [fpr...]    $MK_IMPORT_TRUSTED_KEYS
+
+$MK_SEE_MAN
+EOF
+}
+
+# Shown before main()'s own --help, only for a plain unforced -h/--help -
+# covers this dispatch layer's own extra flags/default behavior.
+print_dispatcher_help_preamble() {
+    # TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+    PRE_INTRO=$(eval_gettext "verify-iso-sig - opens a window to pick and check an ISO or signature file by default when a graphical session is available; falls back to the plain command-line tool otherwise. This preamble covers this launcher's own behavior; a short command-line reference (used automatically whenever given arguments don't look like that window's own syntax, or no graphical session is available) follows below it - see \${FLAG_MAN} for the complete one.")
+    PRE_NOARGS=$(gettext "open that window if a display is available (default), otherwise this same help")
+    PRE_GUI=$(gettext "(default) the graphical main program")
+    PRE_CLI=$(gettext "plain command-line mode")
+    # TRANSLATORS: ${FLAG_HELP} is a literal flag name - keep the placeholder as-is.
+    PRE_MANAGE_KEYS=$(eval_gettext "trusted-keys manager GUI (add \${FLAG_HELP} for its own flags), or with no display, print the CLI flags that cover the same ground")
+    cat <<EOF
+$PRE_INTRO
+
+  (no arguments)            $PRE_NOARGS
+  $FLAG_GUI [file]              $PRE_GUI
+  $FLAG_CLI ...                 $PRE_CLI
+  $FLAG_MANAGE_KEYS             $PRE_MANAGE_KEYS
+
+EOF
+}
+
+# True if $1's basename is a known checksum-listing name: a literal
+# $CHECKSUM_FILES entry, or a $CHECKSUM_FILE_GLOBS pattern match (e.g.
+# Fedora's "<spin>-<version>-<arch>-CHECKSUM").
+looks_like_checksum_listing_name() {
+    local base entry glob
+    base=$(basename "$1")
+    for entry in "${CHECKSUM_FILES[@]}"; do
+        [ "$base" = "${entry%%|*}" ] && return 0
+    done
+    for glob in "${CHECKSUM_FILE_GLOBS[@]}"; do
+        # shellcheck disable=SC2254
+        # Unquoted on purpose: $glob must expand as a glob pattern here
+        # (e.g. "*-CHECKSUM"), not match literally.
+        case "$base" in $glob) return 0 ;; esac
+    done
+    return 1
+}
+
+# True if $1's first line is a clearsign header - the file is itself an
+# OpenPGP-signed message (RFC 4880 SS7), needing no separate detached
+# signature file. Only the first (declared) signer is ever examined here,
+# same as this file's own existing detached-signature handling.
+is_clearsigned_file() {
+    local f=$1 first_line
+    [ -r "$f" ] || return 1
+    IFS= read -r first_line < "$f" 2>/dev/null
+    first_line=${first_line%$'\r'}
+    [ "$first_line" = "-----BEGIN PGP SIGNED MESSAGE-----" ]
+}
+
+# Classifies a checksum-listing filename (one recognized by
+# looks_like_checksum_listing_name()) paired with an ISO, order-
+# independent. Sets ISO, CHECKSUM_FILE_OVERRIDE, and CHECKSUM_SIG_PREVIEW
+# (best-effort guess at the listing's own detached signature, display-
+# only, left empty for an inline-signed listing - it has none). Returns 1
+# if neither argument is a known listing name.
+classify_checksum_listing_pair() {
+    local a=$1 b=$2 a_is_listing=0 b_is_listing=0 sigext
+    looks_like_checksum_listing_name "$a" && a_is_listing=1
+    looks_like_checksum_listing_name "$b" && b_is_listing=1
+    if [ "$a_is_listing" -eq 1 ] && [ "$b_is_listing" -eq 0 ]; then
+        CHECKSUM_FILE_OVERRIDE=$a
+        ISO=$b
+        SIG=""
+    elif [ "$b_is_listing" -eq 1 ] && [ "$a_is_listing" -eq 0 ]; then
+        CHECKSUM_FILE_OVERRIDE=$b
+        ISO=$a
+        SIG=""
+    else
+        return 1
+    fi
+    CHECKSUM_SIG_PREVIEW=""
+    for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+        if [ -r "${CHECKSUM_FILE_OVERRIDE}.${sigext}" ]; then
+            CHECKSUM_SIG_PREVIEW="${CHECKSUM_FILE_OVERRIDE}.${sigext}"
+            break
+        fi
+    done
+    return 0
+}
+
+# Classifies a checksum-listing's own detached signature file (e.g.
+# "SHA256SUMS.gpg") paired with the ISO it indirectly (via the listing
+# it signs) describes. Sets ISO, CHECKSUM_FILE_OVERRIDE (the listing's
+# expected path, not the signature file itself), and CHECKSUM_SIG_PREVIEW
+# (the matched signature argument). Returns 1 if neither argument matches
+# a known listing name + one of $CHECKSUM_SIG_EXTS.
+classify_checksum_signature_pair() {
+    local a=$1 b=$2 a_listing="" b_listing="" entry sigext base
+    for entry in "${CHECKSUM_FILES[@]}"; do
+        base=${entry%%|*}
+        for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+            [ "$(basename "$a")" = "${base}.${sigext}" ] && a_listing=$base
+            [ "$(basename "$b")" = "${base}.${sigext}" ] && b_listing=$base
+        done
+    done
+    if [ -n "$a_listing" ] && [ -z "$b_listing" ]; then
+        CHECKSUM_FILE_OVERRIDE="$(dirname "$a")/$a_listing"
+        CHECKSUM_SIG_PREVIEW=$a
+        ISO=$b
+        SIG=""
+        return 0
+    elif [ -n "$b_listing" ] && [ -z "$a_listing" ]; then
+        CHECKSUM_FILE_OVERRIDE="$(dirname "$b")/$b_listing"
+        CHECKSUM_SIG_PREVIEW=$b
+        ISO=$a
+        SIG=""
+        return 0
+    fi
+    return 1
+}
+
+# Classifies a plain per-ISO checksum's own detached signature (e.g.
+# openSUSE's "<iso>.sha256.asc", signing "<iso>.sha256" itself - not the
+# ISO) paired with the ISO it describes. Distinct from
+# classify_checksum_signature_pair() (fixed CHECKSUM_FILES listing names
+# like SHA256SUMS.gpg) and from classify_plain_checksum_pair() (an
+# unsigned plain checksum with no signature of its own). Sets ISO (the
+# non-checksum-signature argument), CHECKSUM_FILE_OVERRIDE (the derived
+# "<iso>.<suffix>" checksum file, not the signature file), CHECKSUM_ALGO_
+# OVERRIDE ("<suffix>sum", required since try_checksum_fallback() only
+# resolves hashcmd from a CHECKSUM_FILES literal name otherwise), and
+# CHECKSUM_SIG_PREVIEW (the matched signature argument). Returns 1 if
+# neither argument matches a "<other-arg-basename>.<suffix>.<sigext>" shape.
+classify_plain_checksum_signature_pair() {
+    local a=$1 b=$2 suffix sigext a_base b_base match=""
+    a_base=$(basename "$a")
+    b_base=$(basename "$b")
+    for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+        for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+            if [ "$a_base" = "${b_base}.${suffix}.${sigext}" ]; then
+                match=$a
+                ISO=$b
+            elif [ "$b_base" = "${a_base}.${suffix}.${sigext}" ]; then
+                match=$b
+                ISO=$a
+            else
+                continue
+            fi
+            CHECKSUM_FILE_OVERRIDE="$(dirname "$match")/$(basename "$ISO").${suffix}"
+            CHECKSUM_ALGO_OVERRIDE="${suffix}sum"
+            CHECKSUM_SIG_PREVIEW=$match
+            SIG=""
+            return 0
+        done
+    done
+    return 1
+}
+
+# Classifies an unsigned per-file checksum (one of $PLAIN_CHECKSUM_
+# SUFFIXES, e.g. "manjaro-....iso.sha512") paired with the ISO it
+# describes. Sets ISO (the non-checksum file), SIG (its real direct
+# signature if one exists, else a ".sig" placeholder), and NO_DIRECT_SIG
+# (1 when no real direct signature was found, letting the checksum-listing
+# fallback get a chance). Returns 1 if neither basename has a known
+# plain-checksum suffix, or both do.
+classify_plain_checksum_pair() {
+    local a=$1 b=$2 a_is_plain=0 b_is_plain=0 suffix sigext
+    for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+        case "$(basename "$a")" in *".$suffix") a_is_plain=1 ;; esac
+        case "$(basename "$b")" in *".$suffix") b_is_plain=1 ;; esac
+    done
+    if [ "$a_is_plain" -eq 1 ] && [ "$b_is_plain" -eq 0 ]; then
+        ISO=$b
+    elif [ "$b_is_plain" -eq 1 ] && [ "$a_is_plain" -eq 0 ]; then
+        ISO=$a
+    else
+        return 1
+    fi
+    NO_DIRECT_SIG=0
+    for sigext in sig asc gpg; do
+        if [ -r "${ISO}.${sigext}" ]; then
+            SIG="${ISO}.${sigext}"
+            return 0
+        fi
+    done
+    NO_DIRECT_SIG=1
+    SIG="${ISO}.sig"
+    return 0
+}
+
+# Classifies two explicit file paths into ISO/SIG, order-independent:
+# whichever looks like a signature (.sig/.asc/.gpg/.sign) is SIG, the
+# other is ISO. Falls back to the positional convention (first=ISO,
+# second=SIG) when neither or both match. Callers should try
+# classify_checksum_listing_pair()/classify_plain_checksum_pair() first.
+classify_iso_sig_pair() {
+    local a=$1 b=$2 a_is_sig=0 b_is_sig=0
+    case "$a" in *.sig|*.asc|*.gpg|*.sign) a_is_sig=1 ;; esac
+    case "$b" in *.sig|*.asc|*.gpg|*.sign) b_is_sig=1 ;; esac
+    if [ "$a_is_sig" -eq 1 ] && [ "$b_is_sig" -eq 0 ]; then
+        SIG=$a
+        ISO=$b
+    else
+        ISO=$a
+        SIG=$b
+    fi
+}
+
+main() {
+ORIGINAL_ARGS=("$@")
+lib_init_defaults
+# -h/--help/-V/--version/--man always win, wherever they appear in "$@",
+# checked in one pass before the value-taking-flag parsing below (else
+# e.g. `--untrust-key --help` would be rejected as a missing value
+# instead of recognized). Stops at a literal "--".
+for arg in "$@"; do
+    case "$arg" in
+        --) break ;;
+        -h|--help) usage 0 ;;
+        -V|--version) printf '%s %s\n' "$DISPLAY_NAME" "$VERSION"; exit 0 ;;
+        --man) show_man; exit 0 ;;
+    esac
+done
+# Shift-capable loop: every value-taking option accepts both
+# "--option=value" and "--option value"; the "-*" catch-all rejects any
+# unrecognized flag instead of treating it as a filename.
+ARGS=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --quiet) QUIET=1 ;;
+        --debug) DEBUG=1 ;;
+        --keep) KEEP=1 ;;
+        --allow-unrecognized-key) ALLOW_UNKNOWN=1 ;;
+        --trust-key) ALLOW_UNKNOWN=1; TRUST_KEY=1 ;;
+        --keep-key) KEEP_KEY=1 ;;
+        --is-cached) IS_CACHED=1 ;;
+        --list-trusted-keys) LIST_TRUSTED=1 ;;
+        --list-known-keys) LIST_KNOWN_KEYS=1 ;;
+        --list-keyservers | --list-keyserver) LIST_KEYSERVERS=1 ;;
+        --keyserver=*) KEYSERVER_OPT=${1#*=} ;;
+        --keyserver)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --keyserver
+            KEYSERVER_OPT=$2
+            shift
+            ;;
+        --untrust-key=*) UNTRUST_KEY=${1#*=} ;;
+        --untrust-key)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --untrust-key
+            UNTRUST_KEY=$2
+            shift
+            ;;
+        # Takes an optional trailing fingerprint list (zero = every key) -
+        # once the path is captured, the rest of "$@" is that list.
+        --export-trusted-keys=*)
+            EXPORT_TRUSTED_KEYS=${1#*=}
+            shift
+            EXPORT_TRUSTED_KEYS_FPRS=("$@")
+            break
+            ;;
+        --export-trusted-keys)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --export-trusted-keys
+            EXPORT_TRUSTED_KEYS=$2
+            shift 2
+            EXPORT_TRUSTED_KEYS_FPRS=("$@")
+            break
+            ;;
+        --inspect-key-file=*) INSPECT_KEY_FILE=${1#*=} ;;
+        --inspect-key-file)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --inspect-key-file
+            INSPECT_KEY_FILE=$2
+            shift
+            ;;
+        --import-trusted-keys=*)
+            IMPORT_TRUSTED_KEYS=${1#*=}
+            shift
+            IMPORT_TRUSTED_KEYS_FPRS=("$@")
+            break
+            ;;
+        --import-trusted-keys)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --import-trusted-keys
+            IMPORT_TRUSTED_KEYS=$2
+            shift 2
+            IMPORT_TRUSTED_KEYS_FPRS=("$@")
+            break
+            ;;
+        --verify-as-checksum-file) VERIFY_AS_CHECKSUM_FILE=1 ;;
+        --verify-as-clearsigned-checksum-file) VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE=1 ;;
+        --no-checksum-fallback) NO_CHECKSUM_FALLBACK=1 ;;
+        --extract-plaintext-to=*) EXTRACT_PLAINTEXT_TO=${1#*=} ;;
+        --extract-plaintext-to)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --extract-plaintext-to
+            EXTRACT_PLAINTEXT_TO=$2
+            shift
+            ;;
+        --checksum-file=*) CHECKSUM_FILE_OVERRIDE=${1#*=} ;;
+        --checksum-file)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --checksum-file
+            CHECKSUM_FILE_OVERRIDE=$2
+            shift
+            ;;
+        --export-key-to=*) EXPORT_KEY_TO=${1#*=} ;;
+        --export-key-to)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --export-key-to
+            EXPORT_KEY_TO=$2
+            shift
+            ;;
+        # For the GUI scripts: opens the status_out() machine-tag channel.
+        --status-fd=*) STATUS_FD=${1#*=} ;;
+        --status-fd)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --status-fd
+            STATUS_FD=$2
+            shift
+            ;;
+        --from-ring=*) FROM_RING_OVERRIDE=${1#*=} ;;
+        --from-ring)
+            { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --from-ring
+            FROM_RING_OVERRIDE=$2
+            shift
+            ;;
+        --checksum-algo=*|--checksum-algo)
+            if [ "$1" = "--checksum-algo" ]; then
+                { [ "$#" -ge 2 ] && [[ "$2" != -* ]]; } || require_value --checksum-algo
+                algo=$2
+                shift
+            else
+                algo=${1#*=}
+            fi
+            case "$algo" in
+                sha256) CHECKSUM_ALGO_OVERRIDE=sha256sum ;;
+                sha512) CHECKSUM_ALGO_OVERRIDE=sha512sum ;;
+                sha1)   CHECKSUM_ALGO_OVERRIDE=sha1sum ;;
+                md5)    CHECKSUM_ALGO_OVERRIDE=md5sum ;;
+                # TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${algo} are literal - keep placeholders as-is.
+                *) die "$(eval_gettext "unknown \${FLAG_CHECKSUM_ALGO} '\${algo}' (expected sha256, sha512, sha1, or md5)")" ;;
+            esac
+            ;;
+        -h|--help) usage 0 ;;
+        -V|--version) printf '%s %s\n' "$DISPLAY_NAME" "$VERSION"; exit 0 ;;
+        --man) show_man; exit 0 ;;
+        --) shift; while [ "$#" -gt 0 ]; do ARGS+=("$1"); shift; done; break ;;
+        # TRANSLATORS: ${opt}/${FLAG_MAN} are literal - keep placeholders as-is.
+        -*) opt=$1; die "$(eval_gettext "unknown option '\${opt}' (see \${FLAG_MAN})")" ;;
+        *) ARGS+=("$1") ;;
+    esac
+    shift
+done
+set -- "${ARGS[@]}"
+
+debug_cmd "$0" "${ORIGINAL_ARGS[@]}"
+
+if [ "$KEEP_KEY" -eq 1 ]; then
+    # TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+    [ "$#" -eq 1 ] || usage 1 "$(eval_gettext "exactly one fingerprint argument is required for \${FLAG_KEEP_KEY}")"
+    FPR=$1
+    # A full fingerprint only, not a Key ID/name/substring - $FPR reaches
+    # gpg --export/--list-keys unvalidated otherwise (see is_full_
+    # fingerprint()'s own header comment for why that matters).
+    # TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+    is_full_fingerprint "$FPR" || usage 1 "$(eval_gettext "\${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex fingerprint, not '\${FPR}'")"
+elif [ "$LIST_TRUSTED" -eq 1 ] || [ "$LIST_KNOWN_KEYS" -eq 1 ] || [ "$LIST_KEYSERVERS" -eq 1 ] \
+     || [ -n "$UNTRUST_KEY" ] \
+     || [ -n "$EXPORT_TRUSTED_KEYS" ] \
+     || [ -n "$INSPECT_KEY_FILE" ] || [ -n "$IMPORT_TRUSTED_KEYS" ]; then
+    [ "$#" -eq 0 ] || usage 1 "$(gettext "this option takes no extra arguments")"
+else
+    [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage 1 "$(gettext "expected an ISO or signature file to check")"
+    NO_DIRECT_SIG=0
+    if [ -n "${2:-}" ]; then
+        # Two explicit arguments - order-independent via, in order,
+        # classify_checksum_listing_pair()/classify_checksum_signature_
+        # pair()/classify_plain_checksum_signature_pair()/classify_plain_
+        # checksum_pair()/classify_iso_sig_pair().
+        # $SIG ends up empty for any of the first three shapes (none has
+        # a direct signature file), so the "$SIG is a directory" check
+        # below harmlessly never fires for them.
+        #
+        # The two checksum-listing-related classifiers are skipped in
+        # --verify-as-checksum-file mode (try_checksum_fallback()'s own
+        # internal re-exec, verifying a listing's own direct signature) -
+        # its "$name"/"$sigfile" pair already IS one of those shapes and
+        # must not be reinterpreted, or it recurses into itself.
+        if [ "$VERIFY_AS_CHECKSUM_FILE" -eq 1 ]; then
+            classify_iso_sig_pair "$1" "$2"
+        elif classify_checksum_listing_pair "$1" "$2"; then
+            :
+        elif classify_checksum_signature_pair "$1" "$2"; then
+            :
+        elif classify_plain_checksum_signature_pair "$1" "$2"; then
+            :
+        elif classify_plain_checksum_pair "$1" "$2"; then
+            :
+        else
+            classify_iso_sig_pair "$1" "$2"
+        fi
+        [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
+        [ -d "$SIG" ] && die "$(eval_gettext "'\${SIG}' is a directory, not a file - point this at the actual signature file directly.")"
+    else
+        ISO=$1
+        [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
+        if case "$ISO" in *.sig|*.asc|*.gpg|*.sign) true ;; *) false ;; esac; then
+            # A single argument that's itself a signature file - derive the
+            # ISO/checksum-listing name by stripping the extension, then
+            # continue as if passed explicitly as $1 with this as $2.
+            SIG=$ISO
+            case "$SIG" in
+                *.sig)  ISO=${SIG%.sig}  ;;
+                *.asc)  ISO=${SIG%.asc}  ;;
+                *.gpg)  ISO=${SIG%.gpg}  ;;
+                *.sign) ISO=${SIG%.sign} ;;
+            esac
+        elif [ -r "${ISO}.sig" ]; then
+            SIG="${ISO}.sig"
+        elif [ -r "${ISO}.asc" ]; then
+            SIG="${ISO}.asc"
+        elif [ -r "${ISO}.gpg" ]; then
+            SIG="${ISO}.gpg"
+        else
+            # No direct signature - let the checksum-file fallback try
+            # (try_checksum_fallback below); keep the .sig default so the
+            # "cannot read signature file" error still names a path if not.
+            NO_DIRECT_SIG=1
+            SIG="${ISO}.sig"
+        fi
+    fi
+fi
+
+# Dispatch to the mode selected above - one function call per mode,
+# matching the flag classification just above one-for-one.
+if [ "$KEEP_KEY" -eq 1 ]; then
+    verify_iso
+elif [ "$LIST_TRUSTED" -eq 1 ]; then
+    list_trusted
+elif [ "$LIST_KNOWN_KEYS" -eq 1 ]; then
+    list_known_keys
+elif [ "$LIST_KEYSERVERS" -eq 1 ]; then
+    list_keyservers
+elif [ -n "$UNTRUST_KEY" ]; then
+    untrust_key
+elif [ -n "$EXPORT_TRUSTED_KEYS" ]; then
+    export_trusted_keys
+elif [ -n "$INSPECT_KEY_FILE" ]; then
+    inspect_key_file
+elif [ -n "$IMPORT_TRUSTED_KEYS" ]; then
+    import_trusted_keys
+else
+    verify_iso
+fi
+}
+
+# Fixes only the codeset (LC_CTYPE), not the message language - gpg's
+# own --status-fd protocol (not its human-readable text) is what this
+# script parses, and that's never localized, so gpg/gpgv's own messages
+# are left to render in whatever language the environment provides.
+# C.UTF-8 keeps a non-ASCII signer UID rendering correctly even with no
+# locale configured at all (e.g. cron).
+export LC_CTYPE=C.UTF-8
+
+# Every gpg/gpgv call runs against a throwaway, isolated GNUPGHOME (no
+# shared trustdb/agent/dirmngr) - the keyrings actually used
+# (trustedkeys.gpg, pubring.kbx) are still addressed by real absolute
+# paths via --keyring.
+#
+# Each mode function calls setup_gnupg_homedir itself, then its own
+# `trap cleanup RETURN` (a RETURN trap fires on the function containing
+# the trap statement, not a shared helper it calls). Deliberately not a
+# script-wide `trap cleanup EXIT`: when sourced by a GUI script, that
+# would clobber the GUI's own EXIT trap for its own temp files.
+setup_gnupg_homedir() {
+    TMP_RING=""
+    GNUPG_HOMEDIR=$(mktemp -d "$SESSION_TMPDIR/gnupghome.XXXXXXXXXX")
+    chmod 700 "$GNUPG_HOMEDIR"
+    export GNUPGHOME="$GNUPG_HOMEDIR"
+}
+cleanup() {
+    [ -n "$TMP_RING" ] && rm -f "$TMP_RING" "${TMP_RING}~"
+    gpgconf --homedir "$GNUPG_HOMEDIR" --kill all >/dev/null 2>&1
+    rm -rf "$GNUPG_HOMEDIR"
+    true
+}
+
+# True if $1 looks like a real full OpenPGP fingerprint: 40-hex (v4,
+# every fingerprint this tool has ever actually seen) or 64-hex (v5/v6,
+# RFC 9580's 32-byte fingerprints - not yet seen on any real fixture, but
+# a plain {40}-only gate would wrongly reject a future one). Never a
+# prefix/substring match, unlike gpg's own --list-keys/--recv-keys search-
+# term handling - callers rely on this to reject non-fingerprint input
+# (e.g. the "-" placeholder gpgv reports for a v3 signature's missing
+# fingerprint) before it ever reaches gpg as a search term.
+is_full_fingerprint() {
+    [[ $1 =~ ^[0-9A-Fa-f]{40}$ ]] || [[ $1 =~ ^[0-9A-Fa-f]{64}$ ]]
+}
+
+# echoes the label for fingerprint $1 if it is one of the KNOWN_KEYS, else
+# returns non-zero
+known_key_label() {
+    local fpr=$1 entry
+    for entry in "${KNOWN_KEYS[@]}"; do
+        if [ "${entry%%|*}" = "$fpr" ]; then
+            printf '%s' "${entry#*|}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Echoes "missing"/"valid"/"expired"/"revoked" for $FPR in keyring $1
+# ($2: optional prefix, e.g. "gnupg-ring:" to force the legacy format).
+key_status() {
+    local ring=$1 prefix=$2 line validity
+    [ -f "$ring" ] || { echo missing; return; }
+    # $FPR must look like a real full fingerprint before it's ever handed
+    # to gpg as a search term - anything shorter/non-hex (e.g. the literal
+    # "-" placeholder gpgv's own ERRSIG line reports when a v3 signature
+    # packet carries no full fingerprint) makes gpg fall back to a
+    # UID-substring search instead of "no such key", which can spuriously
+    # match an unrelated key and report ITS validity as if it were the
+    # queried key's own.
+    is_full_fingerprint "$FPR" || { echo missing; return; }
+    debug_cmd gpg --batch --no-default-keyring --keyring "${prefix}${ring}" --with-colons --list-keys "$FPR"
+    line=$(gpg --batch --no-default-keyring --keyring "${prefix}${ring}" \
+               --with-colons --list-keys "$FPR" 2>/dev/null | grep '^pub:' | head -n1) || true
+    [ -n "$line" ] || { echo missing; return; }
+    validity=$(printf '%s' "$line" | cut -d: -f2)
+    case "$validity" in
+        e) echo expired ;;
+        r) echo revoked ;;
+        *) echo valid ;;
+    esac
+}
+
+# True if a key_status() result ($1) is good enough to actually attempt a
+# gpgv check with. "valid" and "expired" both qualify - key expiry is a
+# lifecycle/policy signal (the owner should have renewed it by now), not a
+# cryptographic weakness, and gpgv itself doesn't refuse to verify a
+# signature made with an expired key (confirmed on a real key: a real,
+# currently-published distro signing key reported "expired" via
+# --list-keys, yet a manual "gpgv --keyring ..." against it still printed
+# "Good signature"). "revoked" never qualifies, regardless of context -
+# revocation is the key owner's own explicit assertion that the key must
+# never be trusted again, for anything. Recognition (known_key_label()/
+# the "is this key already trusted" checks) also treats "expired" as
+# recognized, same as this predicate - trustedkeys.gpg membership is the
+# durable trust signal (matching KNOWN_KEYS, which never re-checks
+# expiry at all); --untrust-key is the deliberate way to withdraw trust,
+# not letting a self-declared validity window lapse. Still, "revoked"
+# never counts as recognized either, forcing the normal unrecognized-key
+# consent flow again.
+key_material_usable() {
+    case "$1" in
+        valid|expired) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# One-line transparency note, shared by every key_material_usable() call
+# site that just accepted an expired key - so a user always sees
+# explicitly that the key used for this check has expired, even though
+# the crypto check itself still ran (see key_material_usable()'s own
+# header comment for why expiry doesn't block verification here).
+warn_key_expired() {
+    warn "$(gettext "this key has expired - the signature check below still runs, but an expired key is worth confirming independently before you decide to trust it")"
+    status_out "KEY_EXPIRED"
+}
+
+# $FPR is already recognized+usable via an expired copy sitting in
+# $TRUSTED_GPG - tries once to find a renewed (no-longer-expired) copy
+# from a keyserver before falling back to that existing local copy. A
+# key's expiry lives in its own self-signature (RFC 4880), not the key
+# material itself, so the owner can renew it (extend the expiry, same
+# fingerprint) and republish without the identity being fetched ever
+# changing - a plain fingerprint fetch can legitimately return a
+# strictly better copy of the SAME already-trusted key. Silent on
+# failure or "nothing better available" (the expected, common case, not
+# an error) - only logs when a genuine renewal was found and applied.
+# No separate consent needed: trust in this exact fingerprint was
+# already established: this only refreshes ITS OWN expiry metadata, not
+# recognition of a new identity.
+try_renew_expired_key() {
+    local ks tmp_ring renew_args renew_out
+    # Local pubring.kbx first - no network needed, and a personal or
+    # small-circle signing key (confirmed on a real one: the key owner's
+    # own key, renewed locally via their real GPG setup) very often never
+    # gets published to a public keyserver at all, so the fetch loop
+    # below would never find such a renewal on its own. Same bar as that
+    # loop's own check - just "a non-expired copy of this exact already-
+    # trusted fingerprint exists" - not requiring it be separately marked
+    # explicitly trusted there too: the fingerprint itself was already
+    # fully vetted (that's why it's in $TRUSTED_GPG at all), so this is a
+    # metadata refresh, not a new trust decision.
+    if [ "$(key_status "$PUBRING_KBX" "")" = valid ] && export_to_tmp_ring "$PUBRING_KBX" ""; then
+        if keep_in_trusted_gpg "$TMP_RING" "gnupg-ring:"; then
+            rm -f "$TMP_RING" "${TMP_RING}~"
+            TMP_RING=""
+            VERIFY_RING=$TRUSTED_GPG
+            log "$(gettext "this key's expiry was renewed - updated local copy automatically")"
+            status_out "KEY_RENEWED"
+            return 0
+        fi
+        rm -f "$TMP_RING" "${TMP_RING}~"
+        TMP_RING=""
+        # export_to_tmp_ring() pointed $VERIFY_RING at the tmp ring just
+        # removed above - restore the caller's own fallback (the still-
+        # expired but already-usable $TRUSTED_GPG copy) before falling
+        # through to the keyserver loop below.
+        VERIFY_RING=$TRUSTED_GPG
+    fi
+    for ks in "${KEYSERVERS[@]}"; do
+        log "$(eval_gettext "checking \${ks} for a renewed copy of this key...")"
+        tmp_ring=$(mktemp "$SESSION_TMPDIR/gnupg-ring.XXXXXXXXXX.gpg")
+        renew_args=(
+            --batch
+            --no-default-keyring
+            --keyring "gnupg-ring:${tmp_ring}"
+            # 5s, not the mandatory fetch loop's own 15s - this check is
+            # optional (a nice-to-have, not required for verification to
+            # proceed at all), so it's worth capping the worst-case
+            # no-network delay (3 keyservers) at ~15s instead of ~45s. 5s
+            # is still plenty of headroom for a real, working connection,
+            # even a slow one.
+            --keyserver-options timeout=5,import-clean,import-minimal
+            --keyserver "$ks"
+            # "0x" prefix: unambiguous "this is a Key ID/fingerprint" per
+            # the HKP convention, whether $FPR is a full fingerprint or
+            # (a v3 signature's) bare 16-hex Key ID - some keyservers can
+            # otherwise treat a bare hex string as a looser search term.
+            --receive-keys "0x$FPR"
+        )
+        debug_cmd gpg "${renew_args[@]}"
+        set +e
+        renew_out=$(gpg "${renew_args[@]}" 2>&1)
+        set -e
+        [ "$DEBUG" -eq 1 ] && printf '%s\n' "$renew_out" >&2
+        if [ "$(key_status "$tmp_ring" "gnupg-ring:")" = valid ] && keep_in_trusted_gpg "$tmp_ring" "gnupg-ring:"; then
+            rm -f "$tmp_ring" "${tmp_ring}~"
+            log "$(gettext "this key's expiry was renewed - updated local copy automatically")"
+            status_out "KEY_RENEWED"
+            return 0
+        fi
+        rm -f "$tmp_ring" "${tmp_ring}~"
+    done
+    # No renewal found anywhere (or a keyserver was simply unreachable -
+    # this message doesn't distinguish the two, since both lead to the
+    # exact same safe outcome: continue with the existing, still
+    # cryptographically usable expired copy). Not a warning - this is the
+    # expected, common case, not a problem - but worth a clear closing
+    # line so "why did this pause for a few seconds" and "was a network
+    # lookup even attempted" are never a mystery. --debug shows the raw
+    # per-keyserver attempts/errors for anyone who wants that detail.
+    log "$(gettext "no renewal found - continuing with the existing (expired) key")"
+    return 1
+}
+
+# Turns gpg --with-colons output (pub:/fpr:/uid: records) into one line
+# per primary key: FPR|VALIDITY|UID|EXPIRE (EXPIRE is a raw Unix epoch,
+# empty if unset). Shared by --list-trusted-keys and --inspect-key-file.
+parse_colon_key_listing() {
+    awk -F: '
+        $1 == "pub" {
+            if (fpr != "") print fpr "|" vstr "|" uid "|" expire
+            fpr=""; uid=""
+            if ($2 == "e") vstr = "expired"
+            else if ($2 == "r") vstr = "revoked"
+            else vstr = "valid"
+            expire = $7
+            next
+        }
+        $1 == "fpr" && fpr == "" { fpr = $10 }
+        $1 == "uid" && uid == "" { uid = $10 }
+        END { if (fpr != "") print fpr "|" vstr "|" uid "|" expire }
+    '
+}
+
+# When $1 is a bare 16-hex Key ID (not a full fingerprint), looks up
+# whether keyring $2 (prefix $3) already contains a key whose fingerprint
+# ends in it - a Key ID is defined (RFC 4880) as the low-order 64 bits of
+# the fingerprint, so a suffix match is exact, not heuristic. Reuses
+# parse_colon_key_listing() (never a risky "gpg --list-keys <term>"
+# search - a full, unfiltered listing matched by exact string comparison,
+# the same already-safe pattern export_trusted_keys()/import_trusted_keys()
+# use). Echoes that key's real fingerprint and returns 0 only if EXACTLY
+# one match is found; returns 1 (no output) for zero or more-than-one
+# match - ambiguity here just means "couldn't confirm a safe local
+# upgrade," falling through to the normal recognized/fetch flow rather
+# than guessing which key is the real one.
+find_fpr_by_keyid() {
+    local keyid=$1 ring=$2 prefix=$3 matches count
+    [ -f "$ring" ] || return 1
+    matches=$(gpg --batch --no-default-keyring --keyring "${prefix}${ring}" \
+                   --with-colons --list-keys 2>/dev/null \
+              | parse_colon_key_listing \
+              | awk -F'|' -v kid="$keyid" '$1 ~ kid"$" {print $1}') || true
+    # grep -c exits 1 (not just an empty count) when nothing matches - see
+    # the identical guard in verify_iso()'s own post-fetch re-derivation.
+    count=$(printf '%s\n' "$matches" | grep -c .) || true
+    [ "$count" -eq 1 ] || return 1
+    printf '%s' "$matches"
+}
+
+# Reads FPR|VALIDITY|UID|EXPIRE (parse_colon_key_listing's output) and
+# re-prints as FPR|VALIDITY|UID|KNOWN|EXPIRE, KNOWN="known" if on
+# KNOWN_KEYS, else empty. Shared by --list-trusted-keys and --inspect-key-file.
+add_known_flag() {
+    while IFS='|' read -r line_fpr line_vstr line_uid line_expire; do
+        if known_key_label "$line_fpr" >/dev/null 2>&1; then
+            printf '%s|%s|%s|known|%s\n' "$line_fpr" "$line_vstr" "$line_uid" "$line_expire"
+        else
+            printf '%s|%s|%s||%s\n' "$line_fpr" "$line_vstr" "$line_uid" "$line_expire"
+        fi
+    done
+}
+
+# True if a gpg --with-colons stream (from --show-keys) contains a
+# secret-key packet (sec:/ssb: record) - used by --inspect-key-file and
+# --import-trusted-keys to refuse a file before running gpg --import on
+# it. Anchored to field 1, not a substring grep - a UID is free text and
+# could itself contain "sec:"/"ssb:".
+colon_stream_has_secret_key() {
+    awk -F: '$1=="sec"||$1=="ssb"{found=1} END{exit !found}'
+}
+
+# Reads a gpg --with-colons stream (pub:/fpr:/sub: records) and prints
+# "FPR|PRIMARY_FPR" for every fingerprint seen - a primary key maps to
+# itself, a subkey maps to its primary key. Lets a caller resolve a
+# subkey fingerprint passed where a primary key one was meant.
+build_fpr_primary_map() {
+    awk -F: '
+        $1 == "pub" { primary = "" }
+        $1 == "fpr" && primary == "" { primary = $10; print $10 "|" $10; next }
+        $1 == "fpr" { print $10 "|" primary }
+    '
+}
+
+# Resolves the keyserver list into $KEYSERVERS: --keyserver overrides
+# $KEYSERVER, which overrides DEFAULT_KEYSERVERS. Accepts a comma-
+# and/or space-separated list; an entry with no "scheme://" is assumed hkps://.
+resolve_keyservers() {
+    local raw
+    if [ -n "$KEYSERVER_OPT" ]; then
+        raw=$KEYSERVER_OPT
+    elif [ -n "${KEYSERVER:-}" ]; then
+        raw=$KEYSERVER
+    else
+        raw=""
+    fi
+    if [ -n "$raw" ]; then
+        IFS=$' \t\n' read -r -a KEYSERVERS <<< "${raw//,/ }"
+        for i in "${!KEYSERVERS[@]}"; do
+            case "${KEYSERVERS[$i]}" in
+                *://*) ;;
+                *) KEYSERVERS[$i]="hkps://${KEYSERVERS[$i]}" ;;
+            esac
+        done
+    else
+        KEYSERVERS=("${DEFAULT_KEYSERVERS[@]}")
+    fi
+}
+
+# --list-trusted-keys: one stable, parseable line per primary key currently in
+# $TRUSTED_GPG - FPR|VALIDITY|UID|KNOWN|EXPIRE (KNOWN is the literal word
+# "known" if this fingerprint is also on the hardcoded KNOWN_KEYS list,
+# empty otherwise - mainly for the GUI manager to warn that removing
+# such a key here won't make this tool stop recognizing it, since
+# KNOWN_KEYS recognition doesn't depend on $TRUSTED_GPG at all). No
+# $TRUSTED_GPG file at all -> no output (an empty list, not an error).
+list_trusted() {
+    setup_gnupg_homedir
+    trap cleanup RETURN
+    if [ -f "$TRUSTED_GPG" ]; then
+        debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --with-colons --list-keys
+        gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" \
+            --with-colons --list-keys 2>/dev/null | parse_colon_key_listing | add_known_flag
+    fi
+    return 0
+}
+
+# --list-known-keys: dumps the hardcoded KNOWN_KEYS allow-list, offline,
+# independent of $TRUSTED_GPG.
+list_known_keys() {
+    printf '%s\n' "${KNOWN_KEYS[@]}"
+    return 0
+}
+
+# --list-keyservers: prints the resolved KEYSERVERS list this run would try.
+list_keyservers() {
+    resolve_keyservers
+    printf '%s\n' "${KEYSERVERS[@]}"
+    return 0
+}
+
+# --untrust-key=<fpr>: removes that fingerprint from $TRUSTED_GPG.
+untrust_key() {
+    setup_gnupg_homedir
+    trap cleanup RETURN
+    FPR=$UNTRUST_KEY
+    [ -f "$TRUSTED_GPG" ] && [ "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" != missing ] \
+        || die "$(eval_gettext "'\${UNTRUST_KEY}' is not in \${TRUSTED_GPG}")" || return 1
+    debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY"
+    if out=$(gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY" 2>&1); then
+        rm -f "${TRUSTED_GPG}~"
+        log "$(eval_gettext "removed \${UNTRUST_KEY} from \${TRUSTED_GPG}")"
+    else
+        rm -f "${TRUSTED_GPG}~"
+        # `|| return 1`: under `set -e`, a failing die() (LIB_MODE=1) would
+        # otherwise abort the whole process instead of unwinding via return.
+        die "$(eval_gettext "could not remove '\${UNTRUST_KEY}' from \${TRUSTED_GPG}: \${out}")" || return 1
+    fi
+    return 0
+}
+
+# --export-trusted-keys=<path> [FPR...]: exports keys from $TRUSTED_GPG
+# to <path>, ASCII-armored. Zero fingerprints means every key. A
+# requested fingerprint not found is a warning, not a hard failure -
+# only an empty final set dies. Overwrites <path> unconditionally.
+export_trusted_keys() {
+    local FPR_MAP WANTED_FPRS raw fpr resolved sub_fpr primary_fpr ERR_FILE ERR EXPORTED_COUNT
+    setup_gnupg_homedir
+    trap cleanup RETURN
+    [ -f "$TRUSTED_GPG" ] || die "$(eval_gettext "no trusted keys saved yet (\${TRUSTED_GPG} doesn't exist)")" || return 1
+    FPR_MAP=$(gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" \
+        --with-colons --list-keys 2>/dev/null | build_fpr_primary_map)
+    WANTED_FPRS=()
+    if [ "${#EXPORT_TRUSTED_KEYS_FPRS[@]}" -eq 0 ]; then
+        # No fingerprints given - every primary key, deduplicated.
+        while IFS='|' read -r sub_fpr primary_fpr; do
+            [ -n "$sub_fpr" ] && [ "$sub_fpr" = "$primary_fpr" ] && WANTED_FPRS+=("$primary_fpr")
+        done <<< "$FPR_MAP"
+    else
+        for raw in "${EXPORT_TRUSTED_KEYS_FPRS[@]}"; do
+            fpr=$(printf '%s' "$raw" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')
+            resolved=$(awk -F'|' -v want="$fpr" '$1==want{print $2; exit}' <<< "$FPR_MAP")
+            if [ -z "$resolved" ]; then
+                log "$(eval_gettext "warning: fingerprint '\${fpr}' not found in \${TRUSTED_GPG}, skipping")"
+            else
+                [ "$resolved" != "$fpr" ] \
+                    && log "$(eval_gettext "note: '\${fpr}' is a subkey - resolved to its primary key '\${resolved}'")"
+                # Dedup: same primary may be requested via its own fpr and a subkey's.
+                if ! printf '%s\n' "${WANTED_FPRS[@]-}" | grep -qxF "$resolved"; then
+                    WANTED_FPRS+=("$resolved")
+                fi
+            fi
+        done
+    fi
+    [ "${#WANTED_FPRS[@]}" -gt 0 ] || die "$(gettext "no matching trusted key(s) to export")" || return 1
+    debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" \
+        --armor --export-options export-clean --export "${WANTED_FPRS[@]}"
+    ERR_FILE=$(mktemp "$SESSION_TMPDIR/export-err.XXXXXXXXXX")
+    if ! gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" \
+             --armor --export-options export-clean --export "${WANTED_FPRS[@]}" \
+             >"$EXPORT_TRUSTED_KEYS" 2>"$ERR_FILE"; then
+        ERR=$(cat "$ERR_FILE")
+        rm -f "$ERR_FILE"
+        die "$(eval_gettext "could not export to '\${EXPORT_TRUSTED_KEYS}': \${ERR}")" || return 1
+    fi
+    rm -f "$ERR_FILE"
+    EXPORTED_COUNT=${#WANTED_FPRS[@]}
+    log "$(eval_gettext "exported \${EXPORTED_COUNT} key(s) to \${EXPORT_TRUSTED_KEYS}")"
+    return 0
+}
+
+# --inspect-key-file=<path>: read-only inspection of an arbitrary
+# external key file via gpg --show-keys - never imports, never touches
+# any keyring/agent. One output line per primary key found; refuses if
+# the file contains secret key material.
+inspect_key_file() {
+    local SHOW_OUT
+    { [ -f "$INSPECT_KEY_FILE" ] && [ -r "$INSPECT_KEY_FILE" ]; } \
+        || die "$(eval_gettext "cannot read '\${INSPECT_KEY_FILE}'")" || return 1
+    debug_cmd gpg --batch --with-colons --show-keys "$INSPECT_KEY_FILE"
+    SHOW_OUT=$(gpg --batch --with-colons --show-keys "$INSPECT_KEY_FILE" 2>&1) \
+        || die "$(eval_gettext "'\${INSPECT_KEY_FILE}' does not look like a valid OpenPGP key file: \${SHOW_OUT}")" || return 1
+    printf '%s\n' "$SHOW_OUT" | colon_stream_has_secret_key \
+        && { die "$(eval_gettext "'\${INSPECT_KEY_FILE}' contains private/secret key material - refusing to treat it as a public trusted-signing key")" || return 1; }
+    printf '%s\n' "$SHOW_OUT" | parse_colon_key_listing | add_known_flag
+    return 0
+}
+
+# True if $FPR has marginal/full/ultimate ownertrust in pubring.kbx.
+# Ownertrust lives in trustdb.gpg, scoped to the whole GNUPGHOME, so this
+# deliberately queries the real ~/.gnupg (read-only) rather than our
+# isolated one. Merely being present in pubring.kbx does NOT count - only
+# an explicit trust assignment (Seahorse, or `gpg --edit-key ... trust`) does.
+pubring_key_explicitly_trusted() {
+    local line trust
+    [ -f "$PUBRING_KBX" ] || return 1
+    debug_cmd env "GNUPGHOME=$HOME/.gnupg" gpg --batch --no-default-keyring --keyring "$PUBRING_KBX" --with-colons --list-keys "$FPR"
+    line=$(env "GNUPGHOME=$HOME/.gnupg" gpg --batch --no-default-keyring \
+               --keyring "$PUBRING_KBX" --with-colons --list-keys "$FPR" \
+               2>/dev/null | grep '^pub:' | head -n1) || true
+    [ -n "$line" ] || return 1
+    trust=$(printf '%s' "$line" | cut -d: -f9)
+    case "$trust" in
+        m|f|u) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Exports $FPR out of keyring $1 (prefix $2, see key_status) into a fresh
+# legacy-format keyring gpgv can read, pointing VERIFY_RING at it. Returns
+# non-zero, leaving VERIFY_RING untouched, if the export/import fails, so
+# the caller can fall back to the keyserver.
+#
+# --export-options is export-clean only, NOT export-clean,export-minimal:
+# export-minimal drops an expired subkey entirely, even when its
+# signature over the ISO predates its own expiry and would otherwise
+# still verify fine.
+export_to_tmp_ring() {
+    local ring=$1 prefix=$2 tmp out
+    tmp=$(mktemp "$SESSION_TMPDIR/gnupg-ring.XXXXXXXXXX.gpg")
+    local EXPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "${prefix}${ring}"
+        --export-options export-clean
+        --export "$FPR"
+    )
+    local IMPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "gnupg-ring:${tmp}"
+        --import-options import-clean,import-minimal
+        --import
+    )
+    debug_cmd gpg "${EXPORT_ARGS[@]}"
+    debug_cmd gpg "${IMPORT_ARGS[@]}"
+    if out=$( { gpg "${EXPORT_ARGS[@]}" | gpg "${IMPORT_ARGS[@]}"; } 2>&1 ); then
+        TMP_RING=$tmp
+        VERIFY_RING=$tmp
+        return 0
+    fi
+    log "$(eval_gettext "warning: could not export key from \${ring}: \${out}")"
+    rm -f "$tmp" "${tmp}~"
+    return 1
+}
+
+# Exports $FPR out of keyring $1 (prefix $2) into TRUSTED_GPG. Used both
+# after a fresh fetch (--keep/--keep-key) and after --trust-key verifies
+# an unrecognized key successfully. export-clean only - see
+# export_to_tmp_ring()'s comment for why.
+keep_in_trusted_gpg() {
+    local ring=$1 prefix=$2 rc status_file
+    local EXPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "${prefix}${ring}"
+        --export-options export-clean
+        --export "$FPR"
+    )
+    status_file=$(mktemp "$SESSION_TMPDIR/import-status.XXXXXXXXXX")
+    local IMPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "gnupg-ring:${TRUSTED_GPG}"
+        --status-fd 3
+        --import-options import-clean,import-minimal
+        --import
+    )
+    debug_cmd gpg "${EXPORT_ARGS[@]}"
+    debug_cmd gpg "${IMPORT_ARGS[@]}"
+    out=$( { gpg "${EXPORT_ARGS[@]}" | gpg "${IMPORT_ARGS[@]}" 3>"$status_file"; } 2>&1 )
+    rc=$?
+    # IMPORT_RES status-fd fields (never localized, unlike gpg's human
+    # text): count, no_user_id, imported, imported_rsa, unchanged, ...
+    STATUS_LINES=$(cat "$status_file" 2>/dev/null)
+    rm -f "$status_file"
+    # $TRUSTED_GPG is persistent, not a throwaway temp file - clean up
+    # gpg's own "~" backup of it here.
+    rm -f "${TRUSTED_GPG}~"
+    return "$rc"
+}
+
+# --import-trusted-keys=<path> [FPR...]: imports keys from an arbitrary
+# external key file into $TRUSTED_GPG. Same trailing-fingerprint/
+# normalization/subkey-resolution behavior as --export-trusted-keys.
+#
+# Secret key material is refused via --show-keys BEFORE any gpg --import
+# call - gpg --import of a secret key writes the actual private key
+# material into $GNUPGHOME/private-keys-v1.d/ regardless of which
+# --keyring the public parts targeted, which on a shared gpg-agent can
+# leak it outside this script's own throwaway GNUPGHOME. --show-keys
+# never imports or touches any agent/keyring, so checking with it first
+# and refusing outright is what keeps this safe.
+#
+# PROCESSED/IMPORTED/CHANGED/UNCHANGED_COUNT are real globals, not just
+# status_out() tags - a caller that sourced this file reads them
+# directly after calling import_trusted_keys().
+import_trusted_keys() {
+    local FPR_MAP WANTED_FPRS raw fpr resolved sub_fpr primary_fpr SHOW_OUT
+    setup_gnupg_homedir
+    trap cleanup RETURN
+    { [ -f "$IMPORT_TRUSTED_KEYS" ] && [ -r "$IMPORT_TRUSTED_KEYS" ]; } \
+        || die "$(eval_gettext "cannot read '\${IMPORT_TRUSTED_KEYS}'")" || return 1
+    debug_cmd gpg --batch --with-colons --show-keys "$IMPORT_TRUSTED_KEYS"
+    SHOW_OUT=$(gpg --batch --with-colons --show-keys "$IMPORT_TRUSTED_KEYS" 2>&1) \
+        || die "$(eval_gettext "'\${IMPORT_TRUSTED_KEYS}' does not look like a valid OpenPGP key file: \${SHOW_OUT}")" || return 1
+    printf '%s\n' "$SHOW_OUT" | colon_stream_has_secret_key \
+        && { die "$(eval_gettext "'\${IMPORT_TRUSTED_KEYS}' contains private/secret key material - refusing to import it as a public trusted-signing key")" || return 1; }
+    FPR_MAP=$(printf '%s\n' "$SHOW_OUT" | build_fpr_primary_map)
+    [ -n "$FPR_MAP" ] || die "$(eval_gettext "no OpenPGP keys found in '\${IMPORT_TRUSTED_KEYS}'")" || return 1
+    # Only reached once the file is confirmed to contain no secret key material.
+    TMP_RING=$(mktemp "$SESSION_TMPDIR/import-ring.XXXXXXXXXX.gpg")
+    # import-clean only, not import-clean,import-minimal: this is raw
+    # externally-supplied input, not gpg's own sanitized re-export.
+    debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TMP_RING}" \
+        --import-options import-clean --import "$IMPORT_TRUSTED_KEYS"
+    gpg --batch --no-default-keyring --keyring "gnupg-ring:${TMP_RING}" \
+        --import-options import-clean --import "$IMPORT_TRUSTED_KEYS" >/dev/null 2>&1 \
+        || die "$(eval_gettext "could not import '\${IMPORT_TRUSTED_KEYS}' into a scratch keyring")" || return 1
+    WANTED_FPRS=()
+    if [ "${#IMPORT_TRUSTED_KEYS_FPRS[@]}" -eq 0 ]; then
+        while IFS='|' read -r sub_fpr primary_fpr; do
+            [ -n "$sub_fpr" ] && [ "$sub_fpr" = "$primary_fpr" ] && WANTED_FPRS+=("$primary_fpr")
+        done <<< "$FPR_MAP"
+    else
+        for raw in "${IMPORT_TRUSTED_KEYS_FPRS[@]}"; do
+            fpr=$(printf '%s' "$raw" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')
+            resolved=$(awk -F'|' -v want="$fpr" '$1==want{print $2; exit}' <<< "$FPR_MAP")
+            if [ -z "$resolved" ]; then
+                log "$(eval_gettext "warning: fingerprint '\${fpr}' not found in '\${IMPORT_TRUSTED_KEYS}', skipping")"
+            else
+                [ "$resolved" != "$fpr" ] \
+                    && log "$(eval_gettext "note: '\${fpr}' is a subkey - resolved to its primary key '\${resolved}'")"
+                if ! printf '%s\n' "${WANTED_FPRS[@]-}" | grep -qxF "$resolved"; then
+                    WANTED_FPRS+=("$resolved")
+                fi
+            fi
+        done
+    fi
+    [ "${#WANTED_FPRS[@]}" -gt 0 ] || die "$(gettext "no matching key(s) to import")" || return 1
+    # Three outcomes per key, via IMPORT_RES's status-fd fields: field 5
+    # ("imported")=1 only for a genuinely new primary key; field 7
+    # ("unchanged")=1 only for a byte-identical re-import; both 0 means
+    # the key already existed but gained something (new UID/subkey/sig).
+    IMPORTED=0
+    CHANGED=0
+    UNCHANGED_COUNT=0
+    for FPR in "${WANTED_FPRS[@]}"; do
+        if keep_in_trusted_gpg "$TMP_RING" "gnupg-ring:"; then
+            if [ "$(status_field IMPORT_RES 5)" = "1" ]; then
+                IMPORTED=$((IMPORTED + 1))
+            elif [ "$(status_field IMPORT_RES 7)" = "1" ]; then
+                UNCHANGED_COUNT=$((UNCHANGED_COUNT + 1))
+            else
+                CHANGED=$((CHANGED + 1))
+            fi
+        else
+            log "$(eval_gettext "warning: could not import '\${FPR}' into \${TRUSTED_GPG}")"
+        fi
+    done
+    PROCESSED=$((IMPORTED + CHANGED + UNCHANGED_COUNT))
+    [ "$PROCESSED" -gt 0 ] || die "$(eval_gettext "no key(s) were actually imported into \${TRUSTED_GPG}")" || return 1
+    # TRANSLATORS: this exact line is also parsed by the GUI's own
+    # --status-fd tag right after it (IMPORT_SUMMARY, never localized) -
+    # translate freely, the numbers/word order can differ per language,
+    # only this line's own display text changes.
+    log "$(eval_gettext "\${PROCESSED} key(s) processed: \${IMPORTED} new, \${CHANGED} updated, \${UNCHANGED_COUNT} unchanged")"
+    status_out "IMPORT_SUMMARY $PROCESSED $IMPORTED $CHANGED $UNCHANGED_COUNT"
+    return 0
+}
+
+# Exports $FPR out of $VERIFY_RING into $1, classic keyring format - lets
+# a caller (the GUI) pass that path back in as --from-ring later, reusing
+# the fetched copy instead of hitting the keyserver again. Best-effort.
+export_key_to() {
+    local dest=$1 rc
+    local EXPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "gnupg-ring:${VERIFY_RING}"
+        --export-options export-clean
+        --export "$FPR"
+    )
+    local IMPORT_ARGS=(
+        --batch
+        --no-default-keyring
+        --keyring "gnupg-ring:${dest}"
+        --import-options import-clean,import-minimal
+        --import
+    )
+    debug_cmd gpg "${EXPORT_ARGS[@]}"
+    debug_cmd gpg "${IMPORT_ARGS[@]}"
+    gpg "${EXPORT_ARGS[@]}" 2>/dev/null | gpg "${IMPORT_ARGS[@]}" >/dev/null 2>&1
+    rc=$?
+    rm -f "${dest}~"
+    return "$rc"
+}
+
+# $ISO's basename ends in ".$1" (one of PLAIN_CHECKSUM_SUFFIXES). Two
+# cases, checked in this order: A) the checksum file itself is signed
+# (e.g. <iso>.sha512.sig) - handed to try_checksum_fallback() via the
+# --checksum-file/--checksum-algo override mechanism. B) unsigned, but
+# the named ISO has its own real direct signature - use that instead,
+# the checksum file's content itself is never trusted. Neither found -
+# refuses outright.
+resolve_plain_checksum_as_iso() {
+    local suffix=$1 candidate sigext iso_base candidate_base resolved_base candidate_sig_base
+
+    candidate=${ISO%."$suffix"}
+    if [ ! -f "$candidate" ]; then
+        status_out "PLAIN_CHECKSUM_TARGET_MISSING"
+        iso_base=$(basename "$ISO")
+        candidate_base=$(basename "$candidate")
+        # Emitted even on this failure path so a caller like the GUI still
+        # learns the intended ISO name, instead of the raw ".sha512"-suffixed one.
+        status_out "RESOLVED_ISO $candidate_base"
+        RESOLVED_ISO=$candidate_base
+        die "$(eval_gettext "'\${iso_base}' is a checksum file for '\${candidate_base}', but that file isn't present here - nothing to verify.")" || return 1
+    fi
+
+    for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+        if [ -r "${ISO}.${sigext}" ]; then
+            CHECKSUM_FILE_OVERRIDE=$ISO
+            CHECKSUM_ALGO_OVERRIDE="${suffix}sum"
+            ISO=$candidate
+            NO_DIRECT_SIG=1
+            resolved_base=$(basename "$ISO")
+            log "$(eval_gettext "resolved ISO: \${resolved_base}")"
+            status_out "RESOLVED_ISO $resolved_base"
+            RESOLVED_ISO=$resolved_base
+            return 0
+        fi
+    done
+
+    for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+        if [ -r "${candidate}.${sigext}" ]; then
+            iso_base=$(basename "$ISO")
+            candidate_sig_base="$(basename "$candidate").${sigext}"
+            log "$(eval_gettext "'\${iso_base}' is an unsigned per-file checksum - not used for verification. Using '\${candidate_sig_base}' instead, the ISO's own direct signature.")"
+            ISO=$candidate
+            SIG="${candidate}.${sigext}"
+            NO_DIRECT_SIG=0
+            resolved_base=$(basename "$ISO")
+            log "$(eval_gettext "resolved ISO: \${resolved_base}")"
+            status_out "RESOLVED_ISO $resolved_base"
+            RESOLVED_ISO=$resolved_base
+            return 0
+        fi
+    done
+
+    status_out "PLAIN_CHECKSUM_NOTHING_VERIFIABLE"
+    iso_base=$(basename "$ISO")
+    candidate_base=$(basename "$candidate")
+    status_out "RESOLVED_ISO $candidate_base"
+    RESOLVED_ISO=$candidate_base
+    die "$(eval_gettext "'\${iso_base}' is an unsigned checksum file, and '\${candidate_base}' has no direct .sig/.asc/.gpg/.sign of its own either - nothing here can be cryptographically verified.")" || return 1
+}
+
+# Echoes the line in checksum file $1 that names basename $2 exactly, or
+# returns non-zero. Splits on the first space only (mode char, then
+# filename) and compares by plain string equality, not regex/substring -
+# real checksum files list decoy entries too (e.g. Debian's own
+# "<iso>.log"/"<iso>.packages"/"<iso>.contents").
+# If $ISO is itself a known checksum-listing filename (e.g. someone
+# pointed this tool at SHA256SUMS.gpg directly), gpgv would still
+# "verify" it without ever checking an actual ISO's hash - redirect to
+# the one ISO it mentions that's unambiguously present in the same
+# directory, or refuse with specific guidance otherwise.
+resolve_checksum_listing_as_iso() {
+    local dir line hash rest mode fname iso_candidates=() hashcmd="" algo_entry sigfile sigext \
+        iso_base algo sigfile_base resolved_base candidates_joined
+
+    # Resolve algo/signature-file info up front for the two failure
+    # branches below to log. Not logged in the success (1-candidate) case -
+    # try_checksum_fallback logs the same two lines right after.
+    for algo_entry in "${CHECKSUM_FILES[@]}"; do
+        if [ "$(basename "$ISO")" = "${algo_entry%%|*}" ]; then
+            hashcmd=${algo_entry#*|}
+            break
+        fi
+    done
+    sigfile=""
+    for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+        [ -r "${ISO}.${sigext}" ] && { sigfile="${ISO}.${sigext}"; break; }
+    done
+
+    dir=$(dirname "$ISO")
+    while IFS= read -r line || [ -n "$line" ]; do
+        # BSD/tag-style line (e.g. Fedora's "ALGO (name) = hash") - same
+        # format find_checksum_line() recognizes. Opportunistically fills
+        # in $hashcmd for the failure-branch logging below when this
+        # listing's own name isn't one of the fixed $CHECKSUM_FILES
+        # entries (so $hashcmd is still unset at this point).
+        if [[ $line =~ ^([A-Za-z0-9-]+)\ \((.+)\)\ =\ ([0-9a-fA-F]+)$ ]]; then
+            fname=${BASH_REMATCH[2]}
+            [ -n "$hashcmd" ] || hashcmd="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')sum"
+            case "$fname" in
+                *.iso) [ -r "$dir/$fname" ] && iso_candidates+=("$fname") ;;
+            esac
+            continue
+        fi
+        hash=${line%% *}
+        rest=${line#* }
+        mode=${rest:0:1}
+        fname=${rest:1}
+        case "$mode" in
+            ' '|'*') ;;
+            *) continue ;;
+        esac
+        case "$fname" in
+            *.iso) [ -r "$dir/$fname" ] && iso_candidates+=("$fname") ;;
+        esac
+    done < "$ISO"
+
+    case "${#iso_candidates[@]}" in
+        0)
+            iso_base=$(basename "$ISO")
+            algo=${hashcmd%sum}
+            log "$(eval_gettext "using checksum file: \${iso_base} (\${algo})")"
+            status_out "CHECKSUM_FILE $iso_base ($algo)"
+            CHECKSUM_INFO="$iso_base ($algo)"
+            if [ -n "$sigfile" ]; then
+                sigfile_base=$(basename "$sigfile")
+                log "$(eval_gettext "checksum file signature: \${sigfile_base}")"
+                status_out "CHECKSUM_SIG_INFO $sigfile_base"
+                CHECKSUM_SIG_INFO=$sigfile_base
+            fi
+            status_out "CHECKSUM_LISTING_AMBIGUOUS"
+            die "$(eval_gettext "'\${iso_base}' is a checksum listing (it can cover many ISOs), not a single ISO to verify directly - none of the .iso files it mentions are present in '\${dir}'. Point this tool at the actual .iso file instead (its checksum/signature will be found and checked automatically).")" || return 1
+            ;;
+        1)
+            CHECKSUM_FILE_OVERRIDE=$ISO
+            ISO="$dir/${iso_candidates[0]}"
+            NO_DIRECT_SIG=1
+            SIG="${ISO}.sig"
+            # Lets the GUI show the actual resolved ISO instead of the
+            # checksum listing's own name in its result heading.
+            resolved_base=$(basename "$ISO")
+            log "$(eval_gettext "resolved ISO: \${resolved_base}")"
+            status_out "RESOLVED_ISO $resolved_base"
+            RESOLVED_ISO=$resolved_base
+            ;;
+        *)
+            iso_base=$(basename "$ISO")
+            algo=${hashcmd%sum}
+            log "$(eval_gettext "using checksum file: \${iso_base} (\${algo})")"
+            status_out "CHECKSUM_FILE $iso_base ($algo)"
+            CHECKSUM_INFO="$iso_base ($algo)"
+            if [ -n "$sigfile" ]; then
+                sigfile_base=$(basename "$sigfile")
+                log "$(eval_gettext "checksum file signature: \${sigfile_base}")"
+                status_out "CHECKSUM_SIG_INFO $sigfile_base"
+                CHECKSUM_SIG_INFO=$sigfile_base
+            fi
+            status_out "CHECKSUM_LISTING_AMBIGUOUS"
+            candidates_joined="${iso_candidates[*]}"
+            die "$(eval_gettext "'\${iso_base}' is a checksum listing covering multiple ISOs present in '\${dir}': \${candidates_joined} - point this tool at the specific .iso file you want to check instead.")" || return 1
+            ;;
+    esac
+}
+
+# Finds the line in checksum file $1 that names basename $2 exactly, or
+# returns non-zero. Recognizes both GNU coreutils style ("<hash>  <name>"
+# or "<hash> *<name>") and BSD/tag style ("ALGO (<name>) = <hash>", e.g.
+# Fedora's convention) - real checksum files list decoy entries too (e.g.
+# Debian's own "<iso>.log"/"<iso>.packages"/"<iso>.contents"). Sets
+# MATCHED_LINE on success; for a BSD-tag match also sets FOUND_HASHCMD
+# (e.g. "sha256sum") from the line's own algorithm token - both left
+# untouched for a GNU-style match, since that caller already knows its
+# hashcmd from $CHECKSUM_FILES. Sets globals directly rather than
+# echoing to stdout, so callers must NOT invoke this via "$(...)" command
+# substitution - that forks a subshell and the side effects would be lost.
+find_checksum_line() {
+    local file=$1 target=$2 line rest mode fname algo
+    while IFS= read -r line || [ -n "$line" ]; do
+        if [[ $line =~ ^([A-Za-z0-9-]+)\ \((.+)\)\ =\ ([0-9a-fA-F]+)$ ]]; then
+            if [ "${BASH_REMATCH[2]}" = "$target" ]; then
+                algo=$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')
+                FOUND_HASHCMD="${algo}sum"
+                MATCHED_LINE=$line
+                return 0
+            fi
+            continue
+        fi
+        rest=${line#* }
+        mode=${rest:0:1}
+        fname=${rest:1}
+        case "$mode" in
+            ' '|'*') ;;
+            *) continue ;;
+        esac
+        if [ "$fname" = "$target" ]; then
+            MATCHED_LINE=$line
+            return 0
+        fi
+    done < "$file"
+    return 1
+}
+
+# Searches $ISO's own directory for a known, signed checksum-listing
+# file that names $ISO by its exact basename (or uses the
+# --checksum-file/--checksum-algo override instead of searching),
+# verifies that checksum file's own signature by re-invoking this same
+# script as a subprocess, then verifies $ISO's own hash against the
+# matched line. Exits directly on success or either failure mode;
+# returns normally only if nothing applicable was found at all.
+try_checksum_fallback() {
+    local dir base candidates entry name hashcmd sigfile sigext glob \
+        match_line child_rc hash_rc tried_names=() plain_file \
+        name_base algo sigfile_base tried_joined
+
+    dir=$(dirname "$ISO")
+    base=$(basename "$ISO")
+
+    candidates=()
+    if [ -n "$CHECKSUM_FILE_OVERRIDE" ]; then
+        hashcmd="$CHECKSUM_ALGO_OVERRIDE"
+        if [ -z "$hashcmd" ]; then
+            for entry in "${CHECKSUM_FILES[@]}"; do
+                if [ "$(basename "$CHECKSUM_FILE_OVERRIDE")" = "${entry%%|*}" ]; then
+                    hashcmd=${entry#*|}
+                    break
+                fi
+            done
+        fi
+        # Left empty for a clearsigned override - resolved per-line further
+        # down instead (a release-specific name has no fixed hashcmd).
+        if [ -z "$hashcmd" ] && ! is_clearsigned_file "$CHECKSUM_FILE_OVERRIDE"; then
+            # TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
+            die "$(eval_gettext "\${FLAG_CHECKSUM_ALGO} is required when \${FLAG_CHECKSUM_FILE} names a file not in the built-in list (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)")" || return 1
+        fi
+        candidates=("$CHECKSUM_FILE_OVERRIDE|$hashcmd")
+    else
+        for entry in "${CHECKSUM_FILES[@]}"; do
+            candidates+=("$dir/${entry%%|*}|${entry#*|}")
+        done
+        # Release-specific listing names (e.g. Fedora's "<spin>-<version>-
+        # <arch>-CHECKSUM") - hashcmd left empty, resolved per-line below.
+        for glob in "${CHECKSUM_FILE_GLOBS[@]}"; do
+            for name in "$dir"/$glob; do
+                [ -r "$name" ] && candidates+=("$name|")
+            done
+        done
+        # A plain per-ISO checksum with its own detached signature
+        # (openSUSE's own convention, e.g. "<iso>.sha256" + "<iso>.sha256.asc") -
+        # tried last, after every shared-listing shape, so "just point this
+        # at the bare ISO" auto-discovers it exactly like the classify_
+        # plain_checksum_signature_pair() two-argument shape does, without
+        # requiring the checksum file to be named explicitly. The loop
+        # below's own "[ -r "$name" ] || continue" skips whichever suffixes
+        # aren't actually present, same as every other candidate here.
+        for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+            candidates+=("$dir/${base}.${suffix}|${suffix}sum")
+        done
+    fi
+
+    for entry in "${candidates[@]}"; do
+        name=${entry%%|*}
+        hashcmd=${entry#*|}
+        [ -r "$name" ] || continue
+
+        if is_clearsigned_file "$name"; then
+            tried_names+=("$(basename "$name")")
+            plain_file=$(mktemp "$SESSION_TMPDIR/checksum-plain.XXXXXXXXXX")
+
+            CHILD_ARGS=(--verify-as-clearsigned-checksum-file --no-checksum-fallback "--extract-plaintext-to=$plain_file")
+            [ "$QUIET" -eq 1 ] && CHILD_ARGS+=(--quiet)
+            [ "$DEBUG" -eq 1 ] && CHILD_ARGS+=(--debug)
+            [ "$KEEP" -eq 1 ] && CHILD_ARGS+=(--keep)
+            [ -n "$EXPORT_KEY_TO" ] && CHILD_ARGS+=("--export-key-to=$EXPORT_KEY_TO")
+            [ -n "$KEYSERVER_OPT" ] && CHILD_ARGS+=("--keyserver=$KEYSERVER_OPT")
+            [ -n "$STATUS_FD" ] && CHILD_ARGS+=("--status-fd=$STATUS_FD")
+            if [ "$TRUST_KEY" -eq 1 ]; then
+                CHILD_ARGS+=(--trust-key)
+            elif [ "$ALLOW_UNKNOWN" -eq 1 ]; then
+                CHILD_ARGS+=(--allow-unrecognized-key)
+            fi
+
+            debug_cmd "$SELF" "${CHILD_ARGS[@]}" "$name"
+            set +e
+            CHILD_OUTPUT=$("$SELF" "${CHILD_ARGS[@]}" "$name" 2>&1)
+            child_rc=$?
+            set -e
+            printf '%s\n' "$CHILD_OUTPUT" >&2
+
+            if [ "$child_rc" -ne 0 ]; then
+                rm -f "$plain_file"
+                status_out "CHECKSUM_SIG_FAILED"
+                name_base=$(basename "$name")
+                die "$(eval_gettext "the checksum file '\${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror.")" || return 1
+            fi
+
+            # Only ever read $plain_file once $child_rc confirms the
+            # signature was GOOD - gpgv still writes tampered plaintext to
+            # --output even on a BAD signature, so this order is load-bearing.
+            find_checksum_line "$plain_file" "$base" || { rm -f "$plain_file"; continue; }
+            match_line=$MATCHED_LINE
+            rm -f "$plain_file"
+
+            name_base=$(basename "$name")
+            [ -n "$hashcmd" ] || hashcmd=$FOUND_HASHCMD
+            command -v "$hashcmd" >/dev/null 2>&1 || die "$(eval_gettext "checksum file '\${name_base}' uses an unsupported hash algorithm ('\${hashcmd}' not found)")" || return 1
+
+            algo=${hashcmd%sum}
+            log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
+            # "+sig" (status-tag/GUI-facing only, not the log() line above)
+            # flags that this listing carries its own inline signature -
+            # otherwise "(sha256)" looks identical to an unsigned listing.
+            # Not translatable prose, just a suffix on already-untranslated
+            # data, same as "(${algo})" itself.
+            status_out "CHECKSUM_FILE $name_base ($algo+sig)"
+            CHECKSUM_INFO="$name_base ($algo+sig)"
+            # No separate signature file to name - this listing is its own signature.
+            CHECKSUM_SIG_INFO=""
+
+            set +e
+            HASH_OUTPUT=$(cd "$dir" && printf '%s\n' "$match_line" | "$hashcmd" -c - 2>&1)
+            hash_rc=$?
+            set -e
+            printf '%s\n' "$HASH_OUTPUT" >&2
+
+            if [ "$hash_rc" -ne 0 ]; then
+                status_out "CHECKSUM_HASH_MISMATCH"
+                die "$(eval_gettext "'\${name_base}' is validly signed, but '\${base}' does not match the recorded \${algo} checksum - this download is likely corrupted, incomplete, or was tampered with after the checksum file was signed. Re-download the ISO, ideally from a different mirror. (The checksum/signature files themselves are fine - no need to re-fetch those.)")" || return 1
+            fi
+
+            log "$(gettext "OK - signature and checksum both verified")"
+            return 0
+        fi
+
+        sigfile=""
+        for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+            if [ -r "${name}.${sigext}" ]; then
+                sigfile="${name}.${sigext}"
+                break
+            fi
+        done
+        [ -n "$sigfile" ] || continue
+
+        tried_names+=("$(basename "$name")")
+
+        find_checksum_line "$name" "$base" || continue
+        match_line=$MATCHED_LINE
+
+        name_base=$(basename "$name")
+        algo=${hashcmd%sum}
+        log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
+        status_out "CHECKSUM_FILE $name_base ($algo)"
+        CHECKSUM_INFO="$name_base ($algo)"
+        sigfile_base=$(basename "$sigfile")
+        log "$(eval_gettext "checksum file signature: \${sigfile_base}")"
+        status_out "CHECKSUM_SIG_INFO $sigfile_base"
+        CHECKSUM_SIG_INFO=$sigfile_base
+
+        # --is-cached: skip the full verify/hash flow, just extract the
+        # checksum file's own signing key and report its cache status.
+        if [ "$IS_CACHED" -eq 1 ]; then
+            debug_cmd gpgv --status-fd 3 "$sigfile" /dev/null
+            run_gpgv_status "$sigfile" /dev/null
+            FPR=$(status_field ERRSIG 9)
+            [ -n "$FPR" ] || FPR=$(printf '%s' "$GPGV_OUTPUT" | grep -m1 -oE '[[:xdigit:]]{40}' || true)
+            [ -n "$FPR" ] || return 1
+            key_material_usable "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" && return 0
+            key_material_usable "$(key_status "$PUBRING_KBX" "")" && return 0
+            return 1
+        fi
+
+        CHILD_ARGS=(--verify-as-checksum-file --no-checksum-fallback)
+        [ "$QUIET" -eq 1 ] && CHILD_ARGS+=(--quiet)
+        [ "$DEBUG" -eq 1 ] && CHILD_ARGS+=(--debug)
+        [ "$KEEP" -eq 1 ] && CHILD_ARGS+=(--keep)
+        [ -n "$EXPORT_KEY_TO" ] && CHILD_ARGS+=("--export-key-to=$EXPORT_KEY_TO")
+        # Forward --keyserver: the child does its own independent fetch
+        # for the checksum file's signing key (a different key than the
+        # ISO's), so without this an override wouldn't reach it.
+        # ($KEYSERVER env var reaches it via inheritance already.)
+        [ -n "$KEYSERVER_OPT" ] && CHILD_ARGS+=("--keyserver=$KEYSERVER_OPT")
+        # Forward so the child's own status_out() tags reach the parent's captured output.
+        [ -n "$STATUS_FD" ] && CHILD_ARGS+=("--status-fd=$STATUS_FD")
+        if [ "$TRUST_KEY" -eq 1 ]; then
+            CHILD_ARGS+=(--trust-key)
+        elif [ "$ALLOW_UNKNOWN" -eq 1 ]; then
+            CHILD_ARGS+=(--allow-unrecognized-key)
+        fi
+
+        debug_cmd "$SELF" "${CHILD_ARGS[@]}" "$name" "$sigfile"
+        set +e
+        CHILD_OUTPUT=$("$SELF" "${CHILD_ARGS[@]}" "$name" "$sigfile" 2>&1)
+        child_rc=$?
+        set -e
+        printf '%s\n' "$CHILD_OUTPUT" >&2
+
+        if [ "$child_rc" -ne 0 ]; then
+            status_out "CHECKSUM_SIG_FAILED"
+            name_base=$(basename "$name")
+            die "$(eval_gettext "the checksum file '\${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror.")" || return 1
+        fi
+
+        set +e
+        HASH_OUTPUT=$(cd "$dir" && printf '%s\n' "$match_line" | "$hashcmd" -c - 2>&1)
+        hash_rc=$?
+        set -e
+        printf '%s\n' "$HASH_OUTPUT" >&2
+
+        if [ "$hash_rc" -ne 0 ]; then
+            status_out "CHECKSUM_HASH_MISMATCH"
+            name_base=$(basename "$name")
+            algo=${hashcmd%sum}
+            die "$(eval_gettext "'\${name_base}' is validly signed, but '\${base}' does not match the recorded \${algo} checksum - this download is likely corrupted, incomplete, or was tampered with after the checksum file was signed. Re-download the ISO, ideally from a different mirror. (The checksum/signature files themselves are fine - no need to re-fetch those.)")" || return 1
+        fi
+
+        log "$(gettext "OK - signature and checksum both verified")"
+        return 0
+    done
+
+    if [ -n "$CHECKSUM_FILE_OVERRIDE" ]; then
+        die "$(eval_gettext "'\${base}' is not listed in '\${CHECKSUM_FILE_OVERRIDE}'")" || return 1
+    elif [ "${#tried_names[@]}" -gt 0 ]; then
+        status_out "NO_CHECKSUM_LISTING_MATCH"
+        tried_joined="${tried_names[*]}"
+        die "$(eval_gettext "no signature file found for '\${base}', and none of the checksum-listing files in its directory (\${tried_joined}) contain an entry for it either")" || return 1
+    fi
+    # else: no checksum-listing files were present - fall through silently
+    # to the caller's own "cannot read signature file" die.
+    #
+    # Return 2 (never used as a real outcome elsewhere) as an unambiguous
+    # "not applicable, continue normally" sentinel, distinct from every
+    # other return point's real 0/1 result.
+    return 2
+}
+
+# Runs the whole checksum-resolution + key-recognition + keyserver-fetch
+# + gpgv-verify flow, using $ISO/$SIG/$FPR and every CLI-flag-equivalent
+# global (KEEP_KEY, IS_CACHED, ALLOW_UNKNOWN, TRUST_KEY, KEEP,
+# EXPORT_KEY_TO, FROM_RING_OVERRIDE, VERIFY_AS_CHECKSUM_FILE,
+# NO_CHECKSUM_FALLBACK, CHECKSUM_FILE_OVERRIDE, CHECKSUM_ALGO_OVERRIDE,
+# KEYSERVER_OPT, STATUS_FD, QUIET, DEBUG) exactly as CLI flag-parsing
+# sets them. Handles three CLI usages in one flow: a normal verify,
+# --is-cached (network-free precheck), and --keep-key (cache a key
+# without verifying anything).
+verify_iso() {
+    local tcf_rc
+    # CHECKSUM_INFO/CHECKSUM_SIG_INFO/RESOLVED_ISO/CLAIMED_UID mirror an
+    # existing status_out() tag, so a caller that sourced this file can
+    # read the outcome directly instead of parsing the tag stream. Reset
+    # every call so a repeat call (the GUI's "Check Another File" loop)
+    # never sees a stale value.
+    CHECKSUM_INFO=""
+    CHECKSUM_SIG_INFO=""
+    RESOLVED_ISO=""
+    CLAIMED_UID=""
+    # A library caller (LIB_MODE=1) needs the status_out() tags to reach
+    # somewhere readable even with no explicit --status-fd - auto-default
+    # to fd 2, the same stream it already captures for log text. Never
+    # applied to a plain CLI run, which never asked for tags mixed into
+    # its terminal output.
+    [ "$LIB_MODE" -eq 1 ] && [ -z "$STATUS_FD" ] && STATUS_FD=2
+    # $FPR must be a real fingerprint before KEEP_KEY mode ever reaches
+    # --export/--list-keys with it. main()'s own --keep-key CLI argument
+    # parsing already validates this, but that gate is bypassed entirely
+    # by a direct library caller (LIB_MODE=1) that sets KEEP_KEY=1/$FPR
+    # itself and calls verify_iso() straight - e.g. the GUI's own
+    # run_keep_key(), whose $FPR comes from a previous run's own
+    # SIGNATURE_FPR status tag. Validating here too means every call
+    # path is protected, not just the CLI entry point.
+    if [ "$KEEP_KEY" -eq 1 ]; then
+        is_full_fingerprint "$FPR" || die "$(eval_gettext "\${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex fingerprint, not '\${FPR}'")" || return 1
+    fi
+    setup_gnupg_homedir
+    trap cleanup RETURN
+    resolve_keyservers
+
+    if [ "$KEEP_KEY" -ne 1 ]; then
+        if [ "$VERIFY_AS_CHECKSUM_FILE" -ne 1 ] && [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -ne 1 ]; then
+            if looks_like_checksum_listing_name "$ISO"; then
+                resolve_checksum_listing_as_iso || return 1
+            fi
+            # $ISO may already have been reassigned to a real *.iso by the
+            # loop above (a picked shared-listing file) - in that case none
+            # of these suffixes match its new basename, so this is a safe
+            # no-op, not a second, conflicting resolution attempt.
+            for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+                case "$(basename "$ISO")" in
+                    *".$suffix") resolve_plain_checksum_as_iso "$suffix" || return 1; break ;;
+                esac
+            done
+        fi
+        # -f (not just -r) also rejects a FIFO/device/socket masquerading as a readable path.
+        { [ -f "$ISO" ] && [ -r "$ISO" ]; } || die "$(eval_gettext "cannot read ISO file '\${ISO}'")" || return 1
+        if [ "$NO_CHECKSUM_FALLBACK" -ne 1 ] && { [ -n "$CHECKSUM_FILE_OVERRIDE" ] || [ "$NO_DIRECT_SIG" -eq 1 ]; }; then
+            # 2 means "not applicable, keep going"; 0/1 means fully handled - propagate it.
+            # tcf_rc=0 default + "|| tcf_rc=$?", not a bare call followed by
+            # "tcf_rc=$?" on its own line: under set -e, a bare non-zero-
+            # returning statement trips errexit immediately, before the
+            # next line even runs - confirmed the hard way (return 2, the
+            # normal "nothing to fall back to" case, silently killed the
+            # whole process here with no die() message at all).
+            tcf_rc=0
+            try_checksum_fallback || tcf_rc=$?
+            [ "$tcf_rc" -eq 2 ] || return "$tcf_rc"
+        fi
+        [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ] || { [ -f "$SIG" ] && [ -r "$SIG" ]; } || die "$(eval_gettext "cannot read signature file '\${SIG}'")" || return 1
+    fi
+    command -v gpgv >/dev/null || die "$(gettext "gpgv not found")" || return 1
+    command -v gpg  >/dev/null || die "$(gettext "gpg not found")" || return 1
+
+    RECOGNIZED_VIA_TRUSTED_GPG=0
+    if [ "$KEEP_KEY" -ne 1 ]; then
+        # 1. Pull the signing key's fingerprint from the signature packet -
+        #    gpgv emits an ERRSIG status-fd line even with no keyring/match.
+        #    A clearsigned checksum file carries its own signature inline -
+        #    one positional arg (itself), not a separate SIG/data pair.
+    if [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ]; then
+        debug_cmd gpgv --status-fd 3 "$ISO"
+        run_gpgv_status "$ISO"
+    else
+        debug_cmd gpgv --status-fd 3 "$SIG" /dev/null
+        run_gpgv_status "$SIG" /dev/null
+    fi
+    FPR=$(status_field ERRSIG 9)
+    # Backstop for a gpg version/sig-packet shape that omits ERRSIG.
+    [ -n "$FPR" ] || FPR=$(printf '%s' "$GPGV_OUTPUT" | grep -m1 -oE '[[:xdigit:]]{40}' || true)
+    # A legacy v3 signature packet (pre-subpacket format) structurally
+    # cannot carry a full fingerprint - gpgv's own ERRSIG line reports the
+    # literal placeholder "-" in that case, which is why the plain
+    # "[ -n ... ]" checks above accept it without ever validating its
+    # shape. Fall back to the same ERRSIG line's own Key ID field (field
+    # 3 - always present whenever ERRSIG fires, gpg-internal formatted
+    # from the raw packet bytes, not attacker-influenced free text) so a
+    # v3-signed ISO/checksum can still be looked up and fetched by Key ID
+    # - it's just correctly treated as unrecognized the whole time (see
+    # is_full_fingerprint()/key_status()), same consent gate as any other
+    # never-seen key, until verify_iso()'s post-fetch step re-derives the
+    # real fingerprint.
+    if ! is_full_fingerprint "$FPR"; then
+        FPR=$(status_field ERRSIG 3)
+        case "$FPR" in
+            ""|0000000000000000) FPR="" ;;
+        esac
+    fi
+    if [ -z "$FPR" ]; then
+        if [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ]; then
+            die "$(eval_gettext "could not extract signing key fingerprint from '\${ISO}'")" || return 1
+        else
+            die "$(eval_gettext "could not extract signing key fingerprint from '\${SIG}'")" || return 1
+        fi
+    fi
+    log "$(eval_gettext "signature made with: \${FPR}")"
+    # Not emitted here: a v3-signed key's $FPR is still just its Key ID
+    # at this point (see is_full_fingerprint()'s own header comment) -
+    # the GUI's trust dialog reads this same tag expecting a real
+    # fingerprint, so it's emitted once, below, after $FPR has had its
+    # chances to be upgraded to the real thing (first a safe local
+    # lookup just below, then - if that doesn't find it - the fetch
+    # loop's own post-fetch re-derivation).
+
+    # A v3 signature's bare Key ID can't be recognized against
+    # $TRUSTED_GPG/$PUBRING_KBX below (key_status()'s own is_full_
+    # fingerprint() gate rejects it), even if the real fingerprint is
+    # already cached there (e.g. from an earlier --import-trusted-keys
+    # or --keep-key run). Upgrade $FPR now via a safe local lookup so
+    # recognition, --is-cached, and the "already-usable copy" step all
+    # work exactly as they would for a full-fingerprint (v4) signature -
+    # no separate "recognized despite being v3" logic needed anywhere else.
+    if ! is_full_fingerprint "$FPR"; then
+        local_real_fpr=$(find_fpr_by_keyid "$FPR" "$TRUSTED_GPG" "gnupg-ring:") || local_real_fpr=""
+        [ -n "$local_real_fpr" ] || local_real_fpr=$(find_fpr_by_keyid "$FPR" "$PUBRING_KBX" "") || local_real_fpr=""
+        [ -n "$local_real_fpr" ] && FPR=$local_real_fpr
+    fi
+
+    if [ "$IS_CACHED" -eq 1 ]; then
+        key_material_usable "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" && return 0
+        key_material_usable "$(key_status "$PUBRING_KBX" "")" && return 0
+        return 1
+    fi
+
+    # Check the claimed fingerprint against KNOWN_KEYS, a key already
+    # cached/usable in trustedkeys.gpg, or a pubring.kbx key the user has
+    # explicitly marked trusted (not just imported) - before ever
+    # fetching or trusting the key material itself. Recognition accepts
+    # "expired" here too, same as key_material_usable()'s other call
+    # sites: trustedkeys.gpg membership is the durable trust signal
+    # (matching KNOWN_KEYS, which never re-checks expiry at all) -
+    # untrusting a key is what --untrust-key is for, not letting its
+    # self-declared validity window lapse. "revoked" still never
+    # qualifies, forcing the normal unrecognized-key consent flow again.
+    tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
+    pk_status=$(key_status "$PUBRING_KBX" "")
+    if label=$(known_key_label "$FPR"); then
+        log "$(eval_gettext "recognized signing key: \${label}")"
+    elif key_material_usable "$tg_status"; then
+        RECOGNIZED_VIA_TRUSTED_GPG=1
+        log "$(eval_gettext "recognized: key already cached and trusted in \${TRUSTED_GPG}")"
+        [ "$tg_status" = expired ] && warn_key_expired
+    elif key_material_usable "$pk_status" && pubring_key_explicitly_trusted; then
+        log "$(eval_gettext "recognized: key already present in \${PUBRING_KBX} and explicitly marked trusted there")"
+        [ "$pk_status" = expired ] && warn_key_expired
+        # The trust decision was already made by the user - just moving it
+        # into the keyring format gpgv reads. No flag/prompt needed.
+        if keep_in_trusted_gpg "$PUBRING_KBX" ""; then
+            log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} - future runs will recognize it automatically")"
+            status_out "KEPT_IN_TRUSTED_GPG"
+            # Just copied into $TRUSTED_GPG - the "already-usable copy"
+            # step below will find it there and must not repeat either
+            # message already shown above.
+            RECOGNIZED_VIA_TRUSTED_GPG=1
+        else
+            log "$(eval_gettext "warning: could not save key into \${TRUSTED_GPG}: \${out}")"
+        fi
+    else
+        # Brackets every warn() line about this unrecognized key with
+        # stable English tags, so the GUI can later strip the whole span
+        # from its displayed technical body once the key is trusted -
+        # matching the tags, not the (localized) warn() text itself.
+        status_out "UNRECOGNIZED_KEY_WARNINGS_BEGIN"
+        warn "$(eval_gettext "\${FPR} is not one of this tool's built-in recognized keys")"
+        # TRANSLATORS: ${FLAG_LIST_KNOWN_KEYS} is a literal flag name - keep the placeholder as-is.
+        warn "$(eval_gettext "(run \${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's fingerprint independently before trusting it)")"
+        # 0/1, not just a bare tag - the GUI needs to tell which of the two
+        # differently-worded branches fired (direct ISO signature vs. some
+        # kind of checksum-listing signature, detached or inline-signed).
+        status_out "UNRECOGNIZED_KEY $(( VERIFY_AS_CHECKSUM_FILE || VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE ))"
+        if [ "$ALLOW_UNKNOWN" -ne 1 ]; then
+            # TRANSLATORS: ${FLAG_ALLOW_UNKNOWN}/${FLAG_TRUST_KEY} are literal flag names - keep placeholders as-is.
+            die "$(eval_gettext "refusing to verify against an unrecognized signing key (pass \${FLAG_ALLOW_UNKNOWN} to verify just this once, or \${FLAG_TRUST_KEY} to also remember it for next time)")" || return 1
+        fi
+        # TRANSLATORS: ${FLAG_TRUST_KEY} is a literal flag name - keep the placeholder as-is.
+        warn "$(eval_gettext "verifying anyway - if the result below is GOOD and you decide you trust this key, use \${FLAG_TRUST_KEY} next time (or mark it trusted in your own GPG keyring) so future checks recognize it automatically")"
+        status_out "UNRECOGNIZED_KEY_WARNINGS_END"
+    fi
+fi
+
+VERIFY_RING=""
+
+# Shortcut for --keep-key: if the GUI already exported this exact key
+# earlier in the same session (--export-key-to), reuse that copy instead
+# of re-fetching. Falls through to the normal path if it doesn't actually
+# contain $FPR.
+if [ "$KEEP_KEY" -eq 1 ] && [ -n "$FROM_RING_OVERRIDE" ] && [ -r "$FROM_RING_OVERRIDE" ] \
+   && keep_in_trusted_gpg "$FROM_RING_OVERRIDE" "gnupg-ring:"; then
+    keepkey_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
+    if key_material_usable "$keepkey_status"; then
+        [ "$keepkey_status" = expired ] && warn_key_expired
+        log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} (reused the copy fetched during verification - no extra keyserver lookup needed)")"
+        status_out "KEPT_IN_TRUSTED_GPG"
+        return 0
+    fi
+fi
+
+# 2. Check for an already-usable copy of the key before reaching out to
+#    a keyserver. Re-checks (rather than reuses) $TRUSTED_GPG's status
+#    from step 1, since the pubring.kbx-explicit-trust path above can
+#    itself have just copied the key into $TRUSTED_GPG in the meantime.
+status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
+if key_material_usable "$status"; then
+    # Both messages already fired above if RECOGNIZED_VIA_TRUSTED_GPG is
+    # set (recognition itself now accepts "expired" too) - don't repeat
+    # either one here.
+    if [ "$RECOGNIZED_VIA_TRUSTED_GPG" -ne 1 ]; then
+        if [ "$status" = expired ]; then
+            warn_key_expired
+        else
+            log "$(eval_gettext "key already present and valid in \${TRUSTED_GPG}")"
+        fi
+    fi
+    status_out "ALREADY_IN_TRUSTED_GPG"
+    VERIFY_RING=$TRUSTED_GPG
+    # Check once for a renewed (no-longer-expired) copy before settling
+    # for the existing expired one - see try_renew_expired_key()'s own
+    # header comment. $VERIFY_RING stays $TRUSTED_GPG either way (a
+    # successful renewal updates it in place). "|| true": under set -e, a
+    # bare "cond && cmd" statement whose cmd returns 1 (no renewal found,
+    # the expected common case) trips errexit just like a bare failing
+    # statement would - confirmed the hard way earlier in this file
+    # (try_checksum_fallback's own "return 2" case).
+    if [ "$status" = expired ]; then
+        try_renew_expired_key || true
+    fi
+else
+    [ "$status" = missing ] || log "$(eval_gettext "key in \${TRUSTED_GPG} is \${status}, ignoring cached copy")"
+    pr_status=$(key_status "$PUBRING_KBX" "")
+    if key_material_usable "$pr_status" && export_to_tmp_ring "$PUBRING_KBX" ""; then
+        if [ "$pr_status" = expired ]; then
+            warn_key_expired
+        else
+            log "$(eval_gettext "key already present and valid in \${PUBRING_KBX}")"
+        fi
+        status_out "ALREADY_IN_PUBRING"
+    else
+        [ "$pr_status" = missing ] || key_material_usable "$pr_status" || \
+            log "$(eval_gettext "key in \${PUBRING_KBX} is \${pr_status}, ignoring cached copy")"
+    fi
+fi
+
+if [ -z "$VERIFY_RING" ]; then
+    FETCHED=0
+    for ks in "${KEYSERVERS[@]}"; do
+        log "$(eval_gettext "fetching \${FPR} from \${ks}")"
+        status_out "FETCHING"
+        TMP_RING=$(mktemp "$SESSION_TMPDIR/gnupg-ring.XXXXXXXXXX.gpg")
+        FETCH_ARGS=(
+            --batch
+            --no-default-keyring
+            --keyring "gnupg-ring:${TMP_RING}"
+            --keyserver-options timeout=15,import-clean,import-minimal
+            --keyserver "$ks"
+            # "0x" prefix: see the identical comment in
+            # try_renew_expired_key()'s own fetch construction.
+            --receive-keys "0x$FPR"
+        )
+        debug_cmd gpg "${FETCH_ARGS[@]}"
+        set +e
+        out=$(gpg "${FETCH_ARGS[@]}" 2>&1)
+        fetch_rc=$?
+        set -e
+        # $FPR may still be a bare Key ID here (the v3-signature fallback
+        # in the ERRSIG-extraction step above) - key_status()'s own gate
+        # requires a full fingerprint, so it would report "missing" for
+        # this freshly-fetched key even on a genuine success unless $FPR
+        # is upgraded to the real fingerprint first. Re-derive it from
+        # $TMP_RING's own freshly-imported key material (reusing
+        # parse_colon_key_listing(), the same helper --list-trusted-keys/
+        # --inspect-key-file use) rather than trusting the Key ID any
+        # further than "which key to ask a keyserver for". Require
+        # exactly one primary key - a 64-bit long-Key-ID collision is far
+        # more expensive than the broken 32-bit short-ID case, but not
+        # theoretical, and the real risk here isn't forging a signature
+        # (gpgv always needs genuine matching key material regardless) -
+        # it's a wrong key silently entering $TRUSTED_GPG if the user then
+        # consents once via --trust-key/--keep. A loud refusal beats a
+        # silent wrong pick.
+        if [ "$fetch_rc" -eq 0 ] && ! is_full_fingerprint "$FPR"; then
+            real_fprs=$(gpg --batch --no-default-keyring --keyring "gnupg-ring:${TMP_RING}" \
+                            --with-colons --list-keys 2>/dev/null | parse_colon_key_listing) || true
+            # grep -c exits 1 (not just an empty count) when nothing
+            # matches - real_fprs is legitimately empty whenever the
+            # keyserver's own reply carried no usable key material (see
+            # the "without any usable key material" case just below), so
+            # this must never be allowed to trip set -e via pipefail.
+            real_fpr_count=$(printf '%s\n' "$real_fprs" | grep -c .) || true
+            if [ "$real_fpr_count" -gt 1 ]; then
+                die "$(eval_gettext "\${ks} returned more than one key for Key ID \${FPR} - refusing to guess which one is real")" || return 1
+            elif [ "$real_fpr_count" -eq 1 ]; then
+                FPR=$(printf '%s\n' "$real_fprs" | cut -d'|' -f1)
+            fi
+        fi
+        # A keyserver can report success (exit 0) yet import nothing:
+        # keys.openpgp.org withholds a key's user ID until confirmed, and
+        # gpg refuses to keep a key with no user ID - key_status() then
+        # reports it "missing" like a real fetch failure. Only trust this
+        # keyserver's copy once key_status confirms it usable (valid or
+        # merely expired - see key_material_usable()), falling through to
+        # the next keyserver otherwise.
+        fetched_status=""
+        [ "$fetch_rc" -eq 0 ] && fetched_status=$(key_status "$TMP_RING" "gnupg-ring:")
+        if [ "$fetch_rc" -eq 0 ] && key_material_usable "$fetched_status"; then
+            # gpg's own import chatter is just plumbing, not the signature
+            # check itself - only worth showing under --debug.
+            [ "$DEBUG" -eq 1 ] && printf '%s\n' "$out" >&2
+            [ "$fetched_status" = expired ] && warn_key_expired
+            VERIFY_RING=$TMP_RING
+            FETCHED=1
+            break
+        fi
+        printf '%s\n' "$out" >&2
+        if [ "$fetch_rc" -eq 0 ]; then
+            warn "$(eval_gettext "\${ks} returned \${FPR} without any usable key material (likely a user ID that was never confirmed there) - trying next...")"
+        else
+            warn "$(eval_gettext "could not fetch from \${ks}, trying next...")"
+        fi
+        rm -f "$TMP_RING" "${TMP_RING}~"
+        TMP_RING=""
+    done
+    if [ "$FETCHED" -ne 1 ]; then
+        TRIED_KEYSERVERS="${KEYSERVERS[*]}"
+        die "$(eval_gettext "could not fetch key \${FPR} from any keyserver (tried: \${TRIED_KEYSERVERS})")" || return 1
+    fi
+
+    if [ "$KEEP" -eq 1 ] || [ "$KEEP_KEY" -eq 1 ]; then
+        if keep_in_trusted_gpg "$TMP_RING" "gnupg-ring:"; then
+            log "$(eval_gettext "keeping fetched key in \${TRUSTED_GPG} for future runs")"
+            rm -f "$TMP_RING" "${TMP_RING}~"
+            TMP_RING=""
+            VERIFY_RING=$TRUSTED_GPG
+        else
+            log "$(eval_gettext "warning: could not save key into \${TRUSTED_GPG} (\${out}), continuing with a throw-away keyring for this run")"
+        fi
+    fi
+fi
+
+# $FPR has now had every chance (the local find_fpr_by_keyid() lookup
+# earlier, and - if that didn't find it - the fetch loop's own post-fetch
+# re-derivation just above) to be upgraded from a bare Key ID to a real
+# fingerprint - emitted once, here, not right after the initial ERRSIG
+# extraction, so a caller reading this tag (the GUI's trust dialog)
+# always sees the best identifier this run could establish. This point
+# is reached whether $VERIFY_RING was already usable locally or had to
+# be fetched (both paths converge above), but NOT for --keep-key (no
+# signature to extract a fingerprint from in the first place - matches
+# this tag's original, signature-only scope).
+[ "$KEEP_KEY" -ne 1 ] && status_out "SIGNATURE_FPR $FPR"
+
+# Best-effort: hand a copy of the resolved key back to the caller, so a
+# later --keep-key call can reuse it via --from-ring. Not for --keep-key itself.
+if [ "$KEEP_KEY" -ne 1 ] && [ -n "$EXPORT_KEY_TO" ]; then
+    export_key_to "$EXPORT_KEY_TO" || true
+fi
+
+if [ "$KEEP_KEY" -eq 1 ]; then
+    if [ "$VERIFY_RING" != "$TRUSTED_GPG" ]; then
+        if keep_in_trusted_gpg "$VERIFY_RING" "gnupg-ring:"; then
+            log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} - future runs will recognize it automatically")"
+            status_out "KEPT_IN_TRUSTED_GPG"
+        else
+            die "$(eval_gettext "could not save key into \${TRUSTED_GPG}: \${out}")" || return 1
+        fi
+    else
+        log "$(eval_gettext "\${FPR} is already kept in \${TRUSTED_GPG}")"
+        status_out "KEPT_IN_TRUSTED_GPG"
+    fi
+    return 0
+fi
+
+# 3. Verify. VERIFY_RING is always a classical OpenPGP-format keyring -
+#    spell out gnupg-ring: explicitly rather than relying on auto-detection.
+ISO_BASE=$(basename "$ISO")
+if [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ]; then
+    log "$(eval_gettext "verifying inline-signed checksum file '\${ISO_BASE}'")"
+    debug_cmd gpgv --status-fd 3 --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$ISO"
+    run_gpgv_status --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$ISO"
+else
+    SIG_BASE=$(basename "$SIG")
+    log "$(eval_gettext "verifying '\${SIG_BASE}' against '\${ISO_BASE}'")"
+    debug_cmd gpgv --status-fd 3 --keyring "gnupg-ring:${VERIFY_RING}" "$SIG" "$ISO"
+    run_gpgv_status --keyring "gnupg-ring:${VERIFY_RING}" "$SIG" "$ISO"
+fi
+printf '%s\n' "$GPGV_OUTPUT" >&2
+
+if [ "$rc" -eq 0 ]; then
+    log "$(gettext "OK - signature verified")"
+    # Stable, locale-independent form of gpgv's own "Good signature from
+    # ..." line - what the GUI greps for the claimed identity. gpgv emits
+    # EXPKEYSIG instead of GOODSIG (same field layout: keyid, then
+    # username) when the signing key has expired - key_material_usable()
+    # accepts an expired key for this very check, so this case is real,
+    # not theoretical (confirmed on openSUSE's own expired signing key).
+    CLAIMED_UID=$(percent_decode_uid "$(status_field GOODSIG 4-)")
+    [ -n "$CLAIMED_UID" ] || CLAIMED_UID=$(percent_decode_uid "$(status_field EXPKEYSIG 4-)")
+    if [ -n "$CLAIMED_UID" ]; then
+        log "$(eval_gettext "claimed identity: \${CLAIMED_UID}")"
+        status_out "CLAIMED_IDENTITY $CLAIMED_UID"
+    fi
+    # "isn't already sitting in $TRUSTED_GPG", not "wasn't already
+    # recognized" - a key recognized via KNOWN_KEYS/pubring-explicit-trust
+    # but not yet cached there still needs saving here.
+    if [ "$TRUST_KEY" -eq 1 ] && [ "$VERIFY_RING" != "$TRUSTED_GPG" ]; then
+        if keep_in_trusted_gpg "$VERIFY_RING" "gnupg-ring:"; then
+            log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} - future runs will recognize it automatically")"
+            status_out "KEPT_IN_TRUSTED_GPG"
+        else
+            log "$(eval_gettext "warning: could not save key into \${TRUSTED_GPG}: \${out}")"
+        fi
+    fi
+else
+    log "$(gettext "FAILED - signature did NOT verify")"
+fi
+return "$rc"
+}
+
+# Only run the dispatch gate on direct execution - $0 differs from
+# BASH_SOURCE[0] when another script sources this file instead (the GUI,
+# with LIB_MODE=1), leaving that caller to invoke whichever functions it needs.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    FORCE_MODE=""
+    MANAGE_KEYS_DISPATCH=0
+    DISPATCH_ARGS=()
+    # --cli/--gui/--manage-keys are dispatcher-only flags, recognized
+    # anywhere in the argument list - like every other flag this tool
+    # accepts (--debug, --allow-unrecognized-key, ...), not just as the
+    # very first argument. Found via real testing: "--debug --gui <sig>
+    # <iso>" failed with "unknown option '--gui'" (only ${1:-} was ever
+    # checked) while "--gui --debug <sig> <iso>" worked - a confusing,
+    # order-dependent inconsistency with how every other flag behaves.
+    for DISPATCH_ARG in "$@"; do
+        case "$DISPATCH_ARG" in
+            --cli) FORCE_MODE=cli ;;
+            --gui) FORCE_MODE=gui ;;
+            --manage-keys) MANAGE_KEYS_DISPATCH=1 ;;
+            *) DISPATCH_ARGS+=("$DISPATCH_ARG") ;;
+        esac
+    done
+    set -- "${DISPATCH_ARGS[@]}"
+    if [ -z "$FORCE_MODE" ] && [ "$MANAGE_KEYS_DISPATCH" -eq 0 ] && [ "$#" -eq 1 ] \
+       && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
+        print_dispatcher_help_preamble
+        main --help
+    elif [ "$MANAGE_KEYS_DISPATCH" -eq 1 ]; then
+        if want_gui; then
+            export DISPLAY_NAME="verify-iso-sig"
+            # exec replaces this process outright - trap ... EXIT never
+            # fires for it, so this SESSION_TMPDIR (never used for
+            # anything at this point - always empty) would otherwise
+            # leak on every single GUI dispatch, the default way most
+            # users ever run this tool. The GUI sources this same file
+            # again (LIB_MODE=1) and creates its own fresh SESSION_TMPDIR
+            # with its own working trap, so cleaning up this one first is
+            # always safe.
+            session_tmpdir_cleanup
+            exec "$GUI" --manage-keys "$@"
+        else
+            print_manage_keys_cli_usage
+            exit 1
+        fi
+    elif [ "$FORCE_MODE" = "gui" ] \
+         || { [ "$FORCE_MODE" != "cli" ] && have_gui_session \
+              && looks_like_gui_args "$@"; }; then
+        export DISPLAY_NAME="verify-iso-sig"
+        # See the identical comment on the --manage-keys exec above.
+        session_tmpdir_cleanup
+        exec "$GUI" "$@"
+    else
+        main "$@"
+    fi
+    exit $?
+fi

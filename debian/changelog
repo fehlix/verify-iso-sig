@@ -1,0 +1,5 @@
+verify-iso-sig (2026.08.01) mx; urgency=medium
+
+  * Initial commit
+
+ -- fehlix <fehlix@mxlinux.org>  Tue, 11 Aug 2026 19:56:42 -0400

@@ -1,0 +1,1624 @@
+# Spanish translation of verify-iso-sig's GUI strings.
+# Copyright (C) 2026 the verify-iso-sig authors.
+# This file is distributed under the same license as the verify-iso-sig package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: verify-iso-sig\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-11 14:26+0200\n"
+"PO-Revision-Date: 2026-07-30 23:30+0200\n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: verify-iso-sig-gui.sh:180
+msgid "Verify ISO signature"
+msgstr "Verificar la firma del ISO"
+
+#: verify-iso-sig-gui.sh:184
+msgid "Trust this key"
+msgstr "Confiar en esta clave"
+
+#: verify-iso-sig-gui.sh:185
+msgid "Check Another File"
+msgstr "Comprobar otro archivo"
+
+#: verify-iso-sig-gui.sh:260 verify-iso-sig-gui.sh:277
+#: verify-iso-sig-gui.sh:1730
+msgid "OK"
+msgstr "Aceptar"
+
+#: verify-iso-sig-gui.sh:295 verify-iso-sig.desktop.in:3
+msgid "ISO Signature Verifier"
+msgstr "Verificador de firmas ISO"
+
+#: verify-iso-sig-gui.sh:296 verify-iso-sig.desktop.in:4
+msgid ""
+"Check the GPG signature of a downloaded ISO (built-in support for MX Linux/"
+"antiX signing keys)"
+msgstr ""
+"Comprueba la firma GPG de un ISO descargado (compatibilidad integrada con "
+"las claves de firma de MX Linux/antiX)"
+
+#: verify-iso-sig-gui.sh:325
+msgid ""
+"Check the GPG signature of a downloaded ISO\\n(built-in support for MX Linux/"
+"antiX signing keys)"
+msgstr ""
+"Comprueba la firma GPG de un ISO descargado\\n(compatibilidad integrada con "
+"las claves de firma de MX Linux/antiX)"
+
+#: verify-iso-sig-gui.sh:329
+msgid "License: GNU GPL v3 or later"
+msgstr "Licencia: GNU GPL v3 o posterior"
+
+#: verify-iso-sig-gui.sh:332
+#, sh-format
+msgid "About ${ABOUT_TITLE}"
+msgstr "Acerca de ${ABOUT_TITLE}"
+
+#: verify-iso-sig-gui.sh:340 verify-iso-sig-gui.sh:467
+msgid "Close"
+msgstr "Cerrar"
+
+#: verify-iso-sig-gui.sh:407 verify-iso-sig-gui.sh:934
+#: verify-iso-sig-gui.sh:1018 verify-iso-sig.desktop.in:16
+msgid "Manage Trusted Keys"
+msgstr "Gestionar claves de confianza"
+
+#: verify-iso-sig-gui.sh:408
+msgid "Forget Selected"
+msgstr "Olvidar seleccionadas"
+
+#: verify-iso-sig-gui.sh:409
+msgid "Import Selected"
+msgstr "Importar seleccionadas"
+
+#: verify-iso-sig-gui.sh:415
+msgid "Could not read the list of trusted keys:"
+msgstr "No se pudo leer la lista de claves de confianza:"
+
+#: verify-iso-sig-gui.sh:418
+msgid "No signing keys are currently saved in trustedkeys.gpg."
+msgstr "Actualmente no hay ninguna clave de firma guardada en trustedkeys.gpg."
+
+#. TRANSLATORS: "Trust"/"Keep" here are informal short references to
+#. the main GUI's "Trust this key"/"Keep this key" button labels, not
+#. verbatim quotes - no need to match those translated labels exactly.
+#. The straight quotes around each word are just English's own
+#. convention - please use your language's own quotation marks
+#. instead (e.g. « », „", etc.) if that reads more naturally.
+#: verify-iso-sig-gui.sh:425
+msgid ""
+"A key ends up there after you choose to \"Trust\"/\"Keep\" it while "
+"verifying an ISO."
+msgstr ""
+"Una clave termina allí después de que elija «Confiar»/«Conservar» al "
+"verificar una ISO."
+
+#: verify-iso-sig-gui.sh:450
+msgid "Remove"
+msgstr "Eliminar"
+
+#: verify-iso-sig-gui.sh:451 verify-iso-sig-gui.sh:601
+msgid "Fingerprint"
+msgstr "Huella digital"
+
+#: verify-iso-sig-gui.sh:452 verify-iso-sig-gui.sh:602
+msgid "Key ID"
+msgstr "ID de clave"
+
+#: verify-iso-sig-gui.sh:453 verify-iso-sig-gui.sh:603
+msgid "User ID"
+msgstr "ID de usuario"
+
+#: verify-iso-sig-gui.sh:454 verify-iso-sig-gui.sh:604
+msgid "Status"
+msgstr "Estado"
+
+#: verify-iso-sig-gui.sh:455 verify-iso-sig-gui.sh:605
+msgid "Expiration Date"
+msgstr "Fecha de caducidad"
+
+#. TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:465
+#, sh-format
+msgid ""
+"Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then "
+"click \"${BTN_FORGET_SELECTED}\"."
+msgstr ""
+"Claves guardadas en ~/.gnupg/trustedkeys.gpg - marque las que quiera olvidar "
+"y luego haga clic en «${BTN_FORGET_SELECTED}»."
+
+#: verify-iso-sig-gui.sh:471
+msgid "Export Selected"
+msgstr "Exportar seleccionadas"
+
+#: verify-iso-sig-gui.sh:472
+msgid "Import from File"
+msgstr "Importar desde archivo"
+
+#. TRANSLATORS: shown as-is in the list's "Status" column (a
+#. gpg key's trust validity), one word each.
+#: verify-iso-sig-gui.sh:486 verify-iso-sig-gui.sh:620
+msgid "valid"
+msgstr "válida"
+
+#. TRANSLATORS: same "Status" column as "valid" above.
+#: verify-iso-sig-gui.sh:488 verify-iso-sig-gui.sh:621
+msgid "expired"
+msgstr "caducada"
+
+#. TRANSLATORS: same "Status" column as "valid" above.
+#: verify-iso-sig-gui.sh:490 verify-iso-sig-gui.sh:622
+msgid "revoked"
+msgstr "revocada"
+
+#. TRANSLATORS: shown in the "Expires" column when the key has
+#. no expiration date set.
+#: verify-iso-sig-gui.sh:498 verify-iso-sig-gui.sh:635
+msgid "never"
+msgstr "nunca"
+
+#: verify-iso-sig-gui.sh:515
+msgid "No key was checked - nothing to export."
+msgstr "No se marcó ninguna clave - nada que exportar."
+
+#: verify-iso-sig-gui.sh:528
+msgid "Export Trusted Keys"
+msgstr "Exportar claves de confianza"
+
+#: verify-iso-sig-gui.sh:545
+#, sh-format
+msgid "Exported ${EXPORT_COUNT} key(s) to ${EXPORT_PATH_SAFE}."
+msgstr "Se exportaron ${EXPORT_COUNT} clave(s) a ${EXPORT_PATH_SAFE}."
+
+#: verify-iso-sig-gui.sh:547
+msgid "Could not export keys:"
+msgstr "No se pudieron exportar las claves:"
+
+#. TRANSLATORS: ${BTN_IMPORT_SELECTED} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:557 verify-iso-sig-gui.sh:594
+#: verify-iso-sig-gui.sh:611
+msgid "Import Trusted Keys"
+msgstr "Importar claves de confianza"
+
+#: verify-iso-sig-gui.sh:562
+msgid "OpenPGP key files"
+msgstr "Archivos de clave OpenPGP"
+
+#: verify-iso-sig-gui.sh:563
+msgid "All files"
+msgstr "Todos los archivos"
+
+#: verify-iso-sig-gui.sh:573
+msgid "Could not read that key file:"
+msgstr "No se pudo leer ese archivo de clave:"
+
+#: verify-iso-sig-gui.sh:576
+msgid "No keys were found in that file."
+msgstr "No se encontraron claves en ese archivo."
+
+#: verify-iso-sig-gui.sh:600
+msgid "Import"
+msgstr "Importar"
+
+#: verify-iso-sig-gui.sh:611
+#, sh-format
+msgid ""
+"Keys found in this file - check any you want to import, then click "
+"\"${BTN_IMPORT_SELECTED}\"."
+msgstr ""
+"Claves encontradas en este archivo - marque las que quiera importar y luego "
+"haga clic en «${BTN_IMPORT_SELECTED}»."
+
+#: verify-iso-sig-gui.sh:614 verify-iso-sig-gui.sh:728
+#: verify-iso-sig-gui.sh:933 verify-iso-sig-gui.sh:1017
+#: verify-iso-sig-gui.sh:1217 verify-iso-sig-gui.sh:1436
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. TRANSLATORS: appended to the Status cell in the
+#. import preview when this key is already present in
+#. trustedkeys.gpg - lets the user tell "already
+#. trusted" apart from "genuinely new" at a glance.
+#: verify-iso-sig-gui.sh:630
+msgid "(already trusted)"
+msgstr "(ya de confianza)"
+
+#: verify-iso-sig-gui.sh:648
+msgid "No key was checked - nothing to import."
+msgstr "No se marcó ninguna clave - nada que importar."
+
+#: verify-iso-sig-gui.sh:673
+#, sh-format
+msgid ""
+"Processed ${IMPORT_PROCESSED} key(s): ${IMPORT_NEW} new, ${IMPORT_UPDATED} "
+"updated, ${IMPORT_UNCHANGED} unchanged."
+msgstr ""
+"${IMPORT_PROCESSED} clave(s) procesada(s): ${IMPORT_NEW} nueva(s), "
+"${IMPORT_UPDATED} actualizada(s), ${IMPORT_UNCHANGED} sin cambios."
+
+#: verify-iso-sig-gui.sh:677
+msgid "Could not import keys:"
+msgstr "No se pudieron importar las claves:"
+
+#: verify-iso-sig-gui.sh:684
+msgid "No key was checked - nothing to forget."
+msgstr "No se marcó ninguna clave - nada que olvidar."
+
+#. TRANSLATORS: ${COUNT}/${CMD_LIST_KNOWN_KEYS} are literal - keep placeholders as-is.
+#: verify-iso-sig-gui.sh:726
+#, sh-format
+msgid "Forget ${COUNT} selected key(s) from trustedkeys.gpg?"
+msgstr "¿Olvidar ${COUNT} clave(s) seleccionada(s) de trustedkeys.gpg?"
+
+#: verify-iso-sig-gui.sh:726
+#, sh-format
+msgid ""
+"If any of them is also one of this tool's built-in recognized keys (run "
+"'${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized "
+"automatically next time - this only removes the local cache entry, not that "
+"recognition."
+msgstr ""
+"Si alguna de ellas también es una de las claves incorporadas que esta "
+"herramienta reconoce (ejecute '${CMD_LIST_KNOWN_KEYS}' para ver la lista "
+"completa), esta herramienta la seguirá reconociendo automáticamente la "
+"próxima vez - esto solo elimina la entrada de caché local, no ese "
+"reconocimiento."
+
+#: verify-iso-sig-gui.sh:727
+msgid "Forget"
+msgstr "Olvidar"
+
+#: verify-iso-sig-gui.sh:743
+msgid "Some keys could not be removed:"
+msgstr "Algunas claves no se pudieron eliminar:"
+
+#: verify-iso-sig-gui.sh:886
+msgid ""
+"Pick the .iso file, or its .sig/.asc/.gpg/.sign signature file directly."
+msgstr ""
+"Seleccione el archivo .iso, o directamente su archivo de "
+"firma .sig/.asc/.gpg/.sign."
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render as
+#. bold text, not literal characters).
+#: verify-iso-sig-gui.sh:889
+msgid ""
+"The other one is found automatically - <b>but only if it's in the same "
+"folder</b>."
+msgstr ""
+"El otro archivo se encuentra automáticamente - <b>pero solo si está en la "
+"misma carpeta</b>."
+
+#: verify-iso-sig-gui.sh:930 verify-iso-sig-gui.sh:958
+msgid "ISO or signature file"
+msgstr "Archivo ISO o de firma"
+
+#: verify-iso-sig-gui.sh:932 verify-iso-sig-gui.sh:1016
+#: verify-iso-sig-gui.sh:1435
+msgid "Verify"
+msgstr "Verificar"
+
+#: verify-iso-sig-gui.sh:935 verify-iso-sig-gui.sh:1023
+msgid "About"
+msgstr "Acerca de"
+
+#: verify-iso-sig-gui.sh:972
+msgid "Or drag a .iso or signature file here"
+msgstr "O arrastre aquí un archivo .iso o de firma"
+
+#: verify-iso-sig-gui.sh:1001
+msgid "Pick Files"
+msgstr "Seleccionar archivos"
+
+#: verify-iso-sig-gui.sh:1002
+msgid "Drag a File"
+msgstr "Arrastrar un archivo"
+
+#: verify-iso-sig-gui.sh:1088
+#, sh-format
+msgid ""
+"Drop at most two files (the ISO and its signature file) - ${DROP_COUNT} were "
+"dropped."
+msgstr ""
+"Suelte como máximo dos archivos (la ISO y su archivo de firma) - se soltaron "
+"${DROP_COUNT}."
+
+#: verify-iso-sig-gui.sh:1307 verify-iso-sig-gui.sh:1318
+msgid ""
+"That's a folder, not a file - pick the .iso file itself (or "
+"its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+"Eso es una carpeta, no un archivo - seleccione directamente el propio "
+"archivo .iso (o su archivo de firma .sig/.asc/.gpg/.sign)."
+
+#: verify-iso-sig-gui.sh:1352
+msgid "No ISO or signature file was selected."
+msgstr "No se seleccionó ningún archivo ISO ni de firma."
+
+#: verify-iso-sig-gui.sh:1358
+msgid "Cannot read ISO file:"
+msgstr "No se puede leer el archivo ISO:"
+
+#: verify-iso-sig-gui.sh:1369
+msgid "Cannot find the matching signature file:"
+msgstr "No se encuentra el archivo de firma correspondiente:"
+
+#: verify-iso-sig-gui.sh:1374
+msgid "Cannot read the checksum-listing file:"
+msgstr "No se puede leer el archivo de sumas de comprobación:"
+
+#: verify-iso-sig-gui.sh:1386 verify-iso-sig-gui.sh:1537
+#: verify-iso-sig-gui.sh:1550 verify-iso-sig-gui.sh:1665
+#: verify-iso-sig-gui.sh:1670
+msgid "ISO:"
+msgstr "ISO:"
+
+#: verify-iso-sig-gui.sh:1390 verify-iso-sig-gui.sh:1551
+#: verify-iso-sig-gui.sh:1665
+msgid "SHA:"
+msgstr "SHA:"
+
+#: verify-iso-sig-gui.sh:1392 verify-iso-sig-gui.sh:1405
+msgid "About to verify:"
+msgstr "Se va a verificar:"
+
+#: verify-iso-sig-gui.sh:1396 verify-iso-sig-gui.sh:1403
+#: verify-iso-sig-gui.sh:1538 verify-iso-sig-gui.sh:1561
+#: verify-iso-sig-gui.sh:1668 verify-iso-sig-gui.sh:1670
+msgid "SIG:"
+msgstr "SIG:"
+
+#: verify-iso-sig-gui.sh:1465
+msgid "Verifying signature - this can take a while for a large ISO..."
+msgstr ""
+"Verificando la firma - esto puede tardar un poco para una ISO grande..."
+
+#: verify-iso-sig-gui.sh:1467
+msgid "Verifying signature - this can take a few seconds"
+msgstr "Verificando la firma - esto puede tardar unos segundos"
+
+#. TRANSLATORS: continues the previous line's sentence ("Verifying
+#. signature - this can take a few seconds") onto a second line -
+#. the two need to read as one continuous sentence together.
+#: verify-iso-sig-gui.sh:1471
+msgid "if the signing key needs to be fetched from a keyserver..."
+msgstr "si la clave de firma necesita obtenerse de un servidor de claves..."
+
+#. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1529
+#, sh-format
+msgid ""
+"By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID "
+"or fingerprint yourself and want to trust and remember this key for future "
+"checks."
+msgstr ""
+"Al hacer clic en «${BTN_TRUST_THIS_KEY}» confirma que ha comprobado usted "
+"mismo el ID de clave o la huella digital, y que desea confiar en esta clave "
+"y recordarla para futuras comprobaciones."
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
+#. as bold text, not literal characters).
+#: verify-iso-sig-gui.sh:1535
+msgid "Signature check: <b>GOOD</b> - the ISO exactly matches this key."
+msgstr ""
+"Comprobación de firma: <b>CORRECTA</b> - la ISO coincide exactamente con "
+"esta clave."
+
+#: verify-iso-sig-gui.sh:1536
+msgid ""
+"Note: that identity is self-declared by whoever created the key - it is NOT "
+"independently verified, unlike the Key ID or fingerprint. Only trust this "
+"key if you've confirmed the Key ID or fingerprint yourself (e.g. from the "
+"respin/distro's own official site, or its keyserver listing)."
+msgstr ""
+"Nota: esa identidad la declara quien creó la clave - NO está verificada de "
+"forma independiente, a diferencia del ID de clave o la huella digital. "
+"Confíe en esta clave solo si ha comprobado usted mismo el ID de clave o la "
+"huella digital (por ejemplo, en el sitio oficial del respin/distribución, o "
+"en un servidor de claves)."
+
+#: verify-iso-sig-gui.sh:1544
+msgid "This ISO's signing key isn't one this tool already recognizes."
+msgstr ""
+"La clave de firma de esta ISO no es una que esta herramienta ya reconozca."
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Key ID:"
+msgstr "ID de clave:"
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Claimed identity:"
+msgstr "Identidad declarada:"
+
+#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1590
+msgid "Fingerprint:"
+msgstr "Huella digital:"
+
+#. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
+#. as bold text, not literal characters).
+#: verify-iso-sig-gui.sh:1548
+msgid ""
+"Signature check: <b>GOOD</b> - the checksum listing exactly matches this key "
+"(the ISO's own hash is checked separately, next)."
+msgstr ""
+"Comprobación de firma: <b>CORRECTA</b> - la lista de sumas de comprobación "
+"coincide exactamente con esta clave (el propio hash de la ISO se comprueba "
+"por separado, a continuación)."
+
+#: verify-iso-sig-gui.sh:1549
+msgid ""
+"Note: that identity is self-declared by whoever created the key - it is NOT "
+"independently verified, unlike the Key ID or fingerprint. Only trust this "
+"key if you've confirmed it yourself (e.g. from the distro's own official "
+"website or keyserver listing)."
+msgstr ""
+"Nota: esa identidad la declara quien creó la clave - NO está verificada de "
+"forma independiente, a diferencia del ID de clave o la huella digital. "
+"Confíe en esta clave solo si la ha comprobado usted mismo (por ejemplo, en "
+"el sitio web oficial de la distribución o en un servidor de claves)."
+
+#: verify-iso-sig-gui.sh:1566
+msgid ""
+"This checksum-listing file's signing key isn't one this tool already "
+"recognizes."
+msgstr ""
+"La clave de firma de este archivo de lista de sumas de comprobación no es "
+"una que esta herramienta ya reconozca."
+
+#: verify-iso-sig-gui.sh:1592
+msgid ""
+"This signing key currently only lives in your personal keyring (pubring.kbx)."
+msgstr ""
+"Esta clave de firma actualmente solo existe en su llavero personal "
+"(pubring.kbx)."
+
+#: verify-iso-sig-gui.sh:1592
+msgid ""
+"Copy it into ~/.gnupg/trustedkeys.gpg so future checks don't depend on it "
+"staying there?"
+msgstr ""
+"¿Copiarla a ~/.gnupg/trustedkeys.gpg para que las futuras comprobaciones no "
+"dependan de que siga allí?"
+
+#: verify-iso-sig-gui.sh:1594
+msgid "This signing key was just fetched from a keyserver."
+msgstr "Esta clave de firma se acaba de obtener de un servidor de claves."
+
+#: verify-iso-sig-gui.sh:1594
+msgid ""
+"Remember it locally, in ~/.gnupg/trustedkeys.gpg, so future checks don't "
+"need the network again?"
+msgstr ""
+"¿Guardarla localmente, en ~/.gnupg/trustedkeys.gpg, para que las futuras "
+"comprobaciones no necesiten la red de nuevo?"
+
+#: verify-iso-sig-gui.sh:1610
+msgid "Keep this key"
+msgstr "Conservar esta clave"
+
+#: verify-iso-sig-gui.sh:1611
+msgid "No thanks"
+msgstr "No, gracias"
+
+#: verify-iso-sig-gui.sh:1623
+msgid "key saved locally - future checks won't need the network"
+msgstr ""
+"clave guardada localmente - las futuras comprobaciones no necesitarán la red"
+
+#: verify-iso-sig-gui.sh:1625
+msgid "used an already-cached key, no network needed"
+msgstr "se usó una clave ya almacenada en caché, no se necesitó red"
+
+#: verify-iso-sig-gui.sh:1627
+msgid "used a key from your personal keyring (pubring.kbx)"
+msgstr "se usó una clave de su llavero personal (pubring.kbx)"
+
+#: verify-iso-sig-gui.sh:1629
+msgid "fetched the signing key from a keyserver"
+msgstr "se obtuvo la clave de firma de un servidor de claves"
+
+#: verify-iso-sig-gui.sh:1638
+msgid "this key has expired - worth confirming independently"
+msgstr "esta clave ha caducado - conviene confirmarla de forma independiente"
+
+#: verify-iso-sig-gui.sh:1655
+msgid "Verified OK"
+msgstr "Verificación correcta"
+
+#: verify-iso-sig-gui.sh:1657
+msgid "Verification FAILED"
+msgstr "Verificación FALLIDA"
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
+#: verify-iso-sig-gui.sh:1685
+#, sh-format
+msgid ""
+"This only shows as FAILED because you didn't trust this signing key - the "
+"cryptographic check itself already came back GOOD (see the technical details "
+"below). If you're confident this is the genuine key (e.g. you've checked its "
+"fingerprint against the distro's own official site or keyserver listing), "
+"click \"${BTN_CHECK_ANOTHER_FILE}\" and choose \"${BTN_TRUST_THIS_KEY}\" "
+"this time."
+msgstr ""
+"Esto solo aparece como FALLIDO porque no confió en esta clave de firma - la "
+"comprobación criptográfica en sí ya resultó CORRECTA (vea los detalles "
+"técnicos más abajo). Si está seguro de que esta es la clave auténtica (por "
+"ejemplo, ha comprobado su huella digital en el sitio oficial de la "
+"distribución o en un servidor de claves), haga clic en "
+"«${BTN_CHECK_ANOTHER_FILE}» y elija esta vez «${BTN_TRUST_THIS_KEY}»."
+
+#: verify-iso-sig-gui.sh:1687
+msgid ""
+"The cryptographic check itself already came back GOOD (see the technical "
+"details below) - this only shows as FAILED because the key couldn't be saved "
+"for future trust (see the technical details for why). Feel free to try again."
+msgstr ""
+"La comprobación criptográfica en sí ya resultó CORRECTA (vea los detalles "
+"técnicos más abajo) - esto solo aparece como FALLIDO porque la clave no se "
+"pudo guardar para confiar en ella en el futuro (vea los detalles técnicos "
+"para saber por qué). No dude en intentarlo de nuevo."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1690
+#, sh-format
+msgid ""
+"You pointed this tool at a checksum-listing file, not a single ISO - it can "
+"cover many ISOs at once, so there's no one file to check unless exactly one "
+"of the ones it mentions is actually present here (see the technical details "
+"below for which). Use \"${BTN_CHECK_ANOTHER_FILE}\" and point at the "
+"actual .iso file instead."
+msgstr ""
+"Ha dirigido esta herramienta a un archivo de lista de sumas de comprobación, "
+"no a una única ISO - dicho archivo puede cubrir varias ISO a la vez, por lo "
+"que no hay un único archivo que comprobar a menos que exactamente una de las "
+"que menciona esté realmente presente aquí (vea los detalles técnicos más "
+"abajo para saber cuál). Use «${BTN_CHECK_ANOTHER_FILE}» y señale "
+"directamente el archivo .iso real."
+
+#: verify-iso-sig-gui.sh:1692
+msgid ""
+"This is a checksum file for an ISO that isn't present in this folder - "
+"nothing to check. Point this tool at the actual .iso file (or a checksum/"
+"signature file that's actually next to it) instead."
+msgstr ""
+"Este es un archivo de sumas de comprobación para un ISO que no está presente "
+"en esta carpeta - nada que comprobar. Dirija esta herramienta al "
+"archivo .iso real (o a un archivo de sumas de comprobación/firma que esté "
+"realmente junto a él)."
+
+#: verify-iso-sig-gui.sh:1694
+msgid ""
+"This checksum file isn't signed, and the ISO it describes has no signature "
+"of its own either - there's nothing here this tool can cryptographically "
+"verify. Check whether the distro provides a signed checksum listing or a "
+"direct .sig/.asc/.gpg file for this ISO."
+msgstr ""
+"Este archivo de sumas de comprobación no está firmado, y el ISO que describe "
+"tampoco tiene firma propia - no hay nada aquí que esta herramienta pueda "
+"verificar criptográficamente. Compruebe si la distribución ofrece una lista "
+"de sumas de comprobación firmada o un archivo .sig/.asc/.gpg directo para "
+"este ISO."
+
+#: verify-iso-sig-gui.sh:1696
+msgid ""
+"The checksum file that lists this ISO's hash failed its own verification "
+"(bad/untrusted signature, or its key couldn't be confirmed) - nothing in it "
+"can be trusted. Re-download the checksum/signature files (and probably the "
+"ISO too), ideally from a different mirror."
+msgstr ""
+"El archivo de sumas de comprobación que enumera el hash de esta ISO no "
+"superó su propia verificación (firma incorrecta/no confiable, o no se pudo "
+"confirmar su clave) - nada en él es de confianza. Vuelva a descargar los "
+"archivos de sumas de comprobación/firma (y probablemente también la ISO), "
+"idealmente desde un servidor espejo diferente."
+
+#. TRANSLATORS: ${CHECKSUM_INFO_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1700
+#, sh-format
+msgid ""
+"This ISO was checked against a signed checksum listing "
+"(${CHECKSUM_INFO_SAFE}) that IS validly signed - but the ISO's own hash "
+"doesn't match what's listed. The checksum list itself is trustworthy; this "
+"particular download is not. Re-download the ISO, ideally from a different "
+"mirror."
+msgstr ""
+"Esta ISO se comprobó contra una lista de sumas de comprobación firmada "
+"(${CHECKSUM_INFO_SAFE}) que SÍ está firmada válidamente - pero el propio "
+"hash de la ISO no coincide con lo indicado. La lista de sumas de "
+"comprobación en sí es de confianza; esta descarga en particular no lo es. "
+"Vuelva a descargar la ISO, idealmente desde un servidor espejo diferente."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1703
+#, sh-format
+msgid ""
+"No direct signature file was found for this ISO, and none of the checksum-"
+"listing files found nearby mention this exact ISO filename either. If this "
+"distro uses a different naming convention, use \"${BTN_CHECK_ANOTHER_FILE}\" "
+"and point at the right file directly."
+msgstr ""
+"No se encontró ningún archivo de firma directo para esta ISO, y ninguno de "
+"los archivos de lista de sumas de comprobación encontrados cerca menciona "
+"tampoco este nombre exacto de archivo ISO. Si esta distribución usa una "
+"convención de nomenclatura diferente, use «${BTN_CHECK_ANOTHER_FILE}» y "
+"señale directamente el archivo correcto."
+
+#. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1706
+#, sh-format
+msgid ""
+"The file names don't match, so this signature file may simply not belong to "
+"this .iso. Use \"${BTN_CHECK_ANOTHER_FILE}\" and pick the signature file "
+"named exactly like the ISO plus .sig/.asc/.gpg."
+msgstr ""
+"Los nombres de archivo no coinciden, por lo que este archivo de firma puede "
+"simplemente no pertenecer a esta .iso. Use «${BTN_CHECK_ANOTHER_FILE}» y "
+"seleccione el archivo de firma nombrado exactamente como la ISO "
+"más .sig/.asc/.gpg."
+
+#: verify-iso-sig-gui.sh:1708
+msgid ""
+"On top of the signature not matching, this signing key also isn't one this "
+"tool already recognizes - treat this file as untrustworthy and re-download "
+"from an official source."
+msgstr ""
+"Además de que la firma no coincide, esta clave de firma tampoco es una que "
+"esta herramienta ya reconozca - trate este archivo como no confiable y "
+"vuelva a descargarlo desde una fuente oficial."
+
+#: verify-iso-sig-gui.sh:1710
+msgid ""
+"The ISO may be corrupted, or the download was incomplete or tampered with - "
+"try re-downloading it, ideally from a different mirror."
+msgstr ""
+"La ISO puede estar dañada, o la descarga estuvo incompleta o fue manipulada "
+"- intente descargarla de nuevo, idealmente desde un servidor espejo "
+"diferente."
+
+#: verify-iso-sig:166
+msgid "Usage:"
+msgstr "Uso:"
+
+#. TRANSLATORS: keep the distro names (Debian, Ubuntu, Linux Mint) exactly as-is.
+#: verify-iso-sig:168
+msgid ""
+"Verify the GPG signature of an ISO image (any distro - built-in recognition "
+"of the documented MX Linux/antiX signing keys, plus a checksum-listing "
+"convention for distros that sign a checksum listing instead of the ISO "
+"directly, e.g. Debian, Ubuntu, Linux Mint)."
+msgstr ""
+"Verifica la firma GPG de una imagen ISO (cualquier distribución - con "
+"reconocimiento integrado de las claves de firma documentadas de MX Linux/"
+"antiX, además de una convención de lista de sumas de comprobación para "
+"distribuciones que firman una lista de sumas de comprobación en lugar de la "
+"ISO directamente, p. ej. Debian, Ubuntu, Linux Mint)."
+
+#: verify-iso-sig:169
+msgid "this help"
+msgstr "esta ayuda"
+
+#: verify-iso-sig:170
+msgid "show version and exit"
+msgstr "mostrar la versión y salir"
+
+#: verify-iso-sig:171
+msgid ""
+"full manual: every option, recognition rules, the checksum-listing "
+"convention, and more"
+msgstr ""
+"manual completo: todas las opciones, reglas de reconocimiento, la convención "
+"de lista de sumas de comprobación y más"
+
+#: verify-iso-sig:172
+msgid "verify once even if the key isn't recognized"
+msgstr "verificar una vez aunque la clave no sea reconocida"
+
+#. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:174
+#, sh-format
+msgid "like ${FLAG_ALLOW_UNKNOWN}, and remembers the key too"
+msgstr "como ${FLAG_ALLOW_UNKNOWN}, y además recuerda la clave"
+
+#: verify-iso-sig:175
+msgid "list this tool's built-in recognized signing keys"
+msgstr "listar las claves de firma incorporadas que reconoce esta herramienta"
+
+#: verify-iso-sig:176 verify-iso-sig:371
+msgid "list every key saved in trustedkeys.gpg"
+msgstr "listar todas las claves guardadas en trustedkeys.gpg"
+
+#. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:178
+#, sh-format
+msgid "For every other option (scripting/automation flags) see ${FLAG_MAN}."
+msgstr ""
+"Para cualquier otra opción (indicadores de automatización/scripting) "
+"consulte ${FLAG_MAN}."
+
+#: verify-iso-sig:215
+msgid "could not generate the man page (pandoc failed)"
+msgstr "no se pudo generar la página de manual (pandoc falló)"
+
+#. TRANSLATORS: ${man_src} is a file path, ${FLAG_MAN} a literal flag name.
+#: verify-iso-sig:219
+#, sh-format
+msgid ""
+"man page not built yet and pandoc isn't installed - see ${man_src} directly, "
+"or install pandoc and re-run ${FLAG_MAN}"
+msgstr ""
+"la página de manual aún no está generada y pandoc no está instalado - "
+"consulte directamente ${man_src}, o instale pandoc y vuelva a ejecutar "
+"${FLAG_MAN}"
+
+#: verify-iso-sig:225
+msgid "warning:"
+msgstr "aviso:"
+
+#: verify-iso-sig:226
+msgid "error:"
+msgstr "error:"
+
+#. TRANSLATORS: ${flag}/${FLAG_MAN} are literal names - keep placeholders as-is.
+#: verify-iso-sig:240
+#, sh-format
+msgid "${flag} requires a value (see ${FLAG_MAN})"
+msgstr "${flag} requiere un valor (consulte ${FLAG_MAN})"
+
+#: verify-iso-sig:364
+msgid "Manage trusted keys from the command line:"
+msgstr "Gestione las claves de confianza desde la línea de comandos:"
+
+#. TRANSLATORS: ${ENV_DISPLAY}/${ENV_WAYLAND_DISPLAY} are literal env-var names - keep placeholders as-is.
+#: verify-iso-sig:367
+#, sh-format
+msgid ""
+"no graphical session detected (neither ${ENV_DISPLAY} nor "
+"${ENV_WAYLAND_DISPLAY} is set) - the trusted-keys manager needs a desktop to "
+"show its window."
+msgstr ""
+"no se detectó ninguna sesión gráfica (no está definida ni ${ENV_DISPLAY} ni "
+"${ENV_WAYLAND_DISPLAY}) - el gestor de claves de confianza necesita un "
+"escritorio para mostrar su ventana."
+
+#: verify-iso-sig:369
+msgid "Manage trusted keys from the command line instead:"
+msgstr "Gestione las claves de confianza desde la línea de comandos:"
+
+#: verify-iso-sig:372
+msgid "remove <fpr> from trustedkeys.gpg"
+msgstr "eliminar <fpr> de trustedkeys.gpg"
+
+#: verify-iso-sig:373
+msgid "export trusted key(s) to <path> (all if none given)"
+msgstr ""
+"exportar la(s) clave(s) de confianza a <path> (todas si no se indica ninguna)"
+
+#: verify-iso-sig:374
+msgid "list the key(s) in an external key file, read-only"
+msgstr "listar la(s) clave(s) de un archivo de clave externo, solo lectura"
+
+#: verify-iso-sig:375
+msgid "import key(s) from an external key file (all if none given)"
+msgstr ""
+"importar clave(s) desde un archivo de clave externo (todas si no se indica "
+"ninguna)"
+
+#. TRANSLATORS: ${CMD_MAN} is a literal command - keep the placeholder as-is.
+#: verify-iso-sig:377
+#, sh-format
+msgid "See '${CMD_MAN}' for the full manual."
+msgstr "Consulte '${CMD_MAN}' para ver el manual completo."
+
+#. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:394
+#, sh-format
+msgid ""
+"verify-iso-sig - opens a window to pick and check an ISO or signature file "
+"by default when a graphical session is available; falls back to the plain "
+"command-line tool otherwise. This preamble covers this launcher's own "
+"behavior; a short command-line reference (used automatically whenever given "
+"arguments don't look like that window's own syntax, or no graphical session "
+"is available) follows below it - see ${FLAG_MAN} for the complete one."
+msgstr ""
+"verify-iso-sig abre una ventana para elegir y comprobar un archivo ISO o de "
+"firma de forma predeterminada cuando hay una sesión gráfica disponible; de "
+"lo contrario, recurre a la herramienta de línea de comandos. Esta "
+"introducción cubre el comportamiento propio de este lanzador; a continuación "
+"aparece una breve referencia de línea de comandos (usada automáticamente "
+"siempre que los argumentos dados no se parezcan a la sintaxis propia de esa "
+"ventana, o no haya ninguna sesión gráfica disponible) - consulte ${FLAG_MAN} "
+"para la referencia completa."
+
+#: verify-iso-sig:395
+msgid ""
+"open that window if a display is available (default), otherwise this same "
+"help"
+msgstr ""
+"abre esa ventana si hay una pantalla disponible (predeterminado), en caso "
+"contrario esta misma ayuda"
+
+#: verify-iso-sig:396
+msgid "(default) the graphical main program"
+msgstr "(predeterminado) el programa gráfico principal"
+
+#: verify-iso-sig:397
+msgid "plain command-line mode"
+msgstr "modo de línea de comandos"
+
+#. TRANSLATORS: ${FLAG_HELP} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:399
+#, sh-format
+msgid ""
+"trusted-keys manager GUI (add ${FLAG_HELP} for its own flags), or with no "
+"display, print the CLI flags that cover the same ground"
+msgstr ""
+"interfaz gráfica del gestor de claves de confianza (añada ${FLAG_HELP} para "
+"ver sus propias opciones), o sin pantalla, imprime las opciones de la CLI "
+"que cubren lo mismo"
+
+#. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${algo} are literal - keep placeholders as-is.
+#: verify-iso-sig:715
+#, sh-format
+msgid ""
+"unknown ${FLAG_CHECKSUM_ALGO} '${algo}' (expected sha256, sha512, sha1, or "
+"md5)"
+msgstr ""
+"${FLAG_CHECKSUM_ALGO} '${algo}' desconocido (se esperaba sha256, sha512, "
+"sha1 o md5)"
+
+#. TRANSLATORS: ${opt}/${FLAG_MAN} are literal - keep placeholders as-is.
+#: verify-iso-sig:723
+#, sh-format
+msgid "unknown option '${opt}' (see ${FLAG_MAN})"
+msgstr "opción '${opt}' desconocida (consulte ${FLAG_MAN})"
+
+#. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:734
+#, sh-format
+msgid "exactly one fingerprint argument is required for ${FLAG_KEEP_KEY}"
+msgstr ""
+"se requiere exactamente un argumento de huella digital para ${FLAG_KEEP_KEY}"
+
+#. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:740 verify-iso-sig:1936
+#, sh-format
+msgid ""
+"${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex "
+"fingerprint, not '${FPR}'"
+msgstr ""
+"${FLAG_KEEP_KEY} necesita una huella digital hexadecimal completa de 40 "
+"caracteres (o 64 caracteres), no '${FPR}'"
+
+#: verify-iso-sig:745
+msgid "this option takes no extra arguments"
+msgstr "esta opción no acepta argumentos adicionales"
+
+#: verify-iso-sig:747
+msgid "expected an ISO or signature file to check"
+msgstr "se esperaba un archivo ISO o de firma para verificar"
+
+#: verify-iso-sig:776 verify-iso-sig:780
+#, sh-format
+msgid ""
+"'${ISO}' is a directory, not a file - point this at the actual .iso file (or "
+"its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+"'${ISO}' es un directorio, no un archivo - señale directamente el "
+"archivo .iso real (o su archivo de firma .sig/.asc/.gpg/.sign)."
+
+#: verify-iso-sig:777
+#, sh-format
+msgid ""
+"'${SIG}' is a directory, not a file - point this at the actual signature "
+"file directly."
+msgstr ""
+"'${SIG}' es un directorio, no un archivo - señale directamente el archivo de "
+"firma real."
+
+#: verify-iso-sig:942
+msgid ""
+"this key has expired - the signature check below still runs, but an expired "
+"key is worth confirming independently before you decide to trust it"
+msgstr ""
+"esta clave ha caducado - la comprobación de la firma se realiza igualmente, "
+"pero una clave caducada merece confirmarse de forma independiente antes de "
+"decidir confiar en ella"
+
+#: verify-iso-sig:976 verify-iso-sig:1016
+msgid "this key's expiry was renewed - updated local copy automatically"
+msgstr ""
+"la validez de esta clave se ha renovado - copia local actualizada "
+"automáticamente"
+
+#: verify-iso-sig:989
+#, sh-format
+msgid "checking ${ks} for a renewed copy of this key..."
+msgstr "buscando en ${ks} una copia renovada de esta clave..."
+
+#: verify-iso-sig:1030
+msgid "no renewal found - continuing with the existing (expired) key"
+msgstr ""
+"no se encontró ninguna renovación - se continúa con la clave existente "
+"(caducada)"
+
+#: verify-iso-sig:1177
+#, sh-format
+msgid "'${UNTRUST_KEY}' is not in ${TRUSTED_GPG}"
+msgstr "'${UNTRUST_KEY}' no está en ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1181
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr "se eliminó ${UNTRUST_KEY} de ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1186
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
+msgstr "no se pudo eliminar '${UNTRUST_KEY}' de ${TRUSTED_GPG}: ${out}"
+
+#: verify-iso-sig:1199
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr ""
+"todavía no hay claves de confianza guardadas (${TRUSTED_GPG} no existe)"
+
+#: verify-iso-sig:1213
+#, sh-format
+msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
+msgstr ""
+"aviso: huella digital '${fpr}' no encontrada en ${TRUSTED_GPG}, omitiendo"
+
+#: verify-iso-sig:1216 verify-iso-sig:1402
+#, sh-format
+msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
+msgstr ""
+"nota: '${fpr}' es una subclave - resuelta a su clave primaria '${resolved}'"
+
+#: verify-iso-sig:1224
+msgid "no matching trusted key(s) to export"
+msgstr "no hay clave(s) de confianza coincidente(s) para exportar"
+
+#: verify-iso-sig:1233
+#, sh-format
+msgid "could not export to '${EXPORT_TRUSTED_KEYS}': ${ERR}"
+msgstr "no se pudo exportar a '${EXPORT_TRUSTED_KEYS}': ${ERR}"
+
+#: verify-iso-sig:1237
+#, sh-format
+msgid "exported ${EXPORTED_COUNT} key(s) to ${EXPORT_TRUSTED_KEYS}"
+msgstr "se exportaron ${EXPORTED_COUNT} clave(s) a ${EXPORT_TRUSTED_KEYS}"
+
+#: verify-iso-sig:1248
+#, sh-format
+msgid "cannot read '${INSPECT_KEY_FILE}'"
+msgstr "no se puede leer '${INSPECT_KEY_FILE}'"
+
+#: verify-iso-sig:1251
+#, sh-format
+msgid ""
+"'${INSPECT_KEY_FILE}' does not look like a valid OpenPGP key file: "
+"${SHOW_OUT}"
+msgstr ""
+"'${INSPECT_KEY_FILE}' no parece un archivo de clave OpenPGP válido: "
+"${SHOW_OUT}"
+
+#: verify-iso-sig:1253
+#, sh-format
+msgid ""
+"'${INSPECT_KEY_FILE}' contains private/secret key material - refusing to "
+"treat it as a public trusted-signing key"
+msgstr ""
+"'${INSPECT_KEY_FILE}' contiene material de clave privada/secreta - se "
+"rechaza tratarla como una clave pública de firma de confianza"
+
+#: verify-iso-sig:1311
+#, sh-format
+msgid "warning: could not export key from ${ring}: ${out}"
+msgstr "aviso: no se pudo exportar la clave desde ${ring}: ${out}"
+
+#: verify-iso-sig:1372
+#, sh-format
+msgid "cannot read '${IMPORT_TRUSTED_KEYS}'"
+msgstr "no se puede leer '${IMPORT_TRUSTED_KEYS}'"
+
+#: verify-iso-sig:1375
+#, sh-format
+msgid ""
+"'${IMPORT_TRUSTED_KEYS}' does not look like a valid OpenPGP key file: "
+"${SHOW_OUT}"
+msgstr ""
+"'${IMPORT_TRUSTED_KEYS}' no parece un archivo de clave OpenPGP válido: "
+"${SHOW_OUT}"
+
+#: verify-iso-sig:1377
+#, sh-format
+msgid ""
+"'${IMPORT_TRUSTED_KEYS}' contains private/secret key material - refusing to "
+"import it as a public trusted-signing key"
+msgstr ""
+"'${IMPORT_TRUSTED_KEYS}' contiene material de clave privada/secreta - se "
+"rechaza importarla como una clave pública de firma de confianza"
+
+#: verify-iso-sig:1379
+#, sh-format
+msgid "no OpenPGP keys found in '${IMPORT_TRUSTED_KEYS}'"
+msgstr "no se encontraron claves OpenPGP en '${IMPORT_TRUSTED_KEYS}'"
+
+#: verify-iso-sig:1388
+#, sh-format
+msgid "could not import '${IMPORT_TRUSTED_KEYS}' into a scratch keyring"
+msgstr "no se pudo importar '${IMPORT_TRUSTED_KEYS}' en un llavero temporal"
+
+#: verify-iso-sig:1399
+#, sh-format
+msgid ""
+"warning: fingerprint '${fpr}' not found in '${IMPORT_TRUSTED_KEYS}', skipping"
+msgstr ""
+"aviso: huella digital '${fpr}' no encontrada en '${IMPORT_TRUSTED_KEYS}', "
+"omitiendo"
+
+#: verify-iso-sig:1409
+msgid "no matching key(s) to import"
+msgstr "no hay clave(s) coincidente(s) para importar"
+
+#: verify-iso-sig:1427
+#, sh-format
+msgid "warning: could not import '${FPR}' into ${TRUSTED_GPG}"
+msgstr "aviso: no se pudo importar '${FPR}' en ${TRUSTED_GPG}"
+
+#: verify-iso-sig:1431
+#, sh-format
+msgid "no key(s) were actually imported into ${TRUSTED_GPG}"
+msgstr "no se importó ninguna clave realmente en ${TRUSTED_GPG}"
+
+#. TRANSLATORS: this exact line is also parsed by the GUI's own
+#. --status-fd tag right after it (IMPORT_SUMMARY, never localized) -
+#. translate freely, the numbers/word order can differ per language,
+#. only this line's own display text changes.
+#: verify-iso-sig:1436
+#, sh-format
+msgid ""
+"${PROCESSED} key(s) processed: ${IMPORTED} new, ${CHANGED} updated, "
+"${UNCHANGED_COUNT} unchanged"
+msgstr ""
+"${PROCESSED} clave(s) procesada(s): ${IMPORTED} nueva(s), ${CHANGED} "
+"actualizada(s), ${UNCHANGED_COUNT} sin cambios"
+
+#: verify-iso-sig:1487
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum file for '${candidate_base}', but that file "
+"isn't present here - nothing to verify."
+msgstr ""
+"'${iso_base}' es un archivo de sumas de comprobación para "
+"'${candidate_base}', pero ese archivo no está presente aquí - nada que "
+"verificar."
+
+#: verify-iso-sig:1497 verify-iso-sig:1513 verify-iso-sig:1608
+#, sh-format
+msgid "resolved ISO: ${resolved_base}"
+msgstr "ISO resuelta: ${resolved_base}"
+
+#: verify-iso-sig:1508
+#, sh-format
+msgid ""
+"'${iso_base}' is an unsigned per-file checksum - not used for verification. "
+"Using '${candidate_sig_base}' instead, the ISO's own direct signature."
+msgstr ""
+"'${iso_base}' es una suma de comprobación por archivo sin firmar - no se usa "
+"para la verificación. Se usa en su lugar '${candidate_sig_base}', la firma "
+"directa propia de la ISO."
+
+#: verify-iso-sig:1525
+#, sh-format
+msgid ""
+"'${iso_base}' is an unsigned checksum file, and '${candidate_base}' has no "
+"direct .sig/.asc/.gpg/.sign of its own either - nothing here can be "
+"cryptographically verified."
+msgstr ""
+"'${iso_base}' es un archivo de sumas de comprobación sin firmar, y "
+"'${candidate_base}' tampoco tiene su propio .sig/.asc/.gpg/.sign directo - "
+"nada aquí se puede verificar criptográficamente."
+
+#: verify-iso-sig:1588 verify-iso-sig:1615
+#, sh-format
+msgid "using checksum file: ${iso_base} (${algo})"
+msgstr "usando archivo de sumas de comprobación: ${iso_base} (${algo})"
+
+#: verify-iso-sig:1593 verify-iso-sig:1620 verify-iso-sig:1820
+#, sh-format
+msgid "checksum file signature: ${sigfile_base}"
+msgstr "firma del archivo de sumas de comprobación: ${sigfile_base}"
+
+#: verify-iso-sig:1598
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum listing (it can cover many ISOs), not a single "
+"ISO to verify directly - none of the .iso files it mentions are present in "
+"'${dir}'. Point this tool at the actual .iso file instead (its checksum/"
+"signature will be found and checked automatically)."
+msgstr ""
+"'${iso_base}' es una lista de sumas de comprobación (puede cubrir varias "
+"ISO), no una única ISO para verificar directamente - ninguno de los "
+"archivos .iso que menciona está presente en '${dir}'. Dirija esta "
+"herramienta al archivo .iso real (su suma de comprobación/firma se "
+"encontrará y comprobará automáticamente)."
+
+#: verify-iso-sig:1626
+#, sh-format
+msgid ""
+"'${iso_base}' is a checksum listing covering multiple ISOs present in "
+"'${dir}': ${candidates_joined} - point this tool at the specific .iso file "
+"you want to check instead."
+msgstr ""
+"'${iso_base}' es una lista de sumas de comprobación que cubre varias ISO "
+"presentes en '${dir}': ${candidates_joined} - dirija esta herramienta al "
+"archivo .iso específico que desea comprobar."
+
+#. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
+#: verify-iso-sig:1699
+#, sh-format
+msgid ""
+"${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file "
+"not in the built-in list (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)"
+msgstr ""
+"${FLAG_CHECKSUM_ALGO} es obligatorio cuando ${FLAG_CHECKSUM_FILE} indica un "
+"archivo que no está en la lista integrada (SHA512SUMS, SHA256SUMS, "
+"sha256sum.txt, ...)"
+
+#: verify-iso-sig:1759 verify-iso-sig:1865
+#, sh-format
+msgid ""
+"the checksum file '${name_base}' failed its own signature check - it cannot "
+"be trusted, so the ISO hash inside it cannot be trusted either. Re-download "
+"the ISO and the checksum/signature files, ideally from a different mirror."
+msgstr ""
+"el archivo de sumas de comprobación '${name_base}' no superó su propia "
+"comprobación de firma - no se puede confiar en él, así que tampoco se puede "
+"confiar en el hash de la ISO que contiene. Vuelva a descargar la ISO y los "
+"archivos de sumas de comprobación/firma, idealmente desde un servidor espejo "
+"diferente."
+
+#: verify-iso-sig:1771
+#, sh-format
+msgid ""
+"checksum file '${name_base}' uses an unsupported hash algorithm "
+"('${hashcmd}' not found)"
+msgstr "el archivo de sumas de comprobación '${name_base}' usa un algoritmo hash no compatible ('${hashcmd}' no encontrado)"
+
+#: verify-iso-sig:1774 verify-iso-sig:1816
+#, sh-format
+msgid "using checksum file: ${name_base} (${algo})"
+msgstr "usando archivo de sumas de comprobación: ${name_base} (${algo})"
+
+#: verify-iso-sig:1793 verify-iso-sig:1878
+#, sh-format
+msgid ""
+"'${name_base}' is validly signed, but '${base}' does not match the recorded "
+"${algo} checksum - this download is likely corrupted, incomplete, or was "
+"tampered with after the checksum file was signed. Re-download the ISO, "
+"ideally from a different mirror. (The checksum/signature files themselves "
+"are fine - no need to re-fetch those.)"
+msgstr ""
+"'${name_base}' está firmado válidamente, pero '${base}' no coincide con la "
+"suma ${algo} registrada - es probable que esta descarga esté dañada, "
+"incompleta, o haya sido manipulada después de firmar el archivo de sumas de "
+"comprobación. Vuelva a descargar la ISO, idealmente desde un servidor espejo "
+"diferente. (Los propios archivos de sumas de comprobación/firma están bien - "
+"no es necesario volver a obtenerlos.)"
+
+#: verify-iso-sig:1796 verify-iso-sig:1881
+msgid "OK - signature and checksum both verified"
+msgstr "CORRECTO - firma y suma de comprobación verificadas"
+
+#: verify-iso-sig:1886
+#, sh-format
+msgid "'${base}' is not listed in '${CHECKSUM_FILE_OVERRIDE}'"
+msgstr "'${base}' no figura en '${CHECKSUM_FILE_OVERRIDE}'"
+
+#: verify-iso-sig:1890
+#, sh-format
+msgid ""
+"no signature file found for '${base}', and none of the checksum-listing "
+"files in its directory (${tried_joined}) contain an entry for it either"
+msgstr ""
+"no se encontró ningún archivo de firma para '${base}', y ninguno de los "
+"archivos de lista de sumas de comprobación en su directorio "
+"(${tried_joined}) contiene tampoco una entrada para él"
+
+#: verify-iso-sig:1958
+#, sh-format
+msgid "cannot read ISO file '${ISO}'"
+msgstr "no se puede leer el archivo ISO '${ISO}'"
+
+#: verify-iso-sig:1971
+#, sh-format
+msgid "cannot read signature file '${SIG}'"
+msgstr "no se puede leer el archivo de firma '${SIG}'"
+
+#: verify-iso-sig:1973
+msgid "gpgv not found"
+msgstr "gpgv no encontrado"
+
+#: verify-iso-sig:1974
+msgid "gpg not found"
+msgstr "gpg no encontrado"
+
+#: verify-iso-sig:2012
+#, sh-format
+msgid "could not extract signing key fingerprint from '${ISO}'"
+msgstr "no se pudo extraer la huella digital de la clave de firma de '${ISO}'"
+
+#: verify-iso-sig:2014
+#, sh-format
+msgid "could not extract signing key fingerprint from '${SIG}'"
+msgstr "no se pudo extraer la huella digital de la clave de firma de '${SIG}'"
+
+#: verify-iso-sig:2017
+#, sh-format
+msgid "signature made with: ${FPR}"
+msgstr "firma realizada con: ${FPR}"
+
+#: verify-iso-sig:2059
+#, sh-format
+msgid "recognized signing key: ${label}"
+msgstr "clave de firma reconocida: ${label}"
+
+#: verify-iso-sig:2062
+#, sh-format
+msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
+msgstr ""
+"reconocida: clave ya almacenada en caché y de confianza en ${TRUSTED_GPG}"
+
+#: verify-iso-sig:2065
+#, sh-format
+msgid ""
+"recognized: key already present in ${PUBRING_KBX} and explicitly marked "
+"trusted there"
+msgstr ""
+"reconocida: clave ya presente en ${PUBRING_KBX} y marcada explícitamente "
+"como de confianza allí"
+
+#: verify-iso-sig:2070 verify-iso-sig:2281 verify-iso-sig:2327
+#, sh-format
+msgid ""
+"kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
+msgstr ""
+"se conservó ${FPR} en ${TRUSTED_GPG} - las futuras ejecuciones la "
+"reconocerán automáticamente"
+
+#: verify-iso-sig:2077 verify-iso-sig:2330
+#, sh-format
+msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
+msgstr "aviso: no se pudo guardar la clave en ${TRUSTED_GPG}: ${out}"
+
+#: verify-iso-sig:2085
+#, sh-format
+msgid "${FPR} is not one of this tool's built-in recognized keys"
+msgstr ""
+"${FPR} no es una de las claves incorporadas que esta herramienta ya reconoce"
+
+#. TRANSLATORS: ${FLAG_LIST_KNOWN_KEYS} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:2087
+#, sh-format
+msgid ""
+"(run ${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's "
+"fingerprint independently before trusting it)"
+msgstr ""
+"(ejecute ${FLAG_LIST_KNOWN_KEYS} para ver la lista completa, o verifique la "
+"huella digital de esta clave de forma independiente antes de confiar en ella)"
+
+#. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN}/${FLAG_TRUST_KEY} are literal flag names - keep placeholders as-is.
+#: verify-iso-sig:2094
+#, sh-format
+msgid ""
+"refusing to verify against an unrecognized signing key (pass "
+"${FLAG_ALLOW_UNKNOWN} to verify just this once, or ${FLAG_TRUST_KEY} to also "
+"remember it for next time)"
+msgstr ""
+"se rechaza verificar contra una clave de firma no reconocida (indique "
+"${FLAG_ALLOW_UNKNOWN} para verificar solo esta vez, o ${FLAG_TRUST_KEY} para "
+"además recordarla la próxima vez)"
+
+#. TRANSLATORS: ${FLAG_TRUST_KEY} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:2097
+#, sh-format
+msgid ""
+"verifying anyway - if the result below is GOOD and you decide you trust this "
+"key, use ${FLAG_TRUST_KEY} next time (or mark it trusted in your own GPG "
+"keyring) so future checks recognize it automatically"
+msgstr ""
+"verificando de todos modos - si el resultado siguiente es CORRECTO y decide "
+"confiar en esta clave, use ${FLAG_TRUST_KEY} la próxima vez (o márquela como "
+"de confianza en su propio llavero GPG) para que las futuras comprobaciones "
+"la reconozcan automáticamente"
+
+#: verify-iso-sig:2113
+#, sh-format
+msgid ""
+"kept ${FPR} in ${TRUSTED_GPG} (reused the copy fetched during verification - "
+"no extra keyserver lookup needed)"
+msgstr ""
+"se conservó ${FPR} en ${TRUSTED_GPG} (se reutilizó la copia obtenida durante "
+"la verificación - no se necesitó otra consulta al servidor de claves)"
+
+#: verify-iso-sig:2132
+#, sh-format
+msgid "key already present and valid in ${TRUSTED_GPG}"
+msgstr "clave ya presente y válida en ${TRUSTED_GPG}"
+
+#: verify-iso-sig:2149
+#, sh-format
+msgid "key in ${TRUSTED_GPG} is ${status}, ignoring cached copy"
+msgstr "la clave en ${TRUSTED_GPG} está ${status}, ignorando la copia en caché"
+
+#: verify-iso-sig:2155
+#, sh-format
+msgid "key already present and valid in ${PUBRING_KBX}"
+msgstr "clave ya presente y válida en ${PUBRING_KBX}"
+
+#: verify-iso-sig:2160
+#, sh-format
+msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
+msgstr ""
+"la clave en ${PUBRING_KBX} está ${pr_status}, ignorando la copia en caché"
+
+#: verify-iso-sig:2167
+#, sh-format
+msgid "fetching ${FPR} from ${ks}"
+msgstr "obteniendo ${FPR} de ${ks}"
+
+#: verify-iso-sig:2211
+#, sh-format
+msgid ""
+"${ks} returned more than one key for Key ID ${FPR} - refusing to guess which "
+"one is real"
+msgstr ""
+"${ks} devolvió más de una clave para el ID de clave ${FPR} - se rechaza "
+"adivinar cuál es la auténtica"
+
+#: verify-iso-sig:2236
+#, sh-format
+msgid ""
+"${ks} returned ${FPR} without any usable key material (likely a user ID that "
+"was never confirmed there) - trying next..."
+msgstr ""
+"${ks} devolvió ${FPR} sin ningún material de clave utilizable (probablemente "
+"un ID de usuario que nunca se confirmó allí) - probando el siguiente..."
+
+#: verify-iso-sig:2238
+#, sh-format
+msgid "could not fetch from ${ks}, trying next..."
+msgstr "no se pudo obtener de ${ks}, probando el siguiente..."
+
+#: verify-iso-sig:2245
+#, sh-format
+msgid ""
+"could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
+msgstr ""
+"no se pudo obtener la clave ${FPR} de ningún servidor de claves (se probó: "
+"${TRIED_KEYSERVERS})"
+
+#: verify-iso-sig:2250
+#, sh-format
+msgid "keeping fetched key in ${TRUSTED_GPG} for future runs"
+msgstr ""
+"conservando la clave obtenida en ${TRUSTED_GPG} para futuras ejecuciones"
+
+#: verify-iso-sig:2255
+#, sh-format
+msgid ""
+"warning: could not save key into ${TRUSTED_GPG} (${out}), continuing with a "
+"throw-away keyring for this run"
+msgstr ""
+"aviso: no se pudo guardar la clave en ${TRUSTED_GPG} (${out}), continuando "
+"con un llavero desechable para esta ejecución"
+
+#: verify-iso-sig:2284
+#, sh-format
+msgid "could not save key into ${TRUSTED_GPG}: ${out}"
+msgstr "no se pudo guardar la clave en ${TRUSTED_GPG}: ${out}"
+
+#: verify-iso-sig:2287
+#, sh-format
+msgid "${FPR} is already kept in ${TRUSTED_GPG}"
+msgstr "${FPR} ya está conservada en ${TRUSTED_GPG}"
+
+#: verify-iso-sig:2297
+#, sh-format
+msgid "verifying inline-signed checksum file '${ISO_BASE}'"
+msgstr "verificando archivo de sumas de comprobación autofirmado '${ISO_BASE}'"
+
+#: verify-iso-sig:2302
+#, sh-format
+msgid "verifying '${SIG_BASE}' against '${ISO_BASE}'"
+msgstr "verificando '${SIG_BASE}' contra '${ISO_BASE}'"
+
+#: verify-iso-sig:2309
+msgid "OK - signature verified"
+msgstr "CORRECTO - firma verificada"
+
+#: verify-iso-sig:2319
+#, sh-format
+msgid "claimed identity: ${CLAIMED_UID}"
+msgstr "identidad declarada: ${CLAIMED_UID}"
+
+#: verify-iso-sig:2334
+msgid "FAILED - signature did NOT verify"
+msgstr "FALLIDO - la firma NO se verificó"
+
+#: verify-iso-sig.desktop.in:10
+msgid "iso;sig;gpg;"
+msgstr "iso;sig;gpg;firma;"
+
+#~ msgid "Credits:"
+#~ msgstr "Créditos:"
+
+#, sh-format
+#~ msgid "About ${DISPLAY_NAME}"
+#~ msgstr "Acerca de ${DISPLAY_NAME}"
+
+#~ msgid "Verify ISO Signature"
+#~ msgstr "Verificar la firma del ISO"
+
+#~ msgid "Checksum file:"
+#~ msgstr "Archivo de sumas de comprobación:"
+
+#~ msgid "Checksum signature:"
+#~ msgstr "Firma de la suma de comprobación:"
+
+#~ msgid "error: yad is not installed"
+#~ msgstr "error: yad no está instalado"
+
+#, sh-format
+#~ msgid "error: ${VERIFY} not found or not executable"
+#~ msgstr "error: no se encontró ${VERIFY} o no es ejecutable"
+
+#, sh-format
+#~ msgid "error: ${MANAGE_KEYS} not found or not executable"
+#~ msgstr "error: no se encontró ${MANAGE_KEYS} o no es ejecutable"
+
+#~ msgid "force that window open, even with no display detected"
+#~ msgstr ""
+#~ "fuerza la apertura de esa ventana, incluso sin ninguna pantalla detectada"
+
+#~ msgid ""
+#~ "force plain command-line mode, even with a display available (e.g. from a "
+#~ "terminal, when you don't want a window to pop up)"
+#~ msgstr ""
+#~ "fuerza el modo de línea de comandos, incluso con una pantalla disponible "
+#~ "(por ejemplo, desde una terminal, cuando no desea que aparezca una "
+#~ "ventana)"
+
+#~ msgid "like --allow-unrecognized-key, and remembers the key too"
+#~ msgstr "como --allow-unrecognized-key, y además recuerda la clave"
+
+#~ msgid ""
+#~ "For every other option (scripting/automation flags like --checksum-file, "
+#~ "--status-fd, --keep-key, --export-trusted-keys, --inspect-key-file, --"
+#~ "import-trusted-keys, --untrust-key, and more) see --man."
+#~ msgstr ""
+#~ "Para cualquier otra opción (indicadores de automatización/scripting como "
+#~ "--checksum-file, --status-fd, --keep-key, --export-trusted-keys, --"
+#~ "inspect-key-file, --import-trusted-keys, --untrust-key y más) consulte --"
+#~ "man."
+
+#~ msgid "--keep-key needs exactly one fingerprint argument"
+#~ msgstr "--keep-key requiere exactamente un argumento de huella digital"
+
+#~ msgid "show the full manual page"
+#~ msgstr "mostrar la página de manual completa"
+
+#~ msgid "less chatter, only the important lines"
+#~ msgstr "menos verbosidad, solo las líneas importantes"
+
+#~ msgid "print every gpg/gpgv command before running it"
+#~ msgstr "mostrar cada comando gpg/gpgv antes de ejecutarlo"
+
+#~ msgid "print [VERIFY-ISO-SIG:] TAG lines (often with a value) to this fd"
+#~ msgstr ""
+#~ "mostrar líneas [VERIFY-ISO-SIG:] TAG (a menudo con un valor) en este "
+#~ "descriptor de archivo"
+
+#~ msgid ""
+#~ "use these keyserver(s) instead of the built-in list (comma/space "
+#~ "separated, hkps:// assumed)"
+#~ msgstr ""
+#~ "usar este(os) servidor(es) de claves en lugar de la lista incorporada "
+#~ "(separados por comas o espacios, se asume hkps://)"
+
+#~ msgid "save a fetched key locally for future runs"
+#~ msgstr "guardar localmente una clave obtenida para futuras ejecuciones"
+
+#~ msgid "don't fall back to a signed checksum listing"
+#~ msgstr "no recurrir a una lista de sumas de comprobación firmada"
+
+#~ msgid "use this checksum-listing file instead of auto-detecting one"
+#~ msgstr ""
+#~ "usar este archivo de lista de sumas de comprobación en lugar de "
+#~ "detectarlo automáticamente"
+
+#~ msgid "sha256, sha512, sha1, or md5 (only with --checksum-file)"
+#~ msgstr "sha256, sha512, sha1 o md5 (solo con --checksum-file)"
+
+#~ msgid "cache <fpr> as trusted, without verifying anything"
+#~ msgstr "almacenar en caché <fpr> como de confianza, sin verificar nada"
+
+#~ msgid "with --keep-key: reuse a key already exported to <path>"
+#~ msgstr "con --keep-key: reutilizar una clave ya exportada a <path>"
+
+#~ msgid "also export the resolved signing key to <path>"
+#~ msgstr "también exportar la clave de firma resuelta a <path>"
+
+#~ msgid "exit 0/1: is the signing key already cached? (no network)"
+#~ msgstr "salir con 0/1: ¿la clave de firma ya está en caché? (sin red)"
+
+#~ msgid "list the keyserver(s) that would actually be used for this run"
+#~ msgstr ""
+#~ "listar el/los servidor(es) de claves que realmente se usarían en esta "
+#~ "ejecución"
+
+#~ msgid ""
+#~ "Options taking a value accept either --option=value or --option value."
+#~ msgstr ""
+#~ "Las opciones que reciben un valor aceptan tanto --option=value como --"
+#~ "option value."
+
+#~ msgid ""
+#~ "Environment: KEYSERVER=<url> use only this keyserver, not the built-in "
+#~ "fallback list (overridden by --keyserver)."
+#~ msgstr ""
+#~ "Entorno: KEYSERVER=<url> usar solo este servidor de claves, no la lista "
+#~ "de respaldo integrada (anulado por --keyserver)."
+
+#~ msgid ""
+#~ "Note: that identity is self-declared by whoever created the key - it is "
+#~ "NOT independently verified, unlike the Key ID or fingerprint. Only trust "
+#~ "this key if you've confirmed the Key ID or fingerprint yourself (e.g. "
+#~ "from the respin/distro's own official site). See https://mxlinux.org/wiki/"
+#~ "system/signed-iso-files/ for the officially documented MX/antiX keys."
+#~ msgstr ""
+#~ "Nota: esa identidad la declara quien creó la clave - NO está verificada "
+#~ "de forma independiente, a diferencia del ID de clave o la huella digital. "
+#~ "Confíe en esta clave solo si ha comprobado usted mismo el ID de clave o "
+#~ "la huella digital (por ejemplo, en el sitio oficial del respin/"
+#~ "distribución). Consulte https://mxlinux.org/wiki/system/signed-iso-files/ "
+#~ "para ver las claves de MX/antiX oficialmente documentadas."
+
+#~ msgid "This ISO's signing key is not one of the documented MX/antiX keys."
+#~ msgstr ""
+#~ "La clave de firma de esta ISO no es una de las claves documentadas de MX/"
+#~ "antiX."
+
+#~ msgid "list the built-in MX/antiX signing keys this tool recognizes"
+#~ msgstr ""
+#~ "listar las claves de firma MX/antiX incorporadas que reconoce esta "
+#~ "herramienta"
+
+#~ msgid ""
+#~ "(check its fingerprint yourself against the distro's own official site or "
+#~ "keyserver listing)"
+#~ msgstr ""
+#~ "(compruebe usted mismo su huella digital en el sitio oficial de la "
+#~ "distribución o en un servidor de claves)"
+
+#, sh-format
+#~ msgid "${FPR} is NOT one of the documented MX/antiX signing keys"
+#~ msgstr "${FPR} NO es una de las claves de firma documentadas de MX/antiX"
+
+#~ msgid ""
+#~ "(compare it yourself against https://mxlinux.org/wiki/system/signed-iso-"
+#~ "files/)"
+#~ msgstr ""
+#~ "(compárela usted mismo con https://mxlinux.org/wiki/system/signed-iso-"
+#~ "files/)"
