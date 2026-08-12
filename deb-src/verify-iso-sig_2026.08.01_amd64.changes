@@ -1,0 +1,52 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Tue, 11 Aug 2026 19:56:42 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.08.01
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.08.01) mx; urgency=medium
+ .
+   * Initial commit
+Checksums-Sha1:
+ 0690b8dae6a66243344d6c87f11e81f9e78e310a 1516 verify-iso-sig_2026.08.01.dsc
+ 1aea639b04a17b0991d1d165eb6b86d5be1bdeab 520704 verify-iso-sig_2026.08.01.tar.xz
+ 47946f255d292786198cd3fb69f904387d4a0383 105420 verify-iso-sig_2026.08.01_all.deb
+ 44b7f3503f0a8397080d40c0dee09a06b6de6e39 6222 verify-iso-sig_2026.08.01_amd64.buildinfo
+Checksums-Sha256:
+ 6a5220f1ff2169697ba65136fc91f16081d41fe7a62c1736844e65bd334bb318 1516 verify-iso-sig_2026.08.01.dsc
+ be6b031b55ccd8e515f0677cd635bf6d08ef58a4f628529ef654a89c61c6d5f2 520704 verify-iso-sig_2026.08.01.tar.xz
+ dfde67249b903e8f41e10b1a48c8ee3c814fac73b6738aaa96d63266636fa562 105420 verify-iso-sig_2026.08.01_all.deb
+ c7b4c5e30d07c8a6982232bf42cbc2cb137ada6cd1d097287b9933d886a3845d 6222 verify-iso-sig_2026.08.01_amd64.buildinfo
+Files:
+ bddcac332a882775d2b5b1b86cd28f4a 1516 utils optional verify-iso-sig_2026.08.01.dsc
+ 79ca0a4a67ee20048b91d33a0d5f1add 520704 utils optional verify-iso-sig_2026.08.01.tar.xz
+ 97bf409091344ccde85a815bbc7623f5 105420 utils optional verify-iso-sig_2026.08.01_all.deb
+ bc287f72180480eca7e23e59743bc4b9 6222 utils optional verify-iso-sig_2026.08.01_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmp7wKYTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6W8HD/42Yr1VF/yUEwjC2T6l2c9Xto220rVN
+SkCc5JRoLworYdo4HfVa5LJKzXUXTbV6zfydA7JpJ1i1LCoc6aCFjFFqru3jk3Nv
+onR/choYR7tQTEc2zk1I/2Ma2C+n4APfhJbdiloPBdOO+YWmaAbepvIYmqlA81S9
+9zdhnaI9kI9pnfIXZjV0xt2R/dlMgIuovW0mPgYZWgtCZ6gUFCHrg6rtnnw+nP+O
+ajSdtlGSoWhXcbK7CX6Csfuu7uTA0OAKVLaUGvw6v/+dWlS0+tTL4gmZhHQfblbr
+TA4GVRnc3NS2cYyF7Ys/tTqa2VcDEnn759OJQeqO80sRBDzubDHc7o6bioLglpH4
+PG0sAGz3GL2AOKSlCHj5thgoso+yKp2kOfGC9fXUHMwxxlq35yaZFeulxqcKfbjL
+bO9Vcjd5McRjPyNr765nVpao7peKHLis7Ooxutj/vpGBcZrNa2q3T1ODBzeBjdw5
+6enMhLU3fPvCEYRBSQKVVKWj6aDjD2ShRmTZiz3VaOAW7rprWkhW4o1GsK0yuR4d
+wLDk2/85o26fdUd2UDhcOrSlW6cxpIWo0WaLwqVBEF//mGkmwHJ+ZtHCaF7emwtx
+t8N0RqALjpmruhfbfG2PVIaOVi+xgec781acQEYx7Ce+rS8kwsChuk627niX5KbC
+cBvACg4dU+gOeg==
+=kqkj
+-----END PGP SIGNATURE-----
