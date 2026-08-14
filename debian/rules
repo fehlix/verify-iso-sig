@@ -21,3 +21,7 @@ override_dh_install:
 	sed -i "s/^VERSION=.*/VERSION=\"$$(dpkg-parsechangelog -S Version)\"/" \
 		debian/verify-iso-sig/usr/bin/verify-iso-sig \
 		debian/verify-iso-sig/usr/lib/verify-iso-sig/verify-iso-sig-gui.sh
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf locale/

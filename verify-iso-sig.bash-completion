@@ -51,7 +51,7 @@ _verify_iso_sig() {
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=($(compgen -W '
-            --gui --cli --manage-keys
+            --gui --cli --manage-keys --drag-and-drop
             -h --help -V --version --man --quiet --debug
             --allow-unrecognized-key --trust-key
             --list-known-keys --list-trusted-keys --list-keyservers

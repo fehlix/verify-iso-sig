@@ -1,13 +1,6 @@
 #!/usr/bin/bash
-
-# regenerates the .pot/.po via update-pot.sh, then reports what changed 
-# - new msgids (need translating), removed msgids (no longer used anywhere
-# - review before assuming that's really a dropped string and not just a wording
-# tweak of an existing one, which shows up here as a remove+add pair,
-# not a single "changed" entry), and any fuzzy or still-blank msgstr per
-# language. msgmerge's own fuzzy match is not always right - this only
-# flags where to look, never trust it blindly
-#
+# Regenerates the .pot/.po catalogs via update-pot.sh, then reports new
+# msgids, removed msgids, and any fuzzy/untranslated msgstr per language.
 #
 # Usage: po/check-translations.sh
 set -euo pipefail

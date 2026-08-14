@@ -54,6 +54,7 @@ FLAG_LIST_KNOWN_KEYS="--list-known-keys"
 FLAG_GUI="--gui"
 FLAG_CLI="--cli"
 FLAG_MANAGE_KEYS="--manage-keys"
+FLAG_DND="--drag-and-drop"
 CMD_MAN="verify-iso-sig --man"
 ENV_DISPLAY='$DISPLAY'
 ENV_WAYLAND_DISPLAY='$WAYLAND_DISPLAY'
@@ -223,9 +224,14 @@ show_man() {
 
 debug_cmd() { [ "$DEBUG" -eq 1 ] && printf 'debug: %s\n' "$(printf '%q ' "$@")" >&2; true; }
 WARNING_PREFIX=$(gettext "warning:")
+INFO_PREFIX=$(gettext "info:")
 ERROR_PREFIX=$(gettext "error:")
 log() { [ "$QUIET" -eq 1 ] || printf '[*] %s\n' "$*" >&2; }
 warn() { printf '%s %s\n' "$WARNING_PREFIX" "$*" >&2; }
+# For a fact worth noting that isn't actually a problem - "warning:"
+# implies something's wrong, which isn't true for every notable fact
+# (e.g. an expired-but-still-good signature).
+info() { printf '%s %s\n' "$INFO_PREFIX" "$*" >&2; }
 # Exits directly (CLI), or returns 1 (LIB_MODE=1, a sourced GUI caller).
 die() {
     printf '%s %s\n' "$ERROR_PREFIX" "$*" >&2
@@ -397,6 +403,8 @@ print_dispatcher_help_preamble() {
     PRE_CLI=$(gettext "plain command-line mode")
     # TRANSLATORS: ${FLAG_HELP} is a literal flag name - keep the placeholder as-is.
     PRE_MANAGE_KEYS=$(eval_gettext "trusted-keys manager GUI (add \${FLAG_HELP} for its own flags), or with no display, print the CLI flags that cover the same ground")
+    # TRANSLATORS: ${FLAG_GUI} is a literal flag name - keep the placeholder as-is.
+    PRE_DND=$(eval_gettext "same as \${FLAG_GUI}, but also shows the drag-and-drop pane (most users won't need this - reachable from the app menu's own \"Drag & Drop\" entry)")
     cat <<EOF
 $PRE_INTRO
 
@@ -404,6 +412,7 @@ $PRE_INTRO
   $FLAG_GUI [file]              $PRE_GUI
   $FLAG_CLI ...                 $PRE_CLI
   $FLAG_MANAGE_KEYS             $PRE_MANAGE_KEYS
+  $FLAG_DND           $PRE_DND
 
 EOF
 }
@@ -746,6 +755,7 @@ elif [ "$LIST_TRUSTED" -eq 1 ] || [ "$LIST_KNOWN_KEYS" -eq 1 ] || [ "$LIST_KEYSE
 else
     [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage 1 "$(gettext "expected an ISO or signature file to check")"
     NO_DIRECT_SIG=0
+    ISO_DERIVED_FROM_SIG=0
     if [ -n "${2:-}" ]; then
         # Two explicit arguments - order-independent via, in order,
         # classify_checksum_listing_pair()/classify_checksum_signature_
@@ -782,7 +792,9 @@ else
             # A single argument that's itself a signature file - derive the
             # ISO/checksum-listing name by stripping the extension, then
             # continue as if passed explicitly as $1 with this as $2.
+            # ISO_DERIVED_FROM_SIG: this name is only a guess, not user-given.
             SIG=$ISO
+            ISO_DERIVED_FROM_SIG=1
             case "$SIG" in
                 *.sig)  ISO=${SIG%.sig}  ;;
                 *.asc)  ISO=${SIG%.asc}  ;;
@@ -933,14 +945,22 @@ key_material_usable() {
     esac
 }
 
-# One-line transparency note, shared by every key_material_usable() call
-# site that just accepted an expired key - so a user always sees
-# explicitly that the key used for this check has expired, even though
-# the crypto check itself still ran (see key_material_usable()'s own
-# header comment for why expiry doesn't block verification here).
+# Transparency note for an already-accepted expired key (see
+# key_material_usable()). $1/$2: same ring/prefix the caller's
+# key_status() just used - re-queried once to surface the actual
+# expiry date.
 warn_key_expired() {
-    warn "$(gettext "this key has expired - the signature check below still runs, but an expired key is worth confirming independently before you decide to trust it")"
-    status_out "KEY_EXPIRED"
+    local ring=$1 prefix=$2 line epoch date_str=""
+    line=$(gpg --batch --no-default-keyring --keyring "${prefix}${ring}" \
+               --with-colons --list-keys "$FPR" 2>/dev/null | grep '^pub:' | head -n1) || true
+    epoch=$(printf '%s' "$line" | cut -d: -f7)
+    [ -n "$epoch" ] && date_str=$(date -d "@$epoch" +%Y-%m-%d 2>/dev/null) || true
+    if [ -n "$date_str" ]; then
+        info "$(eval_gettext "this key expired on \${date_str} - this does not affect the signature check")"
+    else
+        info "$(gettext "this key has expired - this does not affect the signature check")"
+    fi
+    status_out "KEY_EXPIRED${date_str:+ $date_str}"
 }
 
 # $FPR is already recognized+usable via an expired copy sitting in
@@ -1478,13 +1498,12 @@ resolve_plain_checksum_as_iso() {
     candidate=${ISO%."$suffix"}
     if [ ! -f "$candidate" ]; then
         status_out "PLAIN_CHECKSUM_TARGET_MISSING"
-        iso_base=$(basename "$ISO")
         candidate_base=$(basename "$candidate")
         # Emitted even on this failure path so a caller like the GUI still
         # learns the intended ISO name, instead of the raw ".sha512"-suffixed one.
         status_out "RESOLVED_ISO $candidate_base"
         RESOLVED_ISO=$candidate_base
-        die "$(eval_gettext "'\${iso_base}' is a checksum file for '\${candidate_base}', but that file isn't present here - nothing to verify.")" || return 1
+        die "$(eval_gettext "neither '\${candidate_base}' nor a signature file for it were found in this folder - nothing to check yet.")" || return 1
     fi
 
     for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
@@ -1554,6 +1573,21 @@ resolve_checksum_listing_as_iso() {
     done
 
     dir=$(dirname "$ISO")
+    # A detached signature can exist without its listing (e.g. only
+    # "SHA256SUMS.gpg" left after "SHA256SUMS" was deleted) - without
+    # this check, the read-loop below would crash under set -e instead
+    # of a translated die().
+    if ! { [ -f "$ISO" ] && [ -r "$ISO" ]; }; then
+        iso_base=$(basename "$ISO")
+        # SIG_WITHOUT_ISO's sibling, one level up (a listing's own
+        # signature, not a plain ISO's).
+        if [ "${ISO_DERIVED_FROM_SIG:-0}" -eq 1 ]; then
+            status_out "SIG_WITHOUT_CHECKSUM_LISTING"
+            die "$(eval_gettext "this is a signature file for a checksum listing, but '\${iso_base}' isn't in the same folder")" || return 1
+        fi
+        status_out "NOTHING_TO_VERIFY"
+        die "$(eval_gettext "cannot read checksum listing '\${iso_base}'")" || return 1
+    fi
     while IFS= read -r line || [ -n "$line" ]; do
         # BSD/tag-style line (e.g. Fedora's "ALGO (name) = hash") - same
         # format find_checksum_line() recognizes. Opportunistically fills
@@ -1676,7 +1710,8 @@ find_checksum_line() {
 try_checksum_fallback() {
     local dir base candidates entry name hashcmd sigfile sigext glob \
         match_line child_rc hash_rc tried_names=() plain_file \
-        name_base algo sigfile_base tried_joined
+        name_base algo sigfile_base tried_joined checksum_sig_missing=0 \
+        override_base unsigned_matches=() peek_file
 
     dir=$(dirname "$ISO")
     base=$(basename "$ISO")
@@ -1729,6 +1764,22 @@ try_checksum_fallback() {
         [ -r "$name" ] || continue
 
         if is_clearsigned_file "$name"; then
+            # Cheap, no-network relevance pre-check: gpgv writes a
+            # cleartext-signed message's plaintext to --output even with
+            # an empty keyring (extraction is data-format parsing, not
+            # crypto) - avoids a real keyserver fetch for a candidate
+            # that turns out irrelevant. Never trusted for anything else -
+            # the real extraction below only happens after a genuine key
+            # fetch + full verify succeeds.
+            peek_file=$(mktemp "$SESSION_TMPDIR/checksum-peek.XXXXXXXXXX")
+            debug_cmd gpgv --keyring /dev/null --output "$peek_file" "$name"
+            gpgv --keyring /dev/null --output "$peek_file" "$name" >/dev/null 2>&1 || true
+            if ! find_checksum_line "$peek_file" "$base"; then
+                rm -f "$peek_file"
+                continue
+            fi
+            rm -f "$peek_file"
+
             tried_names+=("$(basename "$name")")
             plain_file=$(mktemp "$SESSION_TMPDIR/checksum-plain.XXXXXXXXXX")
 
@@ -1804,7 +1855,19 @@ try_checksum_fallback() {
                 break
             fi
         done
-        [ -n "$sigfile" ] || continue
+        if [ -z "$sigfile" ]; then
+            # Distinct from "found the sig, but ISO isn't listed" below.
+            checksum_sig_missing=1
+            # Read-only peek (never trusted/used for anything but this
+            # message) - only worth naming this untrusted candidate below
+            # if it's actually relevant to $ISO, not just because it
+            # happens to match a known checksum-listing name/pattern.
+            if find_checksum_line "$name" "$base"; then
+                unsigned_matches+=("$(basename "$name")")
+            fi
+            continue
+        fi
+        checksum_sig_missing=0
 
         tried_names+=("$(basename "$name")")
 
@@ -1883,19 +1946,30 @@ try_checksum_fallback() {
     done
 
     if [ -n "$CHECKSUM_FILE_OVERRIDE" ]; then
+        if [ "$checksum_sig_missing" -eq 1 ]; then
+            override_base=$(basename "$CHECKSUM_FILE_OVERRIDE")
+            status_out "CHECKSUM_LISTING_SIG_MISSING"
+            die "$(eval_gettext "no signature file (.sig/.asc/.gpg/.sign) was found for '\${override_base}' - cannot verify it without one")" || return 1
+        fi
         die "$(eval_gettext "'\${base}' is not listed in '\${CHECKSUM_FILE_OVERRIDE}'")" || return 1
+    elif [ "${#unsigned_matches[@]}" -gt 0 ]; then
+        # More actionable than the "no match" cases below - report even
+        # if other, irrelevant signed listings were also found. Reuses
+        # $override_base (not a new var): eval_gettext substitutes by
+        # that literal name in the message text shared with the
+        # CHECKSUM_FILE_OVERRIDE branch above.
+        override_base=${unsigned_matches[0]}
+        status_out "CHECKSUM_LISTING_FOUND_UNSIGNED $override_base"
+        die "$(eval_gettext "no signature file (.sig/.asc/.gpg/.sign) was found for '\${override_base}' - cannot verify it without one")" || return 1
     elif [ "${#tried_names[@]}" -gt 0 ]; then
         status_out "NO_CHECKSUM_LISTING_MATCH"
         tried_joined="${tried_names[*]}"
         die "$(eval_gettext "no signature file found for '\${base}', and none of the checksum-listing files in its directory (\${tried_joined}) contain an entry for it either")" || return 1
     fi
-    # else: no checksum-listing files were present - fall through silently
-    # to the caller's own "cannot read signature file" die.
-    #
-    # Return 2 (never used as a real outcome elsewhere) as an unambiguous
-    # "not applicable, continue normally" sentinel, distinct from every
-    # other return point's real 0/1 result.
-    return 2
+    # Genuinely nothing nearby - $SIG is just a placeholder guess here,
+    # not worth naming (e.g. Debian/Ubuntu never use ".iso.sig" at all).
+    status_out "NOTHING_TO_VERIFY"
+    die "$(eval_gettext "no signature file or checksum listing was found for '\${base}'")" || return 1
 }
 
 # Runs the whole checksum-resolution + key-recognition + keyserver-fetch
@@ -1955,7 +2029,14 @@ verify_iso() {
             done
         fi
         # -f (not just -r) also rejects a FIFO/device/socket masquerading as a readable path.
-        { [ -f "$ISO" ] && [ -r "$ISO" ]; } || die "$(eval_gettext "cannot read ISO file '\${ISO}'")" || return 1
+        if ! { [ -f "$ISO" ] && [ -r "$ISO" ]; }; then
+            # Not a bare "[ cond ] && status_out": under set -e that trips
+            # errexit when cond is false, with no die() message at all.
+            if [ "${ISO_DERIVED_FROM_SIG:-0}" -eq 1 ]; then
+                status_out "SIG_WITHOUT_ISO"
+            fi
+            die "$(eval_gettext "cannot read ISO file '\${ISO}'")" || return 1
+        fi
         if [ "$NO_CHECKSUM_FALLBACK" -ne 1 ] && { [ -n "$CHECKSUM_FILE_OVERRIDE" ] || [ "$NO_DIRECT_SIG" -eq 1 ]; }; then
             # 2 means "not applicable, keep going"; 0/1 means fully handled - propagate it.
             # tcf_rc=0 default + "|| tcf_rc=$?", not a bare call followed by
@@ -2054,16 +2135,23 @@ verify_iso() {
     # self-declared validity window lapse. "revoked" still never
     # qualifies, forcing the normal unrecognized-key consent flow again.
     tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
+    # Try a renewal BEFORE using this status - otherwise recognition
+    # below warns about an expiry that's about to be silently fixed
+    # anyway (confirmed confusing in practice).
+    if [ "$tg_status" = expired ]; then
+        try_renew_expired_key || true
+        tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
+    fi
     pk_status=$(key_status "$PUBRING_KBX" "")
     if label=$(known_key_label "$FPR"); then
         log "$(eval_gettext "recognized signing key: \${label}")"
     elif key_material_usable "$tg_status"; then
         RECOGNIZED_VIA_TRUSTED_GPG=1
         log "$(eval_gettext "recognized: key already cached and trusted in \${TRUSTED_GPG}")"
-        [ "$tg_status" = expired ] && warn_key_expired
+        [ "$tg_status" = expired ] && warn_key_expired "$TRUSTED_GPG" "gnupg-ring:"
     elif key_material_usable "$pk_status" && pubring_key_explicitly_trusted; then
         log "$(eval_gettext "recognized: key already present in \${PUBRING_KBX} and explicitly marked trusted there")"
-        [ "$pk_status" = expired ] && warn_key_expired
+        [ "$pk_status" = expired ] && warn_key_expired "$PUBRING_KBX" ""
         # The trust decision was already made by the user - just moving it
         # into the keyring format gpgv reads. No flag/prompt needed.
         if keep_in_trusted_gpg "$PUBRING_KBX" ""; then
@@ -2077,14 +2165,12 @@ verify_iso() {
             log "$(eval_gettext "warning: could not save key into \${TRUSTED_GPG}: \${out}")"
         fi
     else
-        # Brackets every warn() line about this unrecognized key with
+        # Brackets every info() line about this unrecognized key with
         # stable English tags, so the GUI can later strip the whole span
         # from its displayed technical body once the key is trusted -
-        # matching the tags, not the (localized) warn() text itself.
+        # matching the tags, not the (localized) info() text itself.
         status_out "UNRECOGNIZED_KEY_WARNINGS_BEGIN"
-        warn "$(eval_gettext "\${FPR} is not one of this tool's built-in recognized keys")"
-        # TRANSLATORS: ${FLAG_LIST_KNOWN_KEYS} is a literal flag name - keep the placeholder as-is.
-        warn "$(eval_gettext "(run \${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's fingerprint independently before trusting it)")"
+        info "$(eval_gettext "\${FPR} is not one of this tool's built-in recognized keys - verify its fingerprint independently before trusting it (e.g. against the distro's own official website or keyserver listing)")"
         # 0/1, not just a bare tag - the GUI needs to tell which of the two
         # differently-worded branches fired (direct ISO signature vs. some
         # kind of checksum-listing signature, detached or inline-signed).
@@ -2094,7 +2180,7 @@ verify_iso() {
             die "$(eval_gettext "refusing to verify against an unrecognized signing key (pass \${FLAG_ALLOW_UNKNOWN} to verify just this once, or \${FLAG_TRUST_KEY} to also remember it for next time)")" || return 1
         fi
         # TRANSLATORS: ${FLAG_TRUST_KEY} is a literal flag name - keep the placeholder as-is.
-        warn "$(eval_gettext "verifying anyway - if the result below is GOOD and you decide you trust this key, use \${FLAG_TRUST_KEY} next time (or mark it trusted in your own GPG keyring) so future checks recognize it automatically")"
+        info "$(eval_gettext "verifying anyway - if the result below is GOOD and you decide you trust this key, use \${FLAG_TRUST_KEY} next time (or mark it trusted in your own GPG keyring) so future checks recognize it automatically")"
         status_out "UNRECOGNIZED_KEY_WARNINGS_END"
     fi
 fi
@@ -2109,7 +2195,7 @@ if [ "$KEEP_KEY" -eq 1 ] && [ -n "$FROM_RING_OVERRIDE" ] && [ -r "$FROM_RING_OVE
    && keep_in_trusted_gpg "$FROM_RING_OVERRIDE" "gnupg-ring:"; then
     keepkey_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
     if key_material_usable "$keepkey_status"; then
-        [ "$keepkey_status" = expired ] && warn_key_expired
+        [ "$keepkey_status" = expired ] && warn_key_expired "$TRUSTED_GPG" "gnupg-ring:"
         log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} (reused the copy fetched during verification - no extra keyserver lookup needed)")"
         status_out "KEPT_IN_TRUSTED_GPG"
         return 0
@@ -2127,21 +2213,15 @@ if key_material_usable "$status"; then
     # either one here.
     if [ "$RECOGNIZED_VIA_TRUSTED_GPG" -ne 1 ]; then
         if [ "$status" = expired ]; then
-            warn_key_expired
+            warn_key_expired "$TRUSTED_GPG" "gnupg-ring:"
         else
             log "$(eval_gettext "key already present and valid in \${TRUSTED_GPG}")"
         fi
     fi
     status_out "ALREADY_IN_TRUSTED_GPG"
     VERIFY_RING=$TRUSTED_GPG
-    # Check once for a renewed (no-longer-expired) copy before settling
-    # for the existing expired one - see try_renew_expired_key()'s own
-    # header comment. $VERIFY_RING stays $TRUSTED_GPG either way (a
-    # successful renewal updates it in place). "|| true": under set -e, a
-    # bare "cond && cmd" statement whose cmd returns 1 (no renewal found,
-    # the expected common case) trips errexit just like a bare failing
-    # statement would - confirmed the hard way earlier in this file
-    # (try_checksum_fallback's own "return 2" case).
+    # Fallback renewal - only matters if the pubring-explicit-trust
+    # branch above just copied in a different, itself-expired key.
     if [ "$status" = expired ]; then
         try_renew_expired_key || true
     fi
@@ -2150,7 +2230,7 @@ else
     pr_status=$(key_status "$PUBRING_KBX" "")
     if key_material_usable "$pr_status" && export_to_tmp_ring "$PUBRING_KBX" ""; then
         if [ "$pr_status" = expired ]; then
-            warn_key_expired
+            warn_key_expired "$PUBRING_KBX" ""
         else
             log "$(eval_gettext "key already present and valid in \${PUBRING_KBX}")"
         fi
@@ -2226,16 +2306,16 @@ if [ -z "$VERIFY_RING" ]; then
             # gpg's own import chatter is just plumbing, not the signature
             # check itself - only worth showing under --debug.
             [ "$DEBUG" -eq 1 ] && printf '%s\n' "$out" >&2
-            [ "$fetched_status" = expired ] && warn_key_expired
+            [ "$fetched_status" = expired ] && warn_key_expired "$TMP_RING" "gnupg-ring:"
             VERIFY_RING=$TMP_RING
             FETCHED=1
             break
         fi
         printf '%s\n' "$out" >&2
         if [ "$fetch_rc" -eq 0 ]; then
-            warn "$(eval_gettext "\${ks} returned \${FPR} without any usable key material (likely a user ID that was never confirmed there) - trying next...")"
+            info "$(eval_gettext "\${ks} returned \${FPR} without any usable key material (likely a user ID that was never confirmed there) - trying next...")"
         else
-            warn "$(eval_gettext "could not fetch from \${ks}, trying next...")"
+            info "$(eval_gettext "could not fetch from \${ks}, trying next...")"
         fi
         rm -f "$TMP_RING" "${TMP_RING}~"
         TMP_RING=""
@@ -2342,19 +2422,24 @@ return "$rc"
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     FORCE_MODE=""
     MANAGE_KEYS_DISPATCH=0
+    DND_DISPATCH=0
     DISPATCH_ARGS=()
-    # --cli/--gui/--manage-keys are dispatcher-only flags, recognized
-    # anywhere in the argument list - like every other flag this tool
-    # accepts (--debug, --allow-unrecognized-key, ...), not just as the
-    # very first argument. Found via real testing: "--debug --gui <sig>
-    # <iso>" failed with "unknown option '--gui'" (only ${1:-} was ever
-    # checked) while "--gui --debug <sig> <iso>" worked - a confusing,
-    # order-dependent inconsistency with how every other flag behaves.
+    # --cli/--gui/--manage-keys/--drag-and-drop are dispatcher-only flags,
+    # recognized anywhere in the argument list - like every other flag
+    # this tool accepts (--debug, --allow-unrecognized-key, ...), not just
+    # as the very first argument. Found via real testing: "--debug --gui
+    # <sig> <iso>" failed with "unknown option '--gui'" (only ${1:-} was
+    # ever checked) while "--gui --debug <sig> <iso>" worked - a
+    # confusing, order-dependent inconsistency with how every other flag
+    # behaves. --drag-and-drop implies --gui (meaningless in CLI mode) -
+    # forcing FORCE_MODE here means the GUI-dispatch branch below needs
+    # no separate check for it.
     for DISPATCH_ARG in "$@"; do
         case "$DISPATCH_ARG" in
             --cli) FORCE_MODE=cli ;;
             --gui) FORCE_MODE=gui ;;
             --manage-keys) MANAGE_KEYS_DISPATCH=1 ;;
+            --drag-and-drop) DND_DISPATCH=1; FORCE_MODE=gui ;;
             *) DISPATCH_ARGS+=("$DISPATCH_ARG") ;;
         esac
     done
@@ -2386,7 +2471,11 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         export DISPLAY_NAME="verify-iso-sig"
         # See the identical comment on the --manage-keys exec above.
         session_tmpdir_cleanup
-        exec "$GUI" "$@"
+        if [ "$DND_DISPATCH" -eq 1 ]; then
+            exec "$GUI" --drag-and-drop "$@"
+        else
+            exec "$GUI" "$@"
+        fi
     else
         main "$@"
     fi

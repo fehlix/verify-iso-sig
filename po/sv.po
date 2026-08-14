@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verify-iso-sig\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-11 14:26+0200\n"
+"POT-Creation-Date: 2026-08-13 22:59+0200\n"
 "PO-Revision-Date: 2026-07-30 23:30+0200\n"
 "Last-Translator: \n"
 "Language-Team: Swedish\n"
@@ -28,7 +28,7 @@ msgid "Check Another File"
 msgstr "Kontrollera en annan fil"
 
 #: verify-iso-sig-gui.sh:260 verify-iso-sig-gui.sh:277
-#: verify-iso-sig-gui.sh:1730
+#: verify-iso-sig-gui.sh:1881
 msgid "OK"
 msgstr "OK"
 
@@ -65,8 +65,8 @@ msgstr "Om ${ABOUT_TITLE}"
 msgid "Close"
 msgstr "Stäng"
 
-#: verify-iso-sig-gui.sh:407 verify-iso-sig-gui.sh:934
-#: verify-iso-sig-gui.sh:1018 verify-iso-sig.desktop.in:16
+#: verify-iso-sig-gui.sh:407 verify-iso-sig-gui.sh:952
+#: verify-iso-sig-gui.sh:1045 verify-iso-sig.desktop.in:18
 msgid "Manage Trusted Keys"
 msgstr "Hantera betrodda nycklar"
 
@@ -217,8 +217,8 @@ msgstr ""
 "sedan på ”${BTN_IMPORT_SELECTED}”."
 
 #: verify-iso-sig-gui.sh:614 verify-iso-sig-gui.sh:728
-#: verify-iso-sig-gui.sh:933 verify-iso-sig-gui.sh:1017
-#: verify-iso-sig-gui.sh:1217 verify-iso-sig-gui.sh:1436
+#: verify-iso-sig-gui.sh:951 verify-iso-sig-gui.sh:1044
+#: verify-iso-sig-gui.sh:1245 verify-iso-sig-gui.sh:1475
 msgid "Cancel"
 msgstr "Avbryt"
 
@@ -278,14 +278,22 @@ msgstr "Glöm"
 msgid "Some keys could not be removed:"
 msgstr "Vissa nycklar kunde inte tas bort:"
 
-#: verify-iso-sig-gui.sh:886
+#: verify-iso-sig-gui.sh:897
+msgid ""
+"This tool checks that a downloaded ISO is authentic and undamaged, using its "
+"signature file or a signed checksum listing."
+msgstr ""
+"Det här verktyget kontrollerar att en nedladdad ISO är äkta och oskadad, med "
+"hjälp av dess signaturfil eller en signerad kontrollsummelista."
+
+#: verify-iso-sig-gui.sh:898
 msgid ""
 "Pick the .iso file, or its .sig/.asc/.gpg/.sign signature file directly."
 msgstr "Välj .iso-filen, eller direkt dess .sig/.asc/.gpg/.sign-signaturfil."
 
 #. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render as
 #. bold text, not literal characters).
-#: verify-iso-sig-gui.sh:889
+#: verify-iso-sig-gui.sh:901
 msgid ""
 "The other one is found automatically - <b>but only if it's in the same "
 "folder</b>."
@@ -293,32 +301,32 @@ msgstr ""
 "Den andra filen hittas automatiskt - <b>men bara om den finns i samma mapp</"
 "b>."
 
-#: verify-iso-sig-gui.sh:930 verify-iso-sig-gui.sh:958
+#: verify-iso-sig-gui.sh:948 verify-iso-sig-gui.sh:976
 msgid "ISO or signature file"
 msgstr "ISO- eller signaturfil"
 
-#: verify-iso-sig-gui.sh:932 verify-iso-sig-gui.sh:1016
-#: verify-iso-sig-gui.sh:1435
+#: verify-iso-sig-gui.sh:950 verify-iso-sig-gui.sh:1043
+#: verify-iso-sig-gui.sh:1474
 msgid "Verify"
 msgstr "Verifiera"
 
-#: verify-iso-sig-gui.sh:935 verify-iso-sig-gui.sh:1023
+#: verify-iso-sig-gui.sh:953 verify-iso-sig-gui.sh:1050
 msgid "About"
 msgstr "Om"
 
-#: verify-iso-sig-gui.sh:972
+#: verify-iso-sig-gui.sh:999
 msgid "Or drag a .iso or signature file here"
 msgstr "Eller dra en .iso- eller signaturfil hit"
 
-#: verify-iso-sig-gui.sh:1001
+#: verify-iso-sig-gui.sh:1028
 msgid "Pick Files"
 msgstr "Välj filer"
 
-#: verify-iso-sig-gui.sh:1002
+#: verify-iso-sig-gui.sh:1029
 msgid "Drag a File"
 msgstr "Dra en fil"
 
-#: verify-iso-sig-gui.sh:1088
+#: verify-iso-sig-gui.sh:1115
 #, sh-format
 msgid ""
 "Drop at most two files (the ISO and its signature file) - ${DROP_COUNT} were "
@@ -327,7 +335,7 @@ msgstr ""
 "Släpp högst två filer (ISO-filen och dess signaturfil) - ${DROP_COUNT} "
 "släpptes."
 
-#: verify-iso-sig-gui.sh:1307 verify-iso-sig-gui.sh:1318
+#: verify-iso-sig-gui.sh:1338 verify-iso-sig-gui.sh:1350
 msgid ""
 "That's a folder, not a file - pick the .iso file itself (or "
 "its .sig/.asc/.gpg/.sign signature file) directly."
@@ -335,60 +343,65 @@ msgstr ""
 "Det är en mapp, inte en fil - välj själva .iso-filen (eller "
 "dess .sig/.asc/.gpg/.sign-signaturfil) direkt."
 
-#: verify-iso-sig-gui.sh:1352
+#: verify-iso-sig-gui.sh:1389
 msgid "No ISO or signature file was selected."
 msgstr "Ingen ISO- eller signaturfil valdes."
 
-#: verify-iso-sig-gui.sh:1358
+#: verify-iso-sig-gui.sh:1397
 msgid "Cannot read ISO file:"
 msgstr "Det går inte att läsa ISO-filen:"
 
-#: verify-iso-sig-gui.sh:1369
+#: verify-iso-sig-gui.sh:1408
 msgid "Cannot find the matching signature file:"
 msgstr "Hittar inte den matchande signaturfilen:"
 
-#: verify-iso-sig-gui.sh:1374
+#: verify-iso-sig-gui.sh:1413
 msgid "Cannot read the checksum-listing file:"
 msgstr "Kan inte läsa kontrollsummefilen:"
 
-#: verify-iso-sig-gui.sh:1386 verify-iso-sig-gui.sh:1537
-#: verify-iso-sig-gui.sh:1550 verify-iso-sig-gui.sh:1665
-#: verify-iso-sig-gui.sh:1670
+#: verify-iso-sig-gui.sh:1425 verify-iso-sig-gui.sh:1578
+#: verify-iso-sig-gui.sh:1591 verify-iso-sig-gui.sh:1758
+#: verify-iso-sig-gui.sh:1762 verify-iso-sig-gui.sh:1767
+#: verify-iso-sig-gui.sh:1782 verify-iso-sig-gui.sh:1787
+#: verify-iso-sig-gui.sh:1792
 msgid "ISO:"
 msgstr "ISO:"
 
-#: verify-iso-sig-gui.sh:1390 verify-iso-sig-gui.sh:1551
-#: verify-iso-sig-gui.sh:1665
+#: verify-iso-sig-gui.sh:1429 verify-iso-sig-gui.sh:1592
+#: verify-iso-sig-gui.sh:1762 verify-iso-sig-gui.sh:1767
+#: verify-iso-sig-gui.sh:1775 verify-iso-sig-gui.sh:1779
+#: verify-iso-sig-gui.sh:1787
 msgid "SHA:"
 msgstr "SHA:"
 
-#: verify-iso-sig-gui.sh:1392 verify-iso-sig-gui.sh:1405
+#: verify-iso-sig-gui.sh:1431 verify-iso-sig-gui.sh:1444
 msgid "About to verify:"
 msgstr "Verifierar:"
 
-#: verify-iso-sig-gui.sh:1396 verify-iso-sig-gui.sh:1403
-#: verify-iso-sig-gui.sh:1538 verify-iso-sig-gui.sh:1561
-#: verify-iso-sig-gui.sh:1668 verify-iso-sig-gui.sh:1670
+#: verify-iso-sig-gui.sh:1435 verify-iso-sig-gui.sh:1442
+#: verify-iso-sig-gui.sh:1579 verify-iso-sig-gui.sh:1602
+#: verify-iso-sig-gui.sh:1770 verify-iso-sig-gui.sh:1780
+#: verify-iso-sig-gui.sh:1790 verify-iso-sig-gui.sh:1792
 msgid "SIG:"
 msgstr "SIG:"
 
-#: verify-iso-sig-gui.sh:1465
+#: verify-iso-sig-gui.sh:1506
 msgid "Verifying signature - this can take a while for a large ISO..."
 msgstr "Verifierar signatur - detta kan ta ett tag för en stor ISO..."
 
-#: verify-iso-sig-gui.sh:1467
+#: verify-iso-sig-gui.sh:1508
 msgid "Verifying signature - this can take a few seconds"
 msgstr "Verifierar signatur - detta kan ta några sekunder"
 
 #. TRANSLATORS: continues the previous line's sentence ("Verifying
 #. signature - this can take a few seconds") onto a second line -
 #. the two need to read as one continuous sentence together.
-#: verify-iso-sig-gui.sh:1471
+#: verify-iso-sig-gui.sh:1512
 msgid "if the signing key needs to be fetched from a keyserver..."
 msgstr "om signeringsnyckeln behöver hämtas från en nyckelserver..."
 
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
-#: verify-iso-sig-gui.sh:1529
+#: verify-iso-sig-gui.sh:1570
 #, sh-format
 msgid ""
 "By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID "
@@ -401,11 +414,11 @@ msgstr ""
 
 #. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
 #. as bold text, not literal characters).
-#: verify-iso-sig-gui.sh:1535
+#: verify-iso-sig-gui.sh:1576
 msgid "Signature check: <b>GOOD</b> - the ISO exactly matches this key."
 msgstr "Signaturkontroll: <b>GODKÄND</b> - ISO:n matchar exakt denna nyckel."
 
-#: verify-iso-sig-gui.sh:1536
+#: verify-iso-sig-gui.sh:1577
 msgid ""
 "Note: that identity is self-declared by whoever created the key - it is NOT "
 "independently verified, unlike the Key ID or fingerprint. Only trust this "
@@ -418,29 +431,29 @@ msgstr ""
 "ID:t eller fingeravtrycket (t.ex. från respinnets/distributionens egen "
 "officiella webbplats, eller en nyckelserverpost)."
 
-#: verify-iso-sig-gui.sh:1544
+#: verify-iso-sig-gui.sh:1585
 msgid "This ISO's signing key isn't one this tool already recognizes."
 msgstr ""
 "Denna ISO:s signeringsnyckel är inte en som detta verktyg redan känner igen."
 
-#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
-#: verify-iso-sig-gui.sh:1590
+#: verify-iso-sig-gui.sh:1585 verify-iso-sig-gui.sh:1607
+#: verify-iso-sig-gui.sh:1631
 msgid "Key ID:"
 msgstr "Nyckel-ID:"
 
-#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
-#: verify-iso-sig-gui.sh:1590
+#: verify-iso-sig-gui.sh:1585 verify-iso-sig-gui.sh:1607
+#: verify-iso-sig-gui.sh:1631
 msgid "Claimed identity:"
 msgstr "Uppgiven identitet:"
 
-#: verify-iso-sig-gui.sh:1544 verify-iso-sig-gui.sh:1566
-#: verify-iso-sig-gui.sh:1590
+#: verify-iso-sig-gui.sh:1585 verify-iso-sig-gui.sh:1607
+#: verify-iso-sig-gui.sh:1631
 msgid "Fingerprint:"
 msgstr "Fingeravtryck:"
 
 #. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
 #. as bold text, not literal characters).
-#: verify-iso-sig-gui.sh:1548
+#: verify-iso-sig-gui.sh:1589
 msgid ""
 "Signature check: <b>GOOD</b> - the checksum listing exactly matches this key "
 "(the ISO's own hash is checked separately, next)."
@@ -448,7 +461,7 @@ msgstr ""
 "Signaturkontroll: <b>GODKÄND</b> - kontrollsummelistan matchar exakt denna "
 "nyckel (ISO:ns egen hash kontrolleras separat, härnäst)."
 
-#: verify-iso-sig-gui.sh:1549
+#: verify-iso-sig-gui.sh:1590
 msgid ""
 "Note: that identity is self-declared by whoever created the key - it is NOT "
 "independently verified, unlike the Key ID or fingerprint. Only trust this "
@@ -461,7 +474,7 @@ msgstr ""
 "(t.ex. på distributionens egen officiella webbplats eller i en "
 "nyckelserverpost)."
 
-#: verify-iso-sig-gui.sh:1566
+#: verify-iso-sig-gui.sh:1607
 msgid ""
 "This checksum-listing file's signing key isn't one this tool already "
 "recognizes."
@@ -469,14 +482,14 @@ msgstr ""
 "Denna kontrollsummelistas signeringsnyckel är inte en som detta verktyg "
 "redan känner igen."
 
-#: verify-iso-sig-gui.sh:1592
+#: verify-iso-sig-gui.sh:1633
 msgid ""
 "This signing key currently only lives in your personal keyring (pubring.kbx)."
 msgstr ""
 "Denna signeringsnyckel finns för närvarande bara i din personliga nyckelring "
 "(pubring.kbx)."
 
-#: verify-iso-sig-gui.sh:1592
+#: verify-iso-sig-gui.sh:1633
 msgid ""
 "Copy it into ~/.gnupg/trustedkeys.gpg so future checks don't depend on it "
 "staying there?"
@@ -484,11 +497,11 @@ msgstr ""
 "Kopiera den till ~/.gnupg/trustedkeys.gpg så att framtida kontroller inte är "
 "beroende av att den finns kvar där?"
 
-#: verify-iso-sig-gui.sh:1594
+#: verify-iso-sig-gui.sh:1635
 msgid "This signing key was just fetched from a keyserver."
 msgstr "Denna signeringsnyckel hämtades just från en nyckelserver."
 
-#: verify-iso-sig-gui.sh:1594
+#: verify-iso-sig-gui.sh:1635
 msgid ""
 "Remember it locally, in ~/.gnupg/trustedkeys.gpg, so future checks don't "
 "need the network again?"
@@ -496,74 +509,90 @@ msgstr ""
 "Kom ihåg den lokalt, i ~/.gnupg/trustedkeys.gpg, så att framtida kontroller "
 "inte behöver nätverket igen?"
 
-#: verify-iso-sig-gui.sh:1610
+#: verify-iso-sig-gui.sh:1651
 msgid "Keep this key"
 msgstr "Behåll denna nyckel"
 
-#: verify-iso-sig-gui.sh:1611
+#: verify-iso-sig-gui.sh:1652
 msgid "No thanks"
 msgstr "Nej tack"
 
-#: verify-iso-sig-gui.sh:1623
+#: verify-iso-sig-gui.sh:1697
 msgid "key saved locally - future checks won't need the network"
 msgstr ""
 "nyckeln sparad lokalt - framtida kontroller kommer inte att behöva nätverket"
 
-#: verify-iso-sig-gui.sh:1625
+#: verify-iso-sig-gui.sh:1699
 msgid "used an already-cached key, no network needed"
 msgstr "använde en redan cachad nyckel, inget nätverk behövdes"
 
-#: verify-iso-sig-gui.sh:1627
+#: verify-iso-sig-gui.sh:1701
 msgid "used a key from your personal keyring (pubring.kbx)"
 msgstr "använde en nyckel från din personliga nyckelring (pubring.kbx)"
 
-#: verify-iso-sig-gui.sh:1629
+#: verify-iso-sig-gui.sh:1703
 msgid "fetched the signing key from a keyserver"
 msgstr "hämtade signeringsnyckeln från en nyckelserver"
 
-#: verify-iso-sig-gui.sh:1638
-msgid "this key has expired - worth confirming independently"
-msgstr "den här nyckeln har gått ut - värt att bekräfta oberoende"
+#. TRANSLATORS: ${KEY_EXPIRY_DATE_SAFE} is a date (e.g. 2026-08-06) - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1716
+#, sh-format
+msgid ""
+"this key expired on ${KEY_EXPIRY_DATE_SAFE} - this does not affect the "
+"signature check"
+msgstr ""
+"den här nyckeln gick ut ${KEY_EXPIRY_DATE_SAFE} - detta påverkar inte "
+"signaturkontrollen"
 
-#: verify-iso-sig-gui.sh:1655
+#: verify-iso-sig-gui.sh:1718 verify-iso-sig:961
+msgid "this key has expired - this does not affect the signature check"
+msgstr "den här nyckeln har gått ut - detta påverkar inte signaturkontrollen"
+
+#: verify-iso-sig-gui.sh:1740
 msgid "Verified OK"
 msgstr "Verifiering lyckades"
 
-#: verify-iso-sig-gui.sh:1657
+#: verify-iso-sig-gui.sh:1742
+msgid "Key not trusted"
+msgstr "Nyckeln är inte betrodd"
+
+#: verify-iso-sig-gui.sh:1744
+msgid "Nothing to verify"
+msgstr "Inget att kontrollera"
+
+#: verify-iso-sig-gui.sh:1746
 msgid "Verification FAILED"
 msgstr "Verifiering MISSLYCKADES"
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
-#: verify-iso-sig-gui.sh:1685
+#: verify-iso-sig-gui.sh:1810
 #, sh-format
 msgid ""
-"This only shows as FAILED because you didn't trust this signing key - the "
-"cryptographic check itself already came back GOOD (see the technical details "
-"below). If you're confident this is the genuine key (e.g. you've checked its "
-"fingerprint against the distro's own official site or keyserver listing), "
-"click \"${BTN_CHECK_ANOTHER_FILE}\" and choose \"${BTN_TRUST_THIS_KEY}\" "
-"this time."
-msgstr ""
-"Detta visas bara som MISSLYCKAD eftersom du inte litade på denna "
-"signeringsnyckel - den kryptografiska kontrollen i sig var redan GODKÄND (se "
-"de tekniska detaljerna nedan). Om du är säker på att detta är den äkta "
-"nyckeln (t.ex. har du kontrollerat dess fingeravtryck mot distributionens "
-"egen officiella webbplats eller nyckelserverpost), klicka på "
-"”${BTN_CHECK_ANOTHER_FILE}” och välj denna gång ”${BTN_TRUST_THIS_KEY}”."
-
-#: verify-iso-sig-gui.sh:1687
-msgid ""
 "The cryptographic check itself already came back GOOD (see the technical "
-"details below) - this only shows as FAILED because the key couldn't be saved "
-"for future trust (see the technical details for why). Feel free to try again."
+"details below) - you just haven't trusted this signing key yet. If you're "
+"confident this is the genuine key (e.g. you've checked its fingerprint "
+"against the distro's own official site or keyserver listing), click "
+"\"${BTN_CHECK_ANOTHER_FILE}\" and choose \"${BTN_TRUST_THIS_KEY}\" this time."
 msgstr ""
 "Den kryptografiska kontrollen i sig var redan GODKÄND (se de tekniska "
-"detaljerna nedan) - detta visas bara som MISSLYCKAD eftersom nyckeln inte "
-"kunde sparas för framtida förtroende (se de tekniska detaljerna för varför). "
-"Prova gärna igen."
+"detaljerna nedan) - du har bara inte litat på den här signeringsnyckeln än. "
+"Om du är säker på att det är den äkta nyckeln (t.ex. har du kontrollerat "
+"dess fingeravtryck mot distributionens egen officiella webbplats eller en "
+"nyckelserver), klicka på \"${BTN_CHECK_ANOTHER_FILE}\" och välj den här "
+"gången \"${BTN_TRUST_THIS_KEY}\"."
+
+#: verify-iso-sig-gui.sh:1812
+msgid ""
+"The cryptographic check itself already came back GOOD (see the technical "
+"details below) - the key just couldn't be saved for future trust (see the "
+"technical details for why). Feel free to try again."
+msgstr ""
+"Den kryptografiska kontrollen i sig var redan GODKÄND (se de tekniska "
+"detaljerna nedan) - nyckeln kunde bara inte sparas för framtida tillit (se "
+"de tekniska detaljerna för varför). Prova gärna igen."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
-#: verify-iso-sig-gui.sh:1690
+#: verify-iso-sig-gui.sh:1815
 #, sh-format
 msgid ""
 "You pointed this tool at a checksum-listing file, not a single ISO - it can "
@@ -578,17 +607,61 @@ msgstr ""
 "(se de tekniska detaljerna nedan för vilken). Använd "
 "”${BTN_CHECK_ANOTHER_FILE}” och peka istället på den faktiska .iso-filen."
 
-#: verify-iso-sig-gui.sh:1692
+#: verify-iso-sig-gui.sh:1817
 msgid ""
-"This is a checksum file for an ISO that isn't present in this folder - "
-"nothing to check. Point this tool at the actual .iso file (or a checksum/"
-"signature file that's actually next to it) instead."
+"No signature file or signed checksum listing was found for this ISO - "
+"there's nothing here to check yet."
 msgstr ""
-"Detta är en kontrollsummefil för en ISO som inte finns i denna mapp - inget "
-"att kontrollera. Peka detta verktyg mot den faktiska .iso-filen istället "
-"(eller mot en kontrollsumme-/signaturfil som verkligen finns bredvid den)."
+"Ingen signaturfil eller signerad kontrollsummelista hittades för den här ISO-"
+"filen - det finns inget att kontrollera här än."
 
-#: verify-iso-sig-gui.sh:1694
+#. TRANSLATORS: ${CHECKSUM_FILE_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1823 verify-iso-sig-gui.sh:1830
+#, sh-format
+msgid ""
+"This checksum listing (${CHECKSUM_FILE_SAFE}) has no signature file of its "
+"own (.sig/.asc/.gpg/.sign) next to it - it can't be trusted without one, so "
+"it was never checked against this ISO."
+msgstr ""
+"Den här kontrollsummelistan (${CHECKSUM_FILE_SAFE}) har ingen egen "
+"signaturfil (.sig/.asc/.gpg/.sign) bredvid sig - utan en sådan går den inte "
+"att lita på, så den kontrollerades aldrig mot den här ISO-filen."
+
+#. TRANSLATORS: ${DISPLAY_ISO_SAFE} is the ISO's filename - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1834
+#, sh-format
+msgid ""
+"This is a signature file, but its ISO ('${DISPLAY_ISO_SAFE}') isn't in the "
+"same folder - this tool only looks for a counterpart next to the file you "
+"pick."
+msgstr ""
+"Det här är en signaturfil, men dess ISO ('${DISPLAY_ISO_SAFE}') finns inte i "
+"samma mapp - det här verktyget letar bara efter motparten bredvid filen du "
+"väljer."
+
+#. TRANSLATORS: ${LISTING_BASE_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1839
+#, sh-format
+msgid ""
+"This is a signature file for a checksum listing, but '${LISTING_BASE_SAFE}' "
+"isn't in the same folder - this tool only looks for a counterpart next to "
+"the file you pick."
+msgstr ""
+"Det här är en signaturfil för en kontrollsummelista, men "
+"'${LISTING_BASE_SAFE}' finns inte i samma mapp - det här verktyget letar "
+"bara efter motparten bredvid filen du väljer."
+
+#. TRANSLATORS: ${DISPLAY_ISO_SAFE} is the ISO's filename - keep the placeholder as-is.
+#: verify-iso-sig-gui.sh:1843
+#, sh-format
+msgid ""
+"Neither '${DISPLAY_ISO_SAFE}' nor a signature file for it were found in this "
+"folder - nothing to check yet."
+msgstr ""
+"Varken '${DISPLAY_ISO_SAFE}' eller en signaturfil för den hittades i den här "
+"mappen - det finns inget att kontrollera än."
+
+#: verify-iso-sig-gui.sh:1845
 msgid ""
 "This checksum file isn't signed, and the ISO it describes has no signature "
 "of its own either - there's nothing here this tool can cryptographically "
@@ -601,7 +674,7 @@ msgstr ""
 "signerad kontrollsummelista eller en direkt .sig-/.asc-/.gpg-fil för denna "
 "ISO."
 
-#: verify-iso-sig-gui.sh:1696
+#: verify-iso-sig-gui.sh:1847
 msgid ""
 "The checksum file that lists this ISO's hash failed its own verification "
 "(bad/untrusted signature, or its key couldn't be confirmed) - nothing in it "
@@ -615,7 +688,7 @@ msgstr ""
 "spegelserver."
 
 #. TRANSLATORS: ${CHECKSUM_INFO_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
-#: verify-iso-sig-gui.sh:1700
+#: verify-iso-sig-gui.sh:1851
 #, sh-format
 msgid ""
 "This ISO was checked against a signed checksum listing "
@@ -631,7 +704,7 @@ msgstr ""
 "spegelserver."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
-#: verify-iso-sig-gui.sh:1703
+#: verify-iso-sig-gui.sh:1854
 #, sh-format
 msgid ""
 "No direct signature file was found for this ISO, and none of the checksum-"
@@ -645,7 +718,7 @@ msgstr ""
 "”${BTN_CHECK_ANOTHER_FILE}” och peka direkt på rätt fil."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
-#: verify-iso-sig-gui.sh:1706
+#: verify-iso-sig-gui.sh:1857
 #, sh-format
 msgid ""
 "The file names don't match, so this signature file may simply not belong to "
@@ -656,7 +729,7 @@ msgstr ""
 "denna .iso. Använd ”${BTN_CHECK_ANOTHER_FILE}” och välj signaturfilen som är "
 "namngiven exakt som ISO:n plus .sig/.asc/.gpg."
 
-#: verify-iso-sig-gui.sh:1708
+#: verify-iso-sig-gui.sh:1859
 msgid ""
 "On top of the signature not matching, this signing key also isn't one this "
 "tool already recognizes - treat this file as untrustworthy and re-download "
@@ -666,7 +739,7 @@ msgstr ""
 "som detta verktyg redan känner igen - betrakta denna fil som opålitlig och "
 "ladda ner den igen från en officiell källa."
 
-#: verify-iso-sig-gui.sh:1710
+#: verify-iso-sig-gui.sh:1861
 msgid ""
 "The ISO may be corrupted, or the download was incomplete or tampered with - "
 "try re-downloading it, ideally from a different mirror."
@@ -674,12 +747,12 @@ msgstr ""
 "ISO:n kan vara skadad, eller så var nedladdningen ofullständig eller "
 "manipulerad - försök ladda ner den igen, helst från en annan spegelserver."
 
-#: verify-iso-sig:166
+#: verify-iso-sig:167
 msgid "Usage:"
 msgstr "Användning:"
 
 #. TRANSLATORS: keep the distro names (Debian, Ubuntu, Linux Mint) exactly as-is.
-#: verify-iso-sig:168
+#: verify-iso-sig:169
 msgid ""
 "Verify the GPG signature of an ISO image (any distro - built-in recognition "
 "of the documented MX Linux/antiX signing keys, plus a checksum-listing "
@@ -692,15 +765,15 @@ msgstr ""
 "kontrollsummelista istället för ISO:n direkt, t.ex. Debian, Ubuntu, Linux "
 "Mint)."
 
-#: verify-iso-sig:169
+#: verify-iso-sig:170
 msgid "this help"
 msgstr "denna hjälp"
 
-#: verify-iso-sig:170
+#: verify-iso-sig:171
 msgid "show version and exit"
 msgstr "visa version och avsluta"
 
-#: verify-iso-sig:171
+#: verify-iso-sig:172
 msgid ""
 "full manual: every option, recognition rules, the checksum-listing "
 "convention, and more"
@@ -708,37 +781,37 @@ msgstr ""
 "fullständig manual: alla alternativ, igenkänningsregler, kontrollsummelista-"
 "konventionen och mer"
 
-#: verify-iso-sig:172
+#: verify-iso-sig:173
 msgid "verify once even if the key isn't recognized"
 msgstr "verifiera ändå en gång även om nyckeln inte känns igen"
 
 #. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:174
+#: verify-iso-sig:175
 #, sh-format
 msgid "like ${FLAG_ALLOW_UNKNOWN}, and remembers the key too"
 msgstr "som ${FLAG_ALLOW_UNKNOWN}, men kommer även ihåg nyckeln"
 
-#: verify-iso-sig:175
+#: verify-iso-sig:176
 msgid "list this tool's built-in recognized signing keys"
 msgstr "lista de inbyggda signeringsnycklar som det här verktyget känner igen"
 
-#: verify-iso-sig:176 verify-iso-sig:371
+#: verify-iso-sig:177 verify-iso-sig:377
 msgid "list every key saved in trustedkeys.gpg"
 msgstr "lista varje nyckel sparad i trustedkeys.gpg"
 
 #. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:178
+#: verify-iso-sig:179
 #, sh-format
 msgid "For every other option (scripting/automation flags) see ${FLAG_MAN}."
 msgstr ""
 "För alla andra alternativ (skript-/automatiseringsflaggor) se ${FLAG_MAN}."
 
-#: verify-iso-sig:215
+#: verify-iso-sig:216
 msgid "could not generate the man page (pandoc failed)"
 msgstr "det gick inte att generera manualsidan (pandoc misslyckades)"
 
 #. TRANSLATORS: ${man_src} is a file path, ${FLAG_MAN} a literal flag name.
-#: verify-iso-sig:219
+#: verify-iso-sig:220
 #, sh-format
 msgid ""
 "man page not built yet and pandoc isn't installed - see ${man_src} directly, "
@@ -747,26 +820,30 @@ msgstr ""
 "manualsidan är inte byggd än och pandoc är inte installerat - se ${man_src} "
 "direkt, eller installera pandoc och kör ${FLAG_MAN} igen"
 
-#: verify-iso-sig:225
+#: verify-iso-sig:226
 msgid "warning:"
 msgstr "varning:"
 
-#: verify-iso-sig:226
+#: verify-iso-sig:227
+msgid "info:"
+msgstr "info:"
+
+#: verify-iso-sig:228
 msgid "error:"
 msgstr "fel:"
 
 #. TRANSLATORS: ${flag}/${FLAG_MAN} are literal names - keep placeholders as-is.
-#: verify-iso-sig:240
+#: verify-iso-sig:246
 #, sh-format
 msgid "${flag} requires a value (see ${FLAG_MAN})"
 msgstr "${flag} kräver ett värde (se ${FLAG_MAN})"
 
-#: verify-iso-sig:364
+#: verify-iso-sig:370
 msgid "Manage trusted keys from the command line:"
 msgstr "Hantera betrodda nycklar från kommandoraden:"
 
 #. TRANSLATORS: ${ENV_DISPLAY}/${ENV_WAYLAND_DISPLAY} are literal env-var names - keep placeholders as-is.
-#: verify-iso-sig:367
+#: verify-iso-sig:373
 #, sh-format
 msgid ""
 "no graphical session detected (neither ${ENV_DISPLAY} nor "
@@ -777,35 +854,35 @@ msgstr ""
 "${ENV_WAYLAND_DISPLAY} är satt) - hanteraren för betrodda nycklar behöver "
 "ett skrivbord för att visa sitt fönster."
 
-#: verify-iso-sig:369
+#: verify-iso-sig:375
 msgid "Manage trusted keys from the command line instead:"
 msgstr "Hantera betrodda nycklar från kommandoraden istället:"
 
-#: verify-iso-sig:372
+#: verify-iso-sig:378
 msgid "remove <fpr> from trustedkeys.gpg"
 msgstr "ta bort <fpr> från trustedkeys.gpg"
 
-#: verify-iso-sig:373
+#: verify-iso-sig:379
 msgid "export trusted key(s) to <path> (all if none given)"
 msgstr "exportera betrodd(a) nyckel/nycklar till <path> (alla om inget anges)"
 
-#: verify-iso-sig:374
+#: verify-iso-sig:380
 msgid "list the key(s) in an external key file, read-only"
 msgstr "lista nyckeln/nycklarna i en extern nyckelfil, skrivskyddat"
 
-#: verify-iso-sig:375
+#: verify-iso-sig:381
 msgid "import key(s) from an external key file (all if none given)"
 msgstr ""
 "importera nyckel/nycklar från en extern nyckelfil (alla om inget anges)"
 
 #. TRANSLATORS: ${CMD_MAN} is a literal command - keep the placeholder as-is.
-#: verify-iso-sig:377
+#: verify-iso-sig:383
 #, sh-format
 msgid "See '${CMD_MAN}' for the full manual."
 msgstr "Se '${CMD_MAN}' för den fullständiga manualen."
 
 #. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:394
+#: verify-iso-sig:400
 #, sh-format
 msgid ""
 "verify-iso-sig - opens a window to pick and check an ISO or signature file "
@@ -823,7 +900,7 @@ msgstr ""
 "ut som fönstrets egen syntax, eller ingen grafisk session är tillgänglig) "
 "följer direkt nedan - se ${FLAG_MAN} för den fullständiga referensen."
 
-#: verify-iso-sig:395
+#: verify-iso-sig:401
 msgid ""
 "open that window if a display is available (default), otherwise this same "
 "help"
@@ -831,16 +908,16 @@ msgstr ""
 "öppnar det fönstret om en display är tillgänglig (standard), annars samma "
 "hjälp"
 
-#: verify-iso-sig:396
+#: verify-iso-sig:402
 msgid "(default) the graphical main program"
 msgstr "(standard) det grafiska huvudprogrammet"
 
-#: verify-iso-sig:397
+#: verify-iso-sig:403
 msgid "plain command-line mode"
 msgstr "rent kommandoradsläge"
 
 #. TRANSLATORS: ${FLAG_HELP} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:399
+#: verify-iso-sig:405
 #, sh-format
 msgid ""
 "trusted-keys manager GUI (add ${FLAG_HELP} for its own flags), or with no "
@@ -850,8 +927,19 @@ msgstr ""
 "${FLAG_HELP} för dess egna flaggor), eller utan display, skriv ut CLI-"
 "flaggorna som täcker samma sak"
 
+#. TRANSLATORS: ${FLAG_GUI} is a literal flag name - keep the placeholder as-is.
+#: verify-iso-sig:407
+#, sh-format
+msgid ""
+"same as ${FLAG_GUI}, but also shows the drag-and-drop pane (most users won't "
+"need this - reachable from the app menu's own \"Drag & Drop\" entry)"
+msgstr ""
+"samma som ${FLAG_GUI}, men visar även dra-och-släpp-panelen (de flesta "
+"användare behöver inte detta - nås via menyalternativet \"Dra och släpp\" i "
+"programmenyn)"
+
 #. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${algo} are literal - keep placeholders as-is.
-#: verify-iso-sig:715
+#: verify-iso-sig:724
 #, sh-format
 msgid ""
 "unknown ${FLAG_CHECKSUM_ALGO} '${algo}' (expected sha256, sha512, sha1, or "
@@ -861,19 +949,19 @@ msgstr ""
 "md5)"
 
 #. TRANSLATORS: ${opt}/${FLAG_MAN} are literal - keep placeholders as-is.
-#: verify-iso-sig:723
+#: verify-iso-sig:732
 #, sh-format
 msgid "unknown option '${opt}' (see ${FLAG_MAN})"
 msgstr "okänd flagga ”${opt}” (se ${FLAG_MAN})"
 
 #. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:734
+#: verify-iso-sig:743
 #, sh-format
 msgid "exactly one fingerprint argument is required for ${FLAG_KEEP_KEY}"
 msgstr "${FLAG_KEEP_KEY} kräver exakt ett fingeravtrycksargument"
 
 #. TRANSLATORS: ${FLAG_KEEP_KEY} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:740 verify-iso-sig:1936
+#: verify-iso-sig:749 verify-iso-sig:2015
 #, sh-format
 msgid ""
 "${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex "
@@ -882,15 +970,15 @@ msgstr ""
 "${FLAG_KEEP_KEY} kräver ett fullständigt hexadecimalt fingeravtryck på 40 "
 "tecken (eller 64 tecken), inte '${FPR}'"
 
-#: verify-iso-sig:745
+#: verify-iso-sig:754
 msgid "this option takes no extra arguments"
 msgstr "detta alternativ tar inga extra argument"
 
-#: verify-iso-sig:747
+#: verify-iso-sig:756
 msgid "expected an ISO or signature file to check"
 msgstr "förväntade en ISO- eller signaturfil att verifiera"
 
-#: verify-iso-sig:776 verify-iso-sig:780
+#: verify-iso-sig:786 verify-iso-sig:790
 #, sh-format
 msgid ""
 "'${ISO}' is a directory, not a file - point this at the actual .iso file (or "
@@ -899,7 +987,7 @@ msgstr ""
 "”${ISO}” är en mapp, inte en fil - peka istället direkt på själva .iso-filen "
 "(eller dess .sig/.asc/.gpg/.sign-signaturfil)."
 
-#: verify-iso-sig:777
+#: verify-iso-sig:787
 #, sh-format
 msgid ""
 "'${SIG}' is a directory, not a file - point this at the actual signature "
@@ -907,84 +995,82 @@ msgid ""
 msgstr ""
 "”${SIG}” är en mapp, inte en fil - peka direkt på själva signaturfilen."
 
-#: verify-iso-sig:942
+#: verify-iso-sig:959
+#, sh-format
 msgid ""
-"this key has expired - the signature check below still runs, but an expired "
-"key is worth confirming independently before you decide to trust it"
+"this key expired on ${date_str} - this does not affect the signature check"
 msgstr ""
-"den här nyckeln har gått ut - signaturkontrollen nedan körs ändå, men en "
-"utgången nyckel är värd att bekräfta oberoende innan du bestämmer dig för "
-"att lita på den"
+"den här nyckeln gick ut ${date_str} - detta påverkar inte signaturkontrollen"
 
-#: verify-iso-sig:976 verify-iso-sig:1016
+#: verify-iso-sig:996 verify-iso-sig:1036
 msgid "this key's expiry was renewed - updated local copy automatically"
 msgstr ""
 "denna nyckels giltighet har förnyats - lokal kopia uppdaterades automatiskt"
 
-#: verify-iso-sig:989
+#: verify-iso-sig:1009
 #, sh-format
 msgid "checking ${ks} for a renewed copy of this key..."
 msgstr "kontrollerar ${ks} efter en förnyad kopia av den här nyckeln..."
 
-#: verify-iso-sig:1030
+#: verify-iso-sig:1050
 msgid "no renewal found - continuing with the existing (expired) key"
 msgstr ""
 "ingen förnyelse hittades - fortsätter med den befintliga (utgångna) nyckeln"
 
-#: verify-iso-sig:1177
+#: verify-iso-sig:1197
 #, sh-format
 msgid "'${UNTRUST_KEY}' is not in ${TRUSTED_GPG}"
 msgstr "”${UNTRUST_KEY}” finns inte i ${TRUSTED_GPG}"
 
-#: verify-iso-sig:1181
+#: verify-iso-sig:1201
 #, sh-format
 msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
 msgstr "tog bort ${UNTRUST_KEY} från ${TRUSTED_GPG}"
 
-#: verify-iso-sig:1186
+#: verify-iso-sig:1206
 #, sh-format
 msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
 msgstr "det gick inte att ta bort ”${UNTRUST_KEY}” från ${TRUSTED_GPG}: ${out}"
 
-#: verify-iso-sig:1199
+#: verify-iso-sig:1219
 #, sh-format
 msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
 msgstr "inga betrodda nycklar sparade än (${TRUSTED_GPG} finns inte)"
 
-#: verify-iso-sig:1213
+#: verify-iso-sig:1233
 #, sh-format
 msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
 msgstr ""
 "varning: fingeravtrycket ”${fpr}” hittades inte i ${TRUSTED_GPG}, hoppar över"
 
-#: verify-iso-sig:1216 verify-iso-sig:1402
+#: verify-iso-sig:1236 verify-iso-sig:1422
 #, sh-format
 msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
 msgstr ""
 "obs: ”${fpr}” är en undernyckel - matchad till dess primärnyckel "
 "”${resolved}”"
 
-#: verify-iso-sig:1224
+#: verify-iso-sig:1244
 msgid "no matching trusted key(s) to export"
 msgstr "inga matchande betrodda nycklar att exportera"
 
-#: verify-iso-sig:1233
+#: verify-iso-sig:1253
 #, sh-format
 msgid "could not export to '${EXPORT_TRUSTED_KEYS}': ${ERR}"
 msgstr "det gick inte att exportera till ”${EXPORT_TRUSTED_KEYS}”: ${ERR}"
 
-#: verify-iso-sig:1237
+#: verify-iso-sig:1257
 #, sh-format
 msgid "exported ${EXPORTED_COUNT} key(s) to ${EXPORT_TRUSTED_KEYS}"
 msgstr ""
 "${EXPORTED_COUNT} nyckel/nycklar exporterades till ${EXPORT_TRUSTED_KEYS}"
 
-#: verify-iso-sig:1248
+#: verify-iso-sig:1268
 #, sh-format
 msgid "cannot read '${INSPECT_KEY_FILE}'"
 msgstr "kan inte läsa ”${INSPECT_KEY_FILE}”"
 
-#: verify-iso-sig:1251
+#: verify-iso-sig:1271
 #, sh-format
 msgid ""
 "'${INSPECT_KEY_FILE}' does not look like a valid OpenPGP key file: "
@@ -993,7 +1079,7 @@ msgstr ""
 "”${INSPECT_KEY_FILE}” ser inte ut att vara en giltig OpenPGP-nyckelfil: "
 "${SHOW_OUT}"
 
-#: verify-iso-sig:1253
+#: verify-iso-sig:1273
 #, sh-format
 msgid ""
 "'${INSPECT_KEY_FILE}' contains private/secret key material - refusing to "
@@ -1002,17 +1088,17 @@ msgstr ""
 "”${INSPECT_KEY_FILE}” innehåller privat/hemligt nyckelmaterial - vägrar "
 "behandla den som en publik betrodd signeringsnyckel"
 
-#: verify-iso-sig:1311
+#: verify-iso-sig:1331
 #, sh-format
 msgid "warning: could not export key from ${ring}: ${out}"
 msgstr "varning: det gick inte att exportera nyckeln från ${ring}: ${out}"
 
-#: verify-iso-sig:1372
+#: verify-iso-sig:1392
 #, sh-format
 msgid "cannot read '${IMPORT_TRUSTED_KEYS}'"
 msgstr "kan inte läsa ”${IMPORT_TRUSTED_KEYS}”"
 
-#: verify-iso-sig:1375
+#: verify-iso-sig:1395
 #, sh-format
 msgid ""
 "'${IMPORT_TRUSTED_KEYS}' does not look like a valid OpenPGP key file: "
@@ -1021,7 +1107,7 @@ msgstr ""
 "”${IMPORT_TRUSTED_KEYS}” ser inte ut att vara en giltig OpenPGP-nyckelfil: "
 "${SHOW_OUT}"
 
-#: verify-iso-sig:1377
+#: verify-iso-sig:1397
 #, sh-format
 msgid ""
 "'${IMPORT_TRUSTED_KEYS}' contains private/secret key material - refusing to "
@@ -1030,19 +1116,19 @@ msgstr ""
 "”${IMPORT_TRUSTED_KEYS}” innehåller privat/hemligt nyckelmaterial - vägrar "
 "importera den som en publik betrodd signeringsnyckel"
 
-#: verify-iso-sig:1379
+#: verify-iso-sig:1399
 #, sh-format
 msgid "no OpenPGP keys found in '${IMPORT_TRUSTED_KEYS}'"
 msgstr "inga OpenPGP-nycklar hittades i ”${IMPORT_TRUSTED_KEYS}”"
 
-#: verify-iso-sig:1388
+#: verify-iso-sig:1408
 #, sh-format
 msgid "could not import '${IMPORT_TRUSTED_KEYS}' into a scratch keyring"
 msgstr ""
 "det gick inte att importera ”${IMPORT_TRUSTED_KEYS}” till en tillfällig "
 "nyckelring"
 
-#: verify-iso-sig:1399
+#: verify-iso-sig:1419
 #, sh-format
 msgid ""
 "warning: fingerprint '${fpr}' not found in '${IMPORT_TRUSTED_KEYS}', skipping"
@@ -1050,16 +1136,16 @@ msgstr ""
 "varning: fingeravtrycket ”${fpr}” hittades inte i ”${IMPORT_TRUSTED_KEYS}”, "
 "hoppar över"
 
-#: verify-iso-sig:1409
+#: verify-iso-sig:1429
 msgid "no matching key(s) to import"
 msgstr "inga matchande nycklar att importera"
 
-#: verify-iso-sig:1427
+#: verify-iso-sig:1447
 #, sh-format
 msgid "warning: could not import '${FPR}' into ${TRUSTED_GPG}"
 msgstr "varning: det gick inte att importera ”${FPR}” till ${TRUSTED_GPG}"
 
-#: verify-iso-sig:1431
+#: verify-iso-sig:1451
 #, sh-format
 msgid "no key(s) were actually imported into ${TRUSTED_GPG}"
 msgstr "inga nycklar importerades faktiskt till ${TRUSTED_GPG}"
@@ -1068,7 +1154,7 @@ msgstr "inga nycklar importerades faktiskt till ${TRUSTED_GPG}"
 #. --status-fd tag right after it (IMPORT_SUMMARY, never localized) -
 #. translate freely, the numbers/word order can differ per language,
 #. only this line's own display text changes.
-#: verify-iso-sig:1436
+#: verify-iso-sig:1456
 #, sh-format
 msgid ""
 "${PROCESSED} key(s) processed: ${IMPORTED} new, ${CHANGED} updated, "
@@ -1077,21 +1163,21 @@ msgstr ""
 "${PROCESSED} nyckel/nycklar bearbetade: ${IMPORTED} nya, ${CHANGED} "
 "uppdaterade, ${UNCHANGED_COUNT} oförändrade"
 
-#: verify-iso-sig:1487
+#: verify-iso-sig:1506
 #, sh-format
 msgid ""
-"'${iso_base}' is a checksum file for '${candidate_base}', but that file "
-"isn't present here - nothing to verify."
+"neither '${candidate_base}' nor a signature file for it were found in this "
+"folder - nothing to check yet."
 msgstr ""
-"”${iso_base}” är en kontrollsummefil för ”${candidate_base}”, men den filen "
-"finns inte här - inget att verifiera."
+"varken '${candidate_base}' eller en signaturfil för den hittades i den här "
+"mappen - det finns inget att kontrollera än."
 
-#: verify-iso-sig:1497 verify-iso-sig:1513 verify-iso-sig:1608
+#: verify-iso-sig:1516 verify-iso-sig:1532 verify-iso-sig:1642
 #, sh-format
 msgid "resolved ISO: ${resolved_base}"
 msgstr "matchad ISO: ${resolved_base}"
 
-#: verify-iso-sig:1508
+#: verify-iso-sig:1527
 #, sh-format
 msgid ""
 "'${iso_base}' is an unsigned per-file checksum - not used for verification. "
@@ -1101,7 +1187,7 @@ msgstr ""
 "verifiering. Använder istället ”${candidate_sig_base}”, ISO:ns egen direkta "
 "signatur."
 
-#: verify-iso-sig:1525
+#: verify-iso-sig:1544
 #, sh-format
 msgid ""
 "'${iso_base}' is an unsigned checksum file, and '${candidate_base}' has no "
@@ -1112,17 +1198,31 @@ msgstr ""
 "inte heller någon egen direkt .sig/.asc/.gpg/.sign - inget här kan "
 "verifieras kryptografiskt."
 
-#: verify-iso-sig:1588 verify-iso-sig:1615
+#: verify-iso-sig:1586
+#, sh-format
+msgid ""
+"this is a signature file for a checksum listing, but '${iso_base}' isn't in "
+"the same folder"
+msgstr ""
+"det här är en signaturfil för en kontrollsummelista, men '${iso_base}' finns "
+"inte i samma mapp"
+
+#: verify-iso-sig:1589
+#, sh-format
+msgid "cannot read checksum listing '${iso_base}'"
+msgstr "det går inte att läsa kontrollsummelistan '${iso_base}'"
+
+#: verify-iso-sig:1622 verify-iso-sig:1649
 #, sh-format
 msgid "using checksum file: ${iso_base} (${algo})"
 msgstr "använder kontrollsummefil: ${iso_base} (${algo})"
 
-#: verify-iso-sig:1593 verify-iso-sig:1620 verify-iso-sig:1820
+#: verify-iso-sig:1627 verify-iso-sig:1654 verify-iso-sig:1888
 #, sh-format
 msgid "checksum file signature: ${sigfile_base}"
 msgstr "kontrollsummefilens signatur: ${sigfile_base}"
 
-#: verify-iso-sig:1598
+#: verify-iso-sig:1632
 #, sh-format
 msgid ""
 "'${iso_base}' is a checksum listing (it can cover many ISOs), not a single "
@@ -1135,7 +1235,7 @@ msgstr ""
 "”${dir}”. Peka detta verktyg mot den faktiska .iso-filen istället (dess "
 "kontrollsumma/signatur hittas och kontrolleras automatiskt)."
 
-#: verify-iso-sig:1626
+#: verify-iso-sig:1660
 #, sh-format
 msgid ""
 "'${iso_base}' is a checksum listing covering multiple ISOs present in "
@@ -1147,7 +1247,7 @@ msgstr ""
 "fil du vill kontrollera istället."
 
 #. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
-#: verify-iso-sig:1699
+#: verify-iso-sig:1734
 #, sh-format
 msgid ""
 "${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file "
@@ -1156,7 +1256,7 @@ msgstr ""
 "${FLAG_CHECKSUM_ALGO} krävs när ${FLAG_CHECKSUM_FILE} anger en fil som inte "
 "finns i den inbyggda listan (SHA512SUMS, SHA256SUMS, sha256sum.txt, …)"
 
-#: verify-iso-sig:1759 verify-iso-sig:1865
+#: verify-iso-sig:1815 verify-iso-sig:1933
 #, sh-format
 msgid ""
 "the checksum file '${name_base}' failed its own signature check - it cannot "
@@ -1168,19 +1268,21 @@ msgstr ""
 "ner ISO:n och kontrollsumme-/signaturfilerna igen, helst från en annan "
 "spegelserver."
 
-#: verify-iso-sig:1771
+#: verify-iso-sig:1827
 #, sh-format
 msgid ""
 "checksum file '${name_base}' uses an unsupported hash algorithm "
 "('${hashcmd}' not found)"
-msgstr "kontrollsummefilen '${name_base}' använder en algoritm för hashning som inte stöds ('${hashcmd}' hittades inte)"
+msgstr ""
+"kontrollsummefilen '${name_base}' använder en algoritm för hashning som inte "
+"stöds ('${hashcmd}' hittades inte)"
 
-#: verify-iso-sig:1774 verify-iso-sig:1816
+#: verify-iso-sig:1830 verify-iso-sig:1884
 #, sh-format
 msgid "using checksum file: ${name_base} (${algo})"
 msgstr "använder kontrollsummefil: ${name_base} (${algo})"
 
-#: verify-iso-sig:1793 verify-iso-sig:1878
+#: verify-iso-sig:1849 verify-iso-sig:1946
 #, sh-format
 msgid ""
 "'${name_base}' is validly signed, but '${base}' does not match the recorded "
@@ -1195,16 +1297,25 @@ msgstr ""
 "Ladda ner ISO:n igen, helst från en annan spegelserver. (Kontrollsumme-/"
 "signaturfilerna i sig är korrekta - inget behov av att hämta dem igen.)"
 
-#: verify-iso-sig:1796 verify-iso-sig:1881
+#: verify-iso-sig:1852 verify-iso-sig:1949
 msgid "OK - signature and checksum both verified"
 msgstr "OK - signatur och kontrollsumma verifierade"
 
-#: verify-iso-sig:1886
+#: verify-iso-sig:1957 verify-iso-sig:1968
+#, sh-format
+msgid ""
+"no signature file (.sig/.asc/.gpg/.sign) was found for '${override_base}' - "
+"cannot verify it without one"
+msgstr ""
+"ingen signaturfil (.sig/.asc/.gpg/.sign) hittades för '${override_base}' - "
+"det går inte att verifiera den utan en sådan"
+
+#: verify-iso-sig:1959
 #, sh-format
 msgid "'${base}' is not listed in '${CHECKSUM_FILE_OVERRIDE}'"
 msgstr "”${base}” finns inte listad i ”${CHECKSUM_FILE_OVERRIDE}”"
 
-#: verify-iso-sig:1890
+#: verify-iso-sig:1972
 #, sh-format
 msgid ""
 "no signature file found for '${base}', and none of the checksum-listing "
@@ -1214,52 +1325,57 @@ msgstr ""
 "kontrollsummelistfilerna i dess katalog (${tried_joined}) innehåller heller "
 "någon post för den"
 
-#: verify-iso-sig:1958
+#: verify-iso-sig:1977
+#, sh-format
+msgid "no signature file or checksum listing was found for '${base}'"
+msgstr "ingen signaturfil eller kontrollsummelista hittades för '${base}'"
+
+#: verify-iso-sig:2043
 #, sh-format
 msgid "cannot read ISO file '${ISO}'"
 msgstr "kan inte läsa ISO-filen ”${ISO}”"
 
-#: verify-iso-sig:1971
+#: verify-iso-sig:2057
 #, sh-format
 msgid "cannot read signature file '${SIG}'"
 msgstr "kan inte läsa signaturfilen ”${SIG}”"
 
-#: verify-iso-sig:1973
+#: verify-iso-sig:2059
 msgid "gpgv not found"
 msgstr "gpgv hittades inte"
 
-#: verify-iso-sig:1974
+#: verify-iso-sig:2060
 msgid "gpg not found"
 msgstr "gpg hittades inte"
 
-#: verify-iso-sig:2012
+#: verify-iso-sig:2098
 #, sh-format
 msgid "could not extract signing key fingerprint from '${ISO}'"
 msgstr ""
 "det gick inte att extrahera signeringsnyckelns fingeravtryck från ”${ISO}”"
 
-#: verify-iso-sig:2014
+#: verify-iso-sig:2100
 #, sh-format
 msgid "could not extract signing key fingerprint from '${SIG}'"
 msgstr ""
 "det gick inte att extrahera signeringsnyckelns fingeravtryck från ”${SIG}”"
 
-#: verify-iso-sig:2017
+#: verify-iso-sig:2103
 #, sh-format
 msgid "signature made with: ${FPR}"
 msgstr "signatur skapad med: ${FPR}"
 
-#: verify-iso-sig:2059
+#: verify-iso-sig:2152
 #, sh-format
 msgid "recognized signing key: ${label}"
 msgstr "kände igen signeringsnyckel: ${label}"
 
-#: verify-iso-sig:2062
+#: verify-iso-sig:2155
 #, sh-format
 msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
 msgstr "kände igen: nyckeln är redan cachad och betrodd i ${TRUSTED_GPG}"
 
-#: verify-iso-sig:2065
+#: verify-iso-sig:2158
 #, sh-format
 msgid ""
 "recognized: key already present in ${PUBRING_KBX} and explicitly marked "
@@ -1268,7 +1384,7 @@ msgstr ""
 "kände igen: nyckeln finns redan i ${PUBRING_KBX} och är där uttryckligen "
 "markerad som betrodd"
 
-#: verify-iso-sig:2070 verify-iso-sig:2281 verify-iso-sig:2327
+#: verify-iso-sig:2163 verify-iso-sig:2366 verify-iso-sig:2412
 #, sh-format
 msgid ""
 "kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
@@ -1276,30 +1392,24 @@ msgstr ""
 "behöll ${FPR} i ${TRUSTED_GPG} - framtida körningar kommer att känna igen "
 "den automatiskt"
 
-#: verify-iso-sig:2077 verify-iso-sig:2330
+#: verify-iso-sig:2170 verify-iso-sig:2415
 #, sh-format
 msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
 msgstr "varning: det gick inte att spara nyckeln i ${TRUSTED_GPG}: ${out}"
 
-#: verify-iso-sig:2085
-#, sh-format
-msgid "${FPR} is not one of this tool's built-in recognized keys"
-msgstr ""
-"${FPR} är inte en av de inbyggda nycklar som det här verktyget redan känner "
-"igen"
-
-#. TRANSLATORS: ${FLAG_LIST_KNOWN_KEYS} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:2087
+#: verify-iso-sig:2178
 #, sh-format
 msgid ""
-"(run ${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's "
-"fingerprint independently before trusting it)"
+"${FPR} is not one of this tool's built-in recognized keys - verify its "
+"fingerprint independently before trusting it (e.g. against the distro's own "
+"official website or keyserver listing)"
 msgstr ""
-"(kör ${FLAG_LIST_KNOWN_KEYS} för att se hela listan, eller verifiera "
-"nyckelns fingeravtryck oberoende innan du litar på den)"
+"${FPR} är inte en av de inbyggda nycklar som det här verktyget redan känner "
+"igen - kontrollera dess fingeravtryck självständigt innan du litar på den "
+"(t.ex. mot distributionens egen officiella webbplats eller en nyckelserver)"
 
 #. TRANSLATORS: ${FLAG_ALLOW_UNKNOWN}/${FLAG_TRUST_KEY} are literal flag names - keep placeholders as-is.
-#: verify-iso-sig:2094
+#: verify-iso-sig:2185
 #, sh-format
 msgid ""
 "refusing to verify against an unrecognized signing key (pass "
@@ -1311,7 +1421,7 @@ msgstr ""
 "komma ihåg den till nästa gång)"
 
 #. TRANSLATORS: ${FLAG_TRUST_KEY} is a literal flag name - keep the placeholder as-is.
-#: verify-iso-sig:2097
+#: verify-iso-sig:2188
 #, sh-format
 msgid ""
 "verifying anyway - if the result below is GOOD and you decide you trust this "
@@ -1323,7 +1433,7 @@ msgstr ""
 "den som betrodd i din egen GPG-nyckelring) så att framtida kontroller känner "
 "igen den automatiskt"
 
-#: verify-iso-sig:2113
+#: verify-iso-sig:2204
 #, sh-format
 msgid ""
 "kept ${FPR} in ${TRUSTED_GPG} (reused the copy fetched during verification - "
@@ -1332,32 +1442,32 @@ msgstr ""
 "behöll ${FPR} i ${TRUSTED_GPG} (återanvände kopian som hämtades under "
 "verifieringen - ingen extra nyckelserveruppslagning behövdes)"
 
-#: verify-iso-sig:2132
+#: verify-iso-sig:2223
 #, sh-format
 msgid "key already present and valid in ${TRUSTED_GPG}"
 msgstr "nyckeln finns redan och är giltig i ${TRUSTED_GPG}"
 
-#: verify-iso-sig:2149
+#: verify-iso-sig:2234
 #, sh-format
 msgid "key in ${TRUSTED_GPG} is ${status}, ignoring cached copy"
 msgstr "nyckeln i ${TRUSTED_GPG} är ${status}, ignorerar cachad kopia"
 
-#: verify-iso-sig:2155
+#: verify-iso-sig:2240
 #, sh-format
 msgid "key already present and valid in ${PUBRING_KBX}"
 msgstr "nyckeln finns redan och är giltig i ${PUBRING_KBX}"
 
-#: verify-iso-sig:2160
+#: verify-iso-sig:2245
 #, sh-format
 msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
 msgstr "nyckeln i ${PUBRING_KBX} är ${pr_status}, ignorerar cachad kopia"
 
-#: verify-iso-sig:2167
+#: verify-iso-sig:2252
 #, sh-format
 msgid "fetching ${FPR} from ${ks}"
 msgstr "hämtar ${FPR} från ${ks}"
 
-#: verify-iso-sig:2211
+#: verify-iso-sig:2296
 #, sh-format
 msgid ""
 "${ks} returned more than one key for Key ID ${FPR} - refusing to guess which "
@@ -1366,7 +1476,7 @@ msgstr ""
 "${ks} returnerade fler än en nyckel för nyckel-ID ${FPR} - vägrar gissa "
 "vilken som är äkta"
 
-#: verify-iso-sig:2236
+#: verify-iso-sig:2321
 #, sh-format
 msgid ""
 "${ks} returned ${FPR} without any usable key material (likely a user ID that "
@@ -1375,12 +1485,12 @@ msgstr ""
 "${ks} returnerade ${FPR} utan något användbart nyckelmaterial (troligen ett "
 "användar-ID som aldrig bekräftades där) - försöker nästa..."
 
-#: verify-iso-sig:2238
+#: verify-iso-sig:2323
 #, sh-format
 msgid "could not fetch from ${ks}, trying next..."
 msgstr "det gick inte att hämta från ${ks}, försöker nästa..."
 
-#: verify-iso-sig:2245
+#: verify-iso-sig:2330
 #, sh-format
 msgid ""
 "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
@@ -1388,12 +1498,12 @@ msgstr ""
 "det gick inte att hämta nyckeln ${FPR} från någon nyckelserver (försökte: "
 "${TRIED_KEYSERVERS})"
 
-#: verify-iso-sig:2250
+#: verify-iso-sig:2335
 #, sh-format
 msgid "keeping fetched key in ${TRUSTED_GPG} for future runs"
 msgstr "behåller den hämtade nyckeln i ${TRUSTED_GPG} för framtida körningar"
 
-#: verify-iso-sig:2255
+#: verify-iso-sig:2340
 #, sh-format
 msgid ""
 "warning: could not save key into ${TRUSTED_GPG} (${out}), continuing with a "
@@ -1402,42 +1512,90 @@ msgstr ""
 "varning: det gick inte att spara nyckeln i ${TRUSTED_GPG} (${out}), "
 "fortsätter med en engångsnyckelring för denna körning"
 
-#: verify-iso-sig:2284
+#: verify-iso-sig:2369
 #, sh-format
 msgid "could not save key into ${TRUSTED_GPG}: ${out}"
 msgstr "det gick inte att spara nyckeln i ${TRUSTED_GPG}: ${out}"
 
-#: verify-iso-sig:2287
+#: verify-iso-sig:2372
 #, sh-format
 msgid "${FPR} is already kept in ${TRUSTED_GPG}"
 msgstr "${FPR} finns redan sparad i ${TRUSTED_GPG}"
 
-#: verify-iso-sig:2297
+#: verify-iso-sig:2382
 #, sh-format
 msgid "verifying inline-signed checksum file '${ISO_BASE}'"
 msgstr "verifierar den självsignerade kontrollsummefilen ”${ISO_BASE}”"
 
-#: verify-iso-sig:2302
+#: verify-iso-sig:2387
 #, sh-format
 msgid "verifying '${SIG_BASE}' against '${ISO_BASE}'"
 msgstr "verifierar ”${SIG_BASE}” mot ”${ISO_BASE}”"
 
-#: verify-iso-sig:2309
+#: verify-iso-sig:2394
 msgid "OK - signature verified"
 msgstr "OK - signaturen verifierad"
 
-#: verify-iso-sig:2319
+#: verify-iso-sig:2404
 #, sh-format
 msgid "claimed identity: ${CLAIMED_UID}"
 msgstr "uppgiven identitet: ${CLAIMED_UID}"
 
-#: verify-iso-sig:2334
+#: verify-iso-sig:2419
 msgid "FAILED - signature did NOT verify"
 msgstr "MISSLYCKADES - signaturen verifierades INTE"
 
-#: verify-iso-sig.desktop.in:10
+#: verify-iso-sig.desktop.in:11
 msgid "iso;sig;gpg;"
 msgstr "iso;sig;gpg;signatur;"
+
+#: verify-iso-sig.desktop.in:23
+msgid "Verify with Drag & Drop"
+msgstr "Verifiera med dra och släpp"
+
+#, sh-format
+#~ msgid "${FPR} is not one of this tool's built-in recognized keys"
+#~ msgstr ""
+#~ "${FPR} är inte en av de inbyggda nycklar som det här verktyget redan "
+#~ "känner igen"
+
+#, sh-format
+#~ msgid ""
+#~ "(run ${FLAG_LIST_KNOWN_KEYS} to see the full list, or verify this key's "
+#~ "fingerprint independently before trusting it)"
+#~ msgstr ""
+#~ "(kör ${FLAG_LIST_KNOWN_KEYS} för att se hela listan, eller verifiera "
+#~ "nyckelns fingeravtryck oberoende innan du litar på den)"
+
+#~ msgid "this key has expired - worth confirming independently"
+#~ msgstr "den här nyckeln har gått ut - värt att bekräfta oberoende"
+
+#~ msgid ""
+#~ "This is a checksum file for an ISO that isn't present in this folder - "
+#~ "nothing to check. Point this tool at the actual .iso file (or a checksum/"
+#~ "signature file that's actually next to it) instead."
+#~ msgstr ""
+#~ "Detta är en kontrollsummefil för en ISO som inte finns i denna mapp - "
+#~ "inget att kontrollera. Peka detta verktyg mot den faktiska .iso-filen "
+#~ "istället (eller mot en kontrollsumme-/signaturfil som verkligen finns "
+#~ "bredvid den)."
+
+#~ msgid ""
+#~ "this key has expired - the signature check below still runs, but an "
+#~ "expired key is worth confirming independently before you decide to trust "
+#~ "it"
+#~ msgstr ""
+#~ "den här nyckeln har gått ut - signaturkontrollen nedan körs ändå, men en "
+#~ "utgången nyckel är värd att bekräfta oberoende innan du bestämmer dig för "
+#~ "att lita på den"
+
+#, sh-format
+#~ msgid ""
+#~ "'${iso_base}' is a checksum file for '${candidate_base}', but that file "
+#~ "isn't present here - nothing to verify."
+#~ msgstr ""
+#~ "”${iso_base}” är en kontrollsummefil för ”${candidate_base}”, men den "
+#~ "filen finns inte här - inget att verifiera."
 
 #~ msgid "Credits:"
 #~ msgstr "Medverkande:"
@@ -1578,13 +1736,6 @@ msgstr "iso;sig;gpg;signatur;"
 #~ msgstr ""
 #~ "lista de inbyggda MX/antiX-signeringsnycklar som det här verktyget känner "
 #~ "igen"
-
-#~ msgid ""
-#~ "(check its fingerprint yourself against the distro's own official site or "
-#~ "keyserver listing)"
-#~ msgstr ""
-#~ "(kontrollera själv dess fingeravtryck mot distributionens egen officiella "
-#~ "webbplats eller nyckelserverpost)"
 
 #, sh-format
 #~ msgid "${FPR} is NOT one of the documented MX/antiX signing keys"

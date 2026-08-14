@@ -3,7 +3,7 @@
 Check if a downloaded ISO file is really the original file, and not
 changed by someone else - in just a few clicks.
 
-![Main picker window with an ISO file already picked](screenshots/picker-x11.png)
+![Main picker window with an ISO file already picked](screenshots/picker.png)
 
 ## What is this?
 
@@ -20,7 +20,9 @@ for scripts.
 
 - Simple picker window: pick your ISO file, or its signature file. The
   tool finds the other one by itself, if it is in the same folder.
-- Drag and drop support (on X11 desktops).
+- Optional drag-and-drop mode (X11 only) - turn it on with
+  `--drag-and-drop`, or the "Verify with Drag & Drop" entry in your
+  application menu.
 - Works with many distros: MX Linux, antiX, Debian, Ubuntu, Linux Mint,
   Fedora, openSUSE, Manjaro, and other distros that sign their ISO or a
   checksum list.
@@ -30,6 +32,22 @@ for scripts.
   and fingerprint, so you can check it yourself.
 - A "Manage Trusted Keys" window to see, remove, or export/import the
   keys you already trust.
+
+## Examples
+
+Different distros publish their signature/checksum files a bit
+differently - here's what to expect, using real filenames from
+well-known distros. Whichever one of these files you pick, the tool
+finds the other one(s) by itself, as long as they're in the same folder.
+
+| You downloaded... | ...next to | What it is |
+|---|---|---|
+| `MX-25.2_July_x64.iso` | `MX-25.2_July_x64.iso.sig` | A direct signature - it signs the ISO itself. |
+| `debian-live-13.6.0-amd64-cinnamon.iso` | `SHA256SUMS` and `SHA256SUMS.sign` | A checksum listing - the ISO's hash is one line in `SHA256SUMS`, which is itself signed by `SHA256SUMS.sign`. |
+| `ubuntucinnamon-26.04-desktop-amd64.iso` | `SHA256SUMS` and `SHA256SUMS.gpg` | Same idea, different extension - some distros sign the listing with a `.gpg` file instead of `.sign`. |
+| `lmde-7-cinnamon-64bit.iso` | `sha256sum.txt` and `sha256sum.txt.gpg` | Same idea again, different filename - the listing doesn't have to be called `SHA256SUMS` either. |
+| `Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso` | `Fedora-KDE-44-1.7-x86_64-CHECKSUM` | An inline-signed checksum listing - the whole file carries its own signature, no separate `.sig` needed. |
+| `openSUSE-Tumbleweed-DVD-x86_64-Snapshot20260806-Media.iso` | `<same-name>.sha256` and `<same-name>.sha256.asc` | A per-ISO checksum - a small file with just this ISO's hash, signed separately. |
 
 ## How to use it
 
@@ -47,19 +65,22 @@ network again.
 
 ![The "keep this key" popup, after a key was just fetched](screenshots/keep-key.png)
 
-### X11 and Wayland look a little different
+### Drag and drop, if you want it
 
-On an X11 desktop, the picker window (like the one at the top of this
-page) also has a drag-and-drop area below the file picker, so you can
-drop the ISO or signature file straight onto the window.
+The picker above is the same on X11 and on Wayland - just the file
+field. Most people already have their file in hand (opened via a file
+manager's "Open With", or by double-clicking the ISO/signature file
+directly), so nothing extra is needed.
 
-On Wayland, the drag-and-drop area is not there - the picker just shows
-the file field. This is a Wayland limitation, not a missing feature:
-the drag-and-drop window needs a feature that Wayland does not support.
-Everything else (picking a file, verifying, trusting keys, managing
-keys) works the same on both.
+If you'd rather drag a file onto the window, turn on drag-and-drop
+mode: run `verify-iso-sig --drag-and-drop`, or use the "Verify with
+Drag & Drop" entry in your application menu (right-click the app's
+icon, or its own menu entry, depending on your desktop). This adds a
+drop area below the file field - available on X11 only, since it
+needs a feature Wayland does not support; on Wayland it falls back to
+the plain picker instead.
 
-![Main window on Wayland, file field only](screenshots/picker-wayland.png)
+![Picker window with the optional drag-and-drop area shown](screenshots/picker-dnd.png)
 
 ### Trusting a new key
 
@@ -93,10 +114,11 @@ clone this repository and run:
 ./build
 ```
 
-It checks whether all components required for the build are installed 
-(`devscripts`, for the `debuild` command; as well as any other 
-components that this package needs for the build and that are listed in 
-`debian/control`), and clearly shows you what might be missing.
+It checks that everything needed to build is installed (`devscripts`,
+for the `debuild` command - already there on MX Linux, antiX, and other
+Debian-based distros, or install with `sudo apt install devscripts`;
+plus anything else this package needs to build, listed in
+`debian/control`) and tells you clearly what is missing, if anything.
 
 You can also build it by hand instead: run `debuild -us -uc -b` from
 the project root.
@@ -115,5 +137,5 @@ GPL-3.0-or-later. See the `LICENSE` file for the full text.
 
 ## Authors
 
-fehlix@mxlinux.org  
+fehlix  
 MX Linux development team

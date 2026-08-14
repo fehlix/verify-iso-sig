@@ -308,7 +308,7 @@ run_about_mode() {
             --image="$ICON_FILE" \
             --pname="$ABOUT_TITLE" \
             --pversion="$VERSION" \
-            --copyright="© MX Linux" \
+            --copyright=$'\u00a9'" MX Linux" \
             --comments="$about_comments" \
             --license=GPL3 \
             --authors="fehlix" \
@@ -326,7 +326,7 @@ run_about_mode() {
         # <a href> renders as a real clickable link even in a plain
         # --text dialog - no --html needed. Line order matches the
         # native --about dialog's own: comments, website, copyright, license.
-        about_text="<span size='x-large'><b>$(pango_escape "$ABOUT_TITLE")</b></span>\n<span size='small'>$(pango_escape "$VERSION")</span>\n\n$(pango_escape "$about_comments_wrapped")\n\n<a href='https://mxlinux.org/'>https://mxlinux.org</a>\n\n© MX Linux\n\n<a href='https://www.gnu.org/licenses/gpl-3.0.html'>$(safe_eval_gettext "License: GNU GPL v3 or later")</a>\n"
+        about_text="<span size='x-large'><b>$(pango_escape "$ABOUT_TITLE")</b></span>\n<span size='small'>$(pango_escape "$VERSION")</span>\n\n$(pango_escape "$about_comments_wrapped")\n\n<a href='https://mxlinux.org/'>https://mxlinux.org</a>\n\n$(printf '%b' '\u00a9') MX Linux\n\n<a href='https://www.gnu.org/licenses/gpl-3.0.html'>$(safe_eval_gettext "License: GNU GPL v3 or later")</a>\n"
         yad --center \
             --fixed \
             --title="$(safe_eval_gettext "About \${ABOUT_TITLE}" ABOUT_TITLE)" \
@@ -753,10 +753,15 @@ $OUT"
 # early -h/--help/-V handling above never reaches here at all).
 if [ "$GUI_MODE" = picker ]; then
     DEBUG=0
+    DND_MODE=0
     FILE_ARGS=()
     for arg in "$@"; do
         case "$arg" in
             --debug) DEBUG=1 ;;
+            # Opt-in, not default - needs yad's --paned/--plug (X11-only,
+            # fixed-size geometry, see run_picker_mode() below). Reached
+            # via the app menu's "Drag & Drop" action.
+            --drag-and-drop) DND_MODE=1 ;;
             # Without this, --help fell through to the "*" branch below
             # and became the picker's prefill value - the GUI opened
             # normally (with a blank field, since "--help" isn't a real
@@ -766,16 +771,17 @@ if [ "$GUI_MODE" = picker ]; then
             # gettext, matching the CLI's own --help convention.
             -h|--help)
                 cat <<EOF
-Usage: $DISPLAY_NAME [--debug] [iso-file] [sig-file]
+Usage: $DISPLAY_NAME [--debug] [--drag-and-drop] [iso-file] [sig-file]
 
 Picks an ISO or signature file and checks its GPG signature, with a
 graphical trust/keep flow for unrecognized keys. Normally opens
 automatically (no arguments needed) whenever a desktop is available;
 see 'verify-iso-sig --man' for the full manual.
 
-  --debug         print every gpg/gpgv command before running it
-  -h, --help      this help
-  -V, --version   show version and exit
+  --debug           print every gpg/gpgv command before running it
+  --drag-and-drop   also show the drag-and-drop pane (X11 only)
+  -h, --help        this help
+  -V, --version     show version and exit
 
 Given one file, it's prefilled into the picker so the naming convention
 (<iso>.sig/.asc/.gpg) can find its counterpart. Given two (an ISO and
@@ -857,10 +863,12 @@ fi
 # No --keep checkbox here - whether to remember a key locally is asked
 # after a successful verification, not guessed upfront.
 #
-# The picker is a Form pane (top) and a drag-and-drop pane (bottom)
-# swallowed into one --paned window via yad's --plug mechanism. Buttons
-# belong to the outer --paned dialog, not the plugs themselves (a
-# plug's own --button is simply not rendered).
+# In --drag-and-drop mode, the picker is a Form pane (top) and a
+# drag-and-drop pane (bottom) swallowed into one --paned window via
+# yad's --plug mechanism. Buttons belong to the outer --paned dialog,
+# not the plugs themselves (a plug's own --button is simply not
+# rendered). The default (no --drag-and-drop) mode is a single plain
+# --form window instead - see the branch below.
 #
 # yad's --paned runs two fully independent processes with no live
 # channel between them, so a single-file drop kills the whole paned
@@ -873,8 +881,8 @@ pick_files() {
     local key res_dnd res_form watcher_pid dnd_pid form_pid form dropped
     local -a DROPPED_LINES DROPPED_PATHS
     local FORM_PLUG_ARGS DND_PLUG_ARGS PANED_ARGS
-    local FORM_TITLE_LINE FORM_LINE1 FORM_LINE2 FORM_LINE2_PLAIN
-    local PICKER_MIN_WIDTH PICKER_MAX_WIDTH PICKER_WIDTH title_px line1_px line2_px
+    local FORM_TITLE_LINE FORM_INTRO_LINE FORM_LINE1 FORM_LINE2 FORM_LINE2_PLAIN
+    local PICKER_MIN_WIDTH PICKER_MAX_WIDTH PICKER_WIDTH title_px intro_px line1_px line2_px
 
     # Dynamic width: estimate each header line's rendered pixel width
     # from its character count, and widen the picker just enough to keep
@@ -883,6 +891,10 @@ pick_files() {
     # char-count heuristic is only an approximation. `${#var}` counts
     # characters, not bytes, correct for UTF-8 locales.
     FORM_TITLE_LINE=$TITLE
+    # First-time-user context, above the how-to instructions below - a
+    # user opening this from the menu with nothing picked yet may not
+    # know what the tool is even for.
+    FORM_INTRO_LINE=$(safe_eval_gettext "This tool checks that a downloaded ISO is authentic and undamaged, using its signature file or a signed checksum listing.")
     FORM_LINE1=$(safe_eval_gettext "Pick the .iso file, or its .sig/.asc/.gpg/.sign signature file directly.")
     # TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render as
     # bold text, not literal characters).
@@ -903,22 +915,25 @@ pick_files() {
     PICKER_MIN_WIDTH=820
     PICKER_MAX_WIDTH=900
     title_px=$(( ${#FORM_TITLE_LINE} * 9 + 80 ))
+    intro_px=$(( ${#FORM_INTRO_LINE} * 7 + 80 ))
     line1_px=$(( ${#FORM_LINE1} * 7 + 80 ))
     line2_px=$(( ${#FORM_LINE2_PLAIN} * 7 + 80 ))
     PICKER_WIDTH=$title_px
+    [ "$intro_px" -gt "$PICKER_WIDTH" ] && PICKER_WIDTH=$intro_px
     [ "$line1_px" -gt "$PICKER_WIDTH" ] && PICKER_WIDTH=$line1_px
     [ "$line2_px" -gt "$PICKER_WIDTH" ] && PICKER_WIDTH=$line2_px
     [ "$PICKER_WIDTH" -lt "$PICKER_MIN_WIDTH" ] && PICKER_WIDTH=$PICKER_MIN_WIDTH
     [ "$PICKER_WIDTH" -gt "$PICKER_MAX_WIDTH" ] && PICKER_WIDTH=$PICKER_MAX_WIDTH
 
     while :; do
-        # yad's --paned/--plug DnD assembly needs native X11 window
-        # embedding - not available under Wayland ("this mode not
-        # supported on wayland"), so skip it entirely there and show
-        # just the file-picker form, no drag-and-drop pane.
-        # $WAYLAND_DISPLAY is the same check used elsewhere in this file
-        # (the no-GUI-session fallback message).
-        if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+        # The drag-and-drop pane (yad's --paned/--plug) is opt-in via
+        # --drag-and-drop ($DND_MODE), not default - unavailable under
+        # Wayland regardless ("this mode not supported on wayland").
+        # Fixed-size geometry below (see PANED_ARGS) - re-verify with
+        # disposable throwaway windows before changing this form's
+        # content again. $WAYLAND_DISPLAY is the same check used
+        # elsewhere in this file (the no-GUI-session fallback message).
+        if [ -n "${WAYLAND_DISPLAY:-}" ] || [ "$DND_MODE" -ne 1 ]; then
             dropped=""
             FORM_ONLY_ARGS=(
                 --form
@@ -926,7 +941,10 @@ pick_files() {
                 --title="$TITLE"
                 --class="$WM_CLASS"
                 --window-icon="$ICON_FILE"
-                --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n\n$FORM_LINE1\n$FORM_LINE2"
+                # No --height/--fixed here (unlike the paned one below) -
+                # yad auto-sizes to content, so each sentence gets its
+                # own line.
+                --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n\n$FORM_INTRO_LINE\n\n$FORM_LINE1\n$FORM_LINE2\n"
                 --field="$(safe_eval_gettext "ISO or signature file"):FL"
                 --width="$PICKER_WIDTH"
                 --button="$(safe_eval_gettext "Verify"):0"
@@ -954,8 +972,17 @@ pick_files() {
                 # Single \n after the title (not \n\n): this fixed-size
                 # splitter has no room for a blank line without pushing the
                 # title off the top, clipped behind the window decoration.
-                --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n$FORM_LINE1\n$FORM_LINE2"
+                --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n$FORM_INTRO_LINE $FORM_LINE1\n$FORM_LINE2"
                 --field="$(safe_eval_gettext "ISO or signature file"):FL"
+                # Kept for consistency, but don't actually fix the FL
+                # field's own file-chooser popup: confirmed via xprop that
+                # yad never sets _NET_WM_ICON on that internal dialog, so
+                # the WM falls back to WM_CLASS's res_name ("yad", hardcoded
+                # - --class only controls res_class) and shows yad's own
+                # icon instead. Believed to be a yad limitation, not fixable
+                # from here.
+                --class="$WM_CLASS"
+                --window-icon="$ICON_FILE"
             )
             # stdout ONLY into res_form, not "2>&1": this file is read back as
             # the plug's submitted data, so stderr noise (e.g. a GTK-WARNING
@@ -1001,9 +1028,9 @@ pick_files() {
                 --tab="$(safe_eval_gettext "Pick Files")"
                 --tab="$(safe_eval_gettext "Drag a File")"
                 --width="$PICKER_WIDTH"
-                --height=400
+                --height=490
                 --orient=vert
-                --splitter=250
+                --splitter=340
                 # GtkPaned's divider is an absolute pixel offset, not a
                 # fraction - shrinking then growing the window can leave it
                 # clamped near zero, hiding the Form pane. This window's
@@ -1172,6 +1199,7 @@ run_verify() {
         else
             [ -n "$SIG" ] && NO_DIRECT_SIG=0 || NO_DIRECT_SIG=1
         fi
+        ISO_DERIVED_FROM_SIG=${PINNED_ISO_DERIVED_FROM_SIG:-0}
         # $OUT_FILE gets the full, unfiltered output (gui_status_field/
         # gui_status_has need every tag line intact); the copy mirrored to
         # stderr drops those machine-readable tag lines so they don't
@@ -1219,11 +1247,11 @@ offer_trust_unrecognized_key() {
     if yad "${QUESTION_ARGS[@]}"; then
         if run_keep_key "$FPR" "$KEY_EXPORT_FILE"; then
             # The key is now trusted, so the earlier "unrecognized key"
-            # warnings no longer describe the current state - strip them
+            # notes no longer describe the current state - strip them
             # from the displayed technical body (not the CLI's own
             # historical output on disk/stderr). Deletes by the stable,
             # never-localized UNRECOGNIZED_KEY_WARNINGS_BEGIN/END tags, not
-            # by matching the (localized) warn() text itself.
+            # by matching the (localized) info() text itself.
             OUTPUT=$(printf '%s\n' "$OUTPUT" | sed '/^\[VERIFY-ISO-SIG:\] UNRECOGNIZED_KEY_WARNINGS_BEGIN$/,/^\[VERIFY-ISO-SIG:\] UNRECOGNIZED_KEY_WARNINGS_END$/d')
             OUTPUT="$OUTPUT
 
@@ -1294,6 +1322,9 @@ run_picker_mode() {
         # (a placeholder), so the usual "$SIG empty means no direct sig"
         # inference would get this sub-case wrong without this override.
         PINNED_NO_DIRECT_SIG=$EXPLICIT_NO_DIRECT_SIG
+        # Always 0 here - both files were explicit, not derived - reset
+        # explicitly so a stale 1 can't survive from an earlier round.
+        PINNED_ISO_DERIVED_FROM_SIG=0
         # Display-only, for the confirmation dialog below - never read by verify_iso().
         CONFIRM_CHECKSUM_SIG=$EXPLICIT_CHECKSUM_SIG
         EXPLICIT_ISO=""
@@ -1311,6 +1342,7 @@ run_picker_mode() {
         PINNED_CHECKSUM_FILE=""
         PINNED_CHECKSUM_ALGO=""
         PINNED_NO_DIRECT_SIG=0
+        PINNED_ISO_DERIVED_FROM_SIG=0
         # A directory passes a plain [ -r ] check like a readable regular
         # file - caught here, before extension classification, so it isn't
         # mistaken for a checksum listing.
@@ -1322,18 +1354,23 @@ run_picker_mode() {
         # The picker returns a single path - the .iso, or a signature file
         # directly (.sig/.asc/.gpg, or a checksum-listing's own .sign).
         # Classify by extension and derive the counterpart via the naming
-        # convention; SIG is left blank when no direct signature exists,
-        # letting the checksum-file fallback take over.
+        # convention. When no direct signature exists, PINNED_NO_DIRECT_SIG
+        # lets the checksum-file fallback take over - SIG itself still gets
+        # sig_for_iso()'s own ".sig" placeholder name (never left blank),
+        # so a later "cannot read signature file" error names an actual
+        # path instead of an empty string, matching the CLI's own main().
         case "$FILE_PICKED" in
             *.sig|*.asc|*.gpg|*.sign)
                 SIG=$FILE_PICKED
                 ISO=$(iso_for_sig "$FILE_PICKED")
+                # Only our own guess from the signature file, not user-given.
+                PINNED_ISO_DERIVED_FROM_SIG=1
                 ;;
             *)
                 ISO=$FILE_PICKED
-                SIG=""
                 CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
-                { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } && SIG=$CANDIDATE_SIG
+                SIG=$CANDIDATE_SIG
+                { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } || PINNED_NO_DIRECT_SIG=1
                 ;;
         esac
     fi
@@ -1354,7 +1391,9 @@ run_picker_mode() {
     fi
 
     # -f (not just -r) also rejects a FIFO/device/socket masquerading as a readable path.
-    if ! { [ -f "$ISO" ] && [ -r "$ISO" ]; }; then
+    # Skip when PINNED_ISO_DERIVED_FROM_SIG - verify_iso()'s own
+    # SIG_WITHOUT_ISO tag handles that case better than a blunt error here.
+    if [ "${PINNED_ISO_DERIVED_FROM_SIG:-0}" -ne 1 ] && ! { [ -f "$ISO" ] && [ -r "$ISO" ]; }; then
         yad_error "$(safe_eval_gettext "Cannot read ISO file:")\n$ISO"
         continue
     fi
@@ -1461,6 +1500,8 @@ run_picker_mode() {
     else
         [ -n "$SIG" ] && NO_DIRECT_SIG=0 || NO_DIRECT_SIG=1
     fi
+    # Same reasoning as NO_DIRECT_SIG just above.
+    ISO_DERIVED_FROM_SIG=${PINNED_ISO_DERIVED_FROM_SIG:-0}
     if verify_iso >/dev/null 2>&1; then
         VERIFYING_TEXT=$(safe_eval_gettext "Verifying signature - this can take a while for a large ISO...")
     else
@@ -1619,6 +1660,39 @@ $KEEPKEY_OUTPUT"
         fi
     fi
 
+    # Crypto check already came back GOOD here - RC is non-zero only
+    # because the key wasn't trusted/saved. Field lines stay the normal
+    # ones below (every name here is a real, checked file).
+    KEY_NOT_TRUSTED_CASE=""
+    if gui_status_has "$OUTPUT" GUI_DECLINED_TRUST; then
+        KEY_NOT_TRUSTED_CASE=GUI_DECLINED_TRUST
+    elif gui_status_has "$OUTPUT" GUI_KEEP_FAILED; then
+        KEY_NOT_TRUSTED_CASE=GUI_KEEP_FAILED
+    fi
+
+    # These tags mean no real check was ever attempted - only field
+    # line(s) confirmed to exist get shown below.
+    NOTHING_TO_VERIFY_CASE=""
+    if gui_status_has "$OUTPUT" NOTHING_TO_VERIFY; then
+        NOTHING_TO_VERIFY_CASE=NOTHING_TO_VERIFY
+    elif gui_status_has "$OUTPUT" SIG_WITHOUT_ISO; then
+        NOTHING_TO_VERIFY_CASE=SIG_WITHOUT_ISO
+    elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_AMBIGUOUS; then
+        NOTHING_TO_VERIFY_CASE=CHECKSUM_LISTING_AMBIGUOUS
+    elif gui_status_has "$OUTPUT" PLAIN_CHECKSUM_TARGET_MISSING; then
+        NOTHING_TO_VERIFY_CASE=PLAIN_CHECKSUM_TARGET_MISSING
+    elif gui_status_has "$OUTPUT" PLAIN_CHECKSUM_NOTHING_VERIFIABLE; then
+        NOTHING_TO_VERIFY_CASE=PLAIN_CHECKSUM_NOTHING_VERIFIABLE
+    elif gui_status_has "$OUTPUT" NO_CHECKSUM_LISTING_MATCH; then
+        NOTHING_TO_VERIFY_CASE=NO_CHECKSUM_LISTING_MATCH
+    elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_SIG_MISSING; then
+        NOTHING_TO_VERIFY_CASE=CHECKSUM_LISTING_SIG_MISSING
+    elif gui_status_has "$OUTPUT" SIG_WITHOUT_CHECKSUM_LISTING; then
+        NOTHING_TO_VERIFY_CASE=SIG_WITHOUT_CHECKSUM_LISTING
+    elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_FOUND_UNSIGNED; then
+        NOTHING_TO_VERIFY_CASE=CHECKSUM_LISTING_FOUND_UNSIGNED
+    fi
+
     if gui_status_has "$OUTPUT" KEPT_IN_TRUSTED_GPG; then
         KEY_SOURCE=$(safe_eval_gettext "key saved locally - future checks won't need the network")
     elif gui_status_has "$OUTPUT" ALREADY_IN_TRUSTED_GPG; then
@@ -1635,7 +1709,14 @@ $KEEPKEY_OUTPUT"
     # the crypto check itself, but the GUI should still surface this
     # plainly rather than silently treating it like a normal, current key.
     if gui_status_has "$OUTPUT" KEY_EXPIRED; then
-        KEY_EXPIRED_NOTE=$(safe_eval_gettext "this key has expired - worth confirming independently")
+        KEY_EXPIRY_DATE=$(gui_status_field "$OUTPUT" KEY_EXPIRED)
+        if [ -n "$KEY_EXPIRY_DATE" ]; then
+            KEY_EXPIRY_DATE_SAFE=$(pango_escape "$KEY_EXPIRY_DATE")
+            # TRANSLATORS: ${KEY_EXPIRY_DATE_SAFE} is a date (e.g. 2026-08-06) - keep the placeholder as-is.
+            KEY_EXPIRED_NOTE=$(safe_eval_gettext "this key expired on \${KEY_EXPIRY_DATE_SAFE} - this does not affect the signature check" KEY_EXPIRY_DATE_SAFE)
+        else
+            KEY_EXPIRED_NOTE=$(safe_eval_gettext "this key has expired - this does not affect the signature check")
+        fi
     else
         KEY_EXPIRED_NOTE=""
     fi
@@ -1649,10 +1730,18 @@ $KEEPKEY_OUTPUT"
     # own source file itself pure ASCII (no literal multi-byte characters
     # in the file). U+2713 CHECK MARK / U+2717 BALLOT X - no plain-ASCII
     # equivalent exists for either.
-    CHECK_MARK=$'✓'
-    CROSS_MARK=$'✗'
+    CHECK_MARK=$'\u2713'
+    CROSS_MARK=$'\u2717'
+    # U+26A0 WARNING SIGN had almost no contrast on a dark theme (thin
+    # outline glyph) - U+26D4 NO ENTRY is a solid, filled shape instead,
+    # checked against both themes directly, no color override needed.
+    WARN_MARK=$'\u26d4'
     if [ "$RC" -eq 0 ]; then
         STATUS_LINE="<span size='x-large'><b>$CHECK_MARK $(safe_eval_gettext "Verified OK")</b></span>"
+    elif [ -n "$KEY_NOT_TRUSTED_CASE" ]; then
+        STATUS_LINE="<span size='x-large'><b>? $(safe_eval_gettext "Key not trusted")</b></span>"
+    elif [ -n "$NOTHING_TO_VERIFY_CASE" ]; then
+        STATUS_LINE="<span size='x-large'><b>$WARN_MARK $(safe_eval_gettext "Nothing to verify")</b></span>"
     else
         STATUS_LINE="<span size='x-large'><b>$CROSS_MARK $(safe_eval_gettext "Verification FAILED")</b></span>"
     fi
@@ -1661,7 +1750,40 @@ $KEEPKEY_OUTPUT"
     # DISPLAY_ISO_PATH/DISPLAY_SIG were already computed above, reused
     # here for the mismatch-check below and the HEADING itself.
 
-    if [ -n "$CHECKSUM_INFO" ]; then
+    if [ -n "$NOTHING_TO_VERIFY_CASE" ]; then
+        # Only show a field line for something confirmed to exist.
+        HEADING="<span size='large'><b>$TITLE</b></span>\n\n$STATUS_LINE"
+        case "$NOTHING_TO_VERIFY_CASE" in
+            NOTHING_TO_VERIFY|PLAIN_CHECKSUM_NOTHING_VERIFIABLE)
+                HEADING="$HEADING\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")"
+                ;;
+            CHECKSUM_LISTING_SIG_MISSING)
+                # Show what was picked (the listing), not just the ISO.
+                HEADING="$HEADING\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")\n<b>$(safe_eval_gettext "SHA:")</b> $(pango_escape "$(basename "${PINNED_CHECKSUM_FILE:-$ISO}")")"
+                ;;
+            CHECKSUM_LISTING_FOUND_UNSIGNED)
+                # Auto-discovered (not picked/pinned) - the name comes
+                # from the CLI's own status field, not $PINNED_CHECKSUM_FILE.
+                HEADING="$HEADING\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")\n<b>$(safe_eval_gettext "SHA:")</b> $(pango_escape "$(gui_status_field "$OUTPUT" CHECKSUM_LISTING_FOUND_UNSIGNED)")"
+                ;;
+            SIG_WITHOUT_ISO|SIG_WITHOUT_CHECKSUM_LISTING)
+                HEADING="$HEADING\n<b>$(safe_eval_gettext "SIG:")</b> $(basename "$DISPLAY_SIG")"
+                ;;
+            PLAIN_CHECKSUM_TARGET_MISSING)
+                # $ISO is the checksum file itself - DISPLAY_ISO would
+                # show the *missing* ISO's name instead.
+                HEADING="$HEADING\n<b>$(safe_eval_gettext "SHA:")</b> $(basename "$ISO")"
+                ;;
+            CHECKSUM_LISTING_AMBIGUOUS|NO_CHECKSUM_LISTING_MATCH)
+                if [ -n "$CHECKSUM_INFO" ]; then
+                    HEADING="$HEADING\n<b>$(safe_eval_gettext "SHA:")</b> $(pango_escape "$CHECKSUM_INFO")"
+                    [ -n "$CHECKSUM_SIG_INFO" ] && HEADING="$HEADING\n<b>$(safe_eval_gettext "SIG:")</b> $(pango_escape "$CHECKSUM_SIG_INFO")"
+                else
+                    HEADING="$HEADING\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")"
+                fi
+                ;;
+        esac
+    elif [ -n "$CHECKSUM_INFO" ]; then
         HEADING="<span size='large'><b>$TITLE</b></span>\n\n$STATUS_LINE\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")\n<b>$(safe_eval_gettext "SHA:")</b> $(pango_escape "$CHECKSUM_INFO")"
         # No separate line for an inline-signed checksum listing - it has no
         # detached signature file to name.
@@ -1669,8 +1791,11 @@ $KEEPKEY_OUTPUT"
     else
         HEADING="<span size='large'><b>$TITLE</b></span>\n\n$STATUS_LINE\n<b>$(safe_eval_gettext "ISO:")</b> $(pango_escape "$DISPLAY_ISO")\n<b>$(safe_eval_gettext "SIG:")</b> $(basename "$DISPLAY_SIG")"
     fi
-    [ -n "$KEY_SOURCE" ] && HEADING="$HEADING\n<i>$KEY_SOURCE</i>"
-    [ -n "$KEY_EXPIRED_NOTE" ] && HEADING="$HEADING\n<i>$KEY_EXPIRED_NOTE</i>"
+    if [ -z "$NOTHING_TO_VERIFY_CASE" ]; then
+        # Neither is meaningful when no key/crypto step was ever reached.
+        [ -n "$KEY_SOURCE" ] && HEADING="$HEADING\n<i>$KEY_SOURCE</i>"
+        [ -n "$KEY_EXPIRED_NOTE" ] && HEADING="$HEADING\n<i>$KEY_EXPIRED_NOTE</i>"
+    fi
 
     # On failure, translate the likely cause into one plain-language note.
     # Priority order matches likelihood/certainty: a declined or
@@ -1682,14 +1807,40 @@ $KEEPKEY_OUTPUT"
     if [ "$RC" -ne 0 ]; then
         if gui_status_has "$OUTPUT" GUI_DECLINED_TRUST; then
             # TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
-            NOTE=$(safe_eval_gettext "This only shows as FAILED because you didn't trust this signing key - the cryptographic check itself already came back GOOD (see the technical details below). If you're confident this is the genuine key (e.g. you've checked its fingerprint against the distro's own official site or keyserver listing), click \"\${BTN_CHECK_ANOTHER_FILE}\" and choose \"\${BTN_TRUST_THIS_KEY}\" this time." BTN_CHECK_ANOTHER_FILE BTN_TRUST_THIS_KEY)
+            NOTE=$(safe_eval_gettext "The cryptographic check itself already came back GOOD (see the technical details below) - you just haven't trusted this signing key yet. If you're confident this is the genuine key (e.g. you've checked its fingerprint against the distro's own official site or keyserver listing), click \"\${BTN_CHECK_ANOTHER_FILE}\" and choose \"\${BTN_TRUST_THIS_KEY}\" this time." BTN_CHECK_ANOTHER_FILE BTN_TRUST_THIS_KEY)
         elif gui_status_has "$OUTPUT" GUI_KEEP_FAILED; then
-            NOTE=$(safe_eval_gettext "The cryptographic check itself already came back GOOD (see the technical details below) - this only shows as FAILED because the key couldn't be saved for future trust (see the technical details for why). Feel free to try again.")
+            NOTE=$(safe_eval_gettext "The cryptographic check itself already came back GOOD (see the technical details below) - the key just couldn't be saved for future trust (see the technical details for why). Feel free to try again.")
         elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_AMBIGUOUS; then
             # TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
             NOTE=$(safe_eval_gettext "You pointed this tool at a checksum-listing file, not a single ISO - it can cover many ISOs at once, so there's no one file to check unless exactly one of the ones it mentions is actually present here (see the technical details below for which). Use \"\${BTN_CHECK_ANOTHER_FILE}\" and point at the actual .iso file instead." BTN_CHECK_ANOTHER_FILE)
+        elif gui_status_has "$OUTPUT" NOTHING_TO_VERIFY; then
+            NOTE=$(safe_eval_gettext "No signature file or signed checksum listing was found for this ISO - there's nothing here to check yet.")
+        elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_SIG_MISSING; then
+            # CHECKSUM_FILE_OVERRIDE itself is only set inside run_verify()'s
+            # own subshell, never visible out here - $ISO/$PINNED_CHECKSUM_FILE instead.
+            CHECKSUM_FILE_SAFE=$(pango_escape "$(basename "${PINNED_CHECKSUM_FILE:-$ISO}")")
+            # TRANSLATORS: ${CHECKSUM_FILE_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+            NOTE=$(safe_eval_gettext "This checksum listing (\${CHECKSUM_FILE_SAFE}) has no signature file of its own (.sig/.asc/.gpg/.sign) next to it - it can't be trusted without one, so it was never checked against this ISO." CHECKSUM_FILE_SAFE)
+        elif gui_status_has "$OUTPUT" CHECKSUM_LISTING_FOUND_UNSIGNED; then
+            # Auto-discovered, not picked/pinned - same note text as
+            # CHECKSUM_LISTING_SIG_MISSING above, just a different source
+            # for the filename (the CLI's own status field).
+            CHECKSUM_FILE_SAFE=$(pango_escape "$(gui_status_field "$OUTPUT" CHECKSUM_LISTING_FOUND_UNSIGNED)")
+            # TRANSLATORS: ${CHECKSUM_FILE_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+            NOTE=$(safe_eval_gettext "This checksum listing (\${CHECKSUM_FILE_SAFE}) has no signature file of its own (.sig/.asc/.gpg/.sign) next to it - it can't be trusted without one, so it was never checked against this ISO." CHECKSUM_FILE_SAFE)
+        elif gui_status_has "$OUTPUT" SIG_WITHOUT_ISO; then
+            DISPLAY_ISO_SAFE=$(pango_escape "$DISPLAY_ISO")
+            # TRANSLATORS: ${DISPLAY_ISO_SAFE} is the ISO's filename - keep the placeholder as-is.
+            NOTE=$(safe_eval_gettext "This is a signature file, but its ISO ('\${DISPLAY_ISO_SAFE}') isn't in the same folder - this tool only looks for a counterpart next to the file you pick." DISPLAY_ISO_SAFE)
+        elif gui_status_has "$OUTPUT" SIG_WITHOUT_CHECKSUM_LISTING; then
+            # $ISO is the checksum listing's own guessed name here.
+            LISTING_BASE_SAFE=$(pango_escape "$(basename "$ISO")")
+            # TRANSLATORS: ${LISTING_BASE_SAFE} is the checksum-listing file's name - keep the placeholder as-is.
+            NOTE=$(safe_eval_gettext "This is a signature file for a checksum listing, but '\${LISTING_BASE_SAFE}' isn't in the same folder - this tool only looks for a counterpart next to the file you pick." LISTING_BASE_SAFE)
         elif gui_status_has "$OUTPUT" PLAIN_CHECKSUM_TARGET_MISSING; then
-            NOTE=$(safe_eval_gettext "This is a checksum file for an ISO that isn't present in this folder - nothing to check. Point this tool at the actual .iso file (or a checksum/signature file that's actually next to it) instead.")
+            DISPLAY_ISO_SAFE=$(pango_escape "$DISPLAY_ISO")
+            # TRANSLATORS: ${DISPLAY_ISO_SAFE} is the ISO's filename - keep the placeholder as-is.
+            NOTE=$(safe_eval_gettext "Neither '\${DISPLAY_ISO_SAFE}' nor a signature file for it were found in this folder - nothing to check yet." DISPLAY_ISO_SAFE)
         elif gui_status_has "$OUTPUT" PLAIN_CHECKSUM_NOTHING_VERIFIABLE; then
             NOTE=$(safe_eval_gettext "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing or a direct .sig/.asc/.gpg file for this ISO.")
         elif gui_status_has "$OUTPUT" CHECKSUM_SIG_FAILED; then

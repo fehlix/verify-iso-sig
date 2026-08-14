@@ -191,6 +191,17 @@ into `trustedkeys.gpg` for next time.
     **--export-trusted-keys**, **--inspect-key-file**,
     **--import-trusted-keys**) and exits.
 
+**--drag-and-drop**
+:   Same as **--gui**, but also shows the picker's drag-and-drop pane.
+    Not the default: most users already have their file in hand (opened
+    via a file manager's "Open With", or one of this tool's own MIME
+    associations) and never need to drag one in, so the plain picker
+    form is simpler and opens faster. Also reachable from the app
+    menu's own "Verify with Drag & Drop" entry. Has no effect under
+    Wayland - the drag-and-drop pane needs `yad`'s `--paned`/`--plug`
+    window embedding, which Wayland doesn't support; the plain form is
+    shown there regardless.
+
 **--quiet**
 :   Suppress informational `[*]` log lines (`gpg`/`gpgv` output is
     still shown).
