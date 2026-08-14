@@ -1,0 +1,58 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Thu, 13 Aug 2026 20:10:31 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.08.02
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.08.02) mx; urgency=medium
+ .
+   * Add "Nothing to verify" and "Key not trusted" results, replacing
+     misleading Verification FAILED cases; fix several related
+     checksum-listing/signature edge cases.
+   * Reword expired-key and unrecognized-key messages for clarity.
+   * Redesign the picker: intro text for first-time users, a clearer
+     warning icon, and drag-and-drop moved to an opt-in "Verify with
+     Drag & Drop" menu action (--drag-and-drop).
+Checksums-Sha1:
+ deef5f7c05842ce61b145f0ddbe2fcf03421b9b6 1516 verify-iso-sig_2026.08.02.dsc
+ 5240c4cd373cbb313913d5b3fe29a51b56460892 521780 verify-iso-sig_2026.08.02.tar.xz
+ 6d4efe95599a98edf75c080c6ed59f49a247bdc1 111000 verify-iso-sig_2026.08.02_all.deb
+ 135b66fe3d9c74a0f4224270850d273db5dfe92f 6218 verify-iso-sig_2026.08.02_amd64.buildinfo
+Checksums-Sha256:
+ 1667a8a4dc951f8e9c727d28f1018a313c476f3ebfdd34951eb5f56d0982df0d 1516 verify-iso-sig_2026.08.02.dsc
+ 0d11997a60b51a7939678ef53bfac36ea900036a0b939b1573e7814b3e0e7270 521780 verify-iso-sig_2026.08.02.tar.xz
+ 6e61b1c54b6a3dc821e599311d925df6c0d5f694ee96847a3aae67c9c07b33be 111000 verify-iso-sig_2026.08.02_all.deb
+ 7ef5a5a94c3a9db866a56e3a9588128fbe8fad7f293432d3e99b33047e87e1c3 6218 verify-iso-sig_2026.08.02_amd64.buildinfo
+Files:
+ 0fc989eca9c8e994cefe35ae884fb2b9 1516 utils optional verify-iso-sig_2026.08.02.dsc
+ 21185e87e961fc67d866e7018c7e29a2 521780 utils optional verify-iso-sig_2026.08.02.tar.xz
+ d776fb41584dd8e95827db92e38876ee 111000 utils optional verify-iso-sig_2026.08.02_all.deb
+ 8a3244f84726aefb6b8292590f98cc52 6218 utils optional verify-iso-sig_2026.08.02_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmp+arcTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6WMFD/9MdKCnHYKB9+fWTqRctCBkBk3Zij7N
+LhNEs9ILFvq+Dp2ErSrcjLpEdkViTxejHgv+S/MVy1F5RutLIZ0AsklA+xwesqVC
+y+rNijc4ULpypMkZteJL5YTJHsV1WSp9Nx6iXkKBdBZU7QgJnaUWyf1AUHmX8sve
+v59WCKS8pY8GokaqlqkrhWzcR5Jrmbctyjz016SSl+AwiA1nMfi1zgI+gUsye5MS
+pSZp+OmQIzM2Iw2DccxehVQon5oRRe0PyPjrsgH8zwDbkoN02xmwC2FsiNpWMJR8
+LugcPCOKRud9dUAx8o12no7RIt3i+VjrFytFcoQYZDk5lriZUMSXYcV3pT6QdMMK
+29dxBKE8qs7/a/uQTW1ItYjjGgC9VNKgD9erKM2cp/OptuWkeB3J+HnRYkflkTMh
+n6nw1fwuX2C1B7hfrs64mKN85uRmj94W2a99OAqHhVtaY2umnkSE6xx++lxOyBeC
+mv3AFLy8fbXe5n+6Ps6yslEpPqXsXIcOi55dfc42Sn9LeUCB43BdEz0v9z6r6D3b
+QYnENAf3cFf5ImldT/tBMrkEjmyg8ZLK05MZlxQToT0D11UseLvFf8oOT1R1mNiJ
+2Fm269xQxw2zV4Laz7vddDSK3JJCdNy89s9/sqWIpaQVdHK657uNfIHaSsULwXkD
+JNq0/1M7RHBfCA==
+=F7B7
+-----END PGP SIGNATURE-----
