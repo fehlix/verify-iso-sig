@@ -1,0 +1,56 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Sat, 15 Aug 2026 17:47:51 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.08.03
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.08.03) mx; urgency=medium
+ .
+   * Add help button.
+   * Use "X-MX-Live" category in .desktop file.
+   * Reorder buttons.
+   * Enable run-once.
+   * Disable running as root.
+Checksums-Sha1:
+ a0245767f0778283e1d4ad0588a37a87bb341148 1516 verify-iso-sig_2026.08.03.dsc
+ 33ad85c037d83fb23363a2a825bb6cf224bedbfa 523240 verify-iso-sig_2026.08.03.tar.xz
+ cade547a8de2c50b833092d1a8ad693bd3bc6723 516064 verify-iso-sig_2026.08.03_all.deb
+ a2eec70d6b3414349138c84970d1bfa45778dc91 6222 verify-iso-sig_2026.08.03_amd64.buildinfo
+Checksums-Sha256:
+ e7d6dd1da3db7e9085f9dfb820a796f3f0b564b5e4d64539ba056ffb831f615d 1516 verify-iso-sig_2026.08.03.dsc
+ 624b6506681b449ff93a12b62f20924feed1e2c425a22eb9c1a3c66480e2e8f0 523240 verify-iso-sig_2026.08.03.tar.xz
+ a96ad1a02f09edca136f3dcdf9481c291d12cf22e65a3fc08ac4d4bdb83410f9 516064 verify-iso-sig_2026.08.03_all.deb
+ c0dd56916a9e738243bd636f96430ff070c38a013e8fa9a52fefd4a4c8276713 6222 verify-iso-sig_2026.08.03_amd64.buildinfo
+Files:
+ 8f367276b5368dfa69536abec8d96a67 1516 utils optional verify-iso-sig_2026.08.03.dsc
+ b310caa983001c7f65b912b4b11201cd 523240 utils optional verify-iso-sig_2026.08.03.tar.xz
+ 259c25ee7e62b6573e25eef83d956d58 516064 utils optional verify-iso-sig_2026.08.03_all.deb
+ 15ba11029fb5c3b79423c07837fb052b 6222 utils optional verify-iso-sig_2026.08.03_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqA+awTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6aCwD/kB2Ic0C+oNLf2lxytQKA8QLJJfu/ZW
+yWsmMGqpaDtvMozR8DUBzfjIJhXiyYZ8gknLGwIZmrVQxQefTkU1z+KCJl0kV0u6
+hKdBAJ1EfFlxhqiPWzqUR2PnR6uXxisv05icoc1sky1p7h570uboAWvjI74AayPu
+KKm7fTxMzwZQZXJIJySWzUcF21bFEv9l4CBxjDpS1IYwUjvpAPQpBk291ZN4rnoJ
+inRODfy/LoaDKVN7ZqWXIfs1RahQ/QY+aMdy44DYq6Vk4TpiJIS3citaMrA/i+8x
+XW2LcDbrzmnORqbfhraCHu9SBXCAkm5eHrkOxR26ErjkNfwuAF0KC/72IyBT6LUa
+wZggotSdDnrWwPFuS8zc+Hf1dPD5j78n5F2koNsqKgLvRH8rMVtT6RWAnsjs3PBU
+DhAglbPkZ+sCP0IiBgJ7+xh8scOnL1+FC3hsGpQt876xNPMC3kq0/77L/dKasXOD
+jHhpBwy9mHs/v6+au8MuGG6RgNmYBdNobMO80fyoguWhsFfxlN5rBF5R5LKA2FUz
+VqoDiXlsRiIasEqO8FgGcXCPN1V1NuwT8paFw5rEERQ072IU51tiruIkEdAnspJJ
+Tb1vdShmXhgTdCco+IFSgudfbAAPQ1bTYN9mc51x02mh9SOXuRJkbzq+imD40Ihr
+L95K8dVNVJW+/Q==
+=VIno
+-----END PGP SIGNATURE-----
