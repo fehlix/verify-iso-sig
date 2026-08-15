@@ -15,6 +15,13 @@ override_dh_auto_build:
 		-M footer="Version $$(dpkg-parsechangelog -S Version)" \
 		-M date="$$(date -d "$$(dpkg-parsechangelog -S Date)" +%Y-%m-%d)" \
 		-o verify-iso-sig.1
+	mkdir -p help
+	pandoc -f markdown-smart-fancy_lists -s -t html --toc --toc-depth=3 \
+		-M toc-title="Contents" -M pagetitle="ISO Signature Verifier - Help" \
+		-M lang=en -H help-header.html \
+		README.md -o help/help.html
+	cp -a screenshots help/screenshots
+	cp LICENSE help/LICENSE
 
 override_dh_install:
 	dh_install
@@ -24,4 +31,4 @@ override_dh_install:
 
 override_dh_auto_clean:
 	dh_auto_clean
-	rm -rf locale/
+	rm -rf locale/ help/

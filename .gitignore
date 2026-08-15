@@ -7,6 +7,7 @@
 /verify-iso-sig.desktop
 /verify-iso-sig.1
 /locale/*/LC_MESSAGES/*.mo
+/help/
 
 # Debian packaging build state (debhelper's own scratch area) - always
 # regenerated, never meant to be committed.

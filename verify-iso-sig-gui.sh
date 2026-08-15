@@ -187,12 +187,42 @@ case "$GUI_MODE" in
         ;;
 esac
 ICON_FILE="$SCRIPT_DIR/verify-iso-sig.svg"
+
+# Help button target - a local copy of the README (built from it by
+# debian/rules, English-only for now) if installed, else the GitHub
+# page. The local copy avoids the full GitHub web UI chrome and works
+# offline; it's skipped in a from-source checkout, where help/ was
+# never built.
+HELP_FILE="$SCRIPT_DIR/help/help.html"
+if [ -f "$HELP_FILE" ]; then
+    HELP_URL="file://$HELP_FILE"
+else
+    HELP_URL="https://github.com/MX-Linux/verify-iso-sig/blob/main/README.md"
+fi
+
 # --class is a standard GTK option, setting WM_CLASS so the window
 # manager/taskbar can group and icon this window - matches
 # verify-iso-sig.desktop's StartupWMClass=. Same class for both modes -
 # a distinct manager class left the taskbar showing a generic icon
 # instead of the real one.
 WM_CLASS="verify-iso-sig"
+
+# GUI apps shouldn't run as root - and this one specifically reads/
+# writes the real ~/.gnupg (verify-iso-sig's own $TRUSTED_GPG/
+# $PUBRING_KBX, both under $HOME - not this tool's own throwaway
+# per-run $GNUPGHOME), so under sudo/pkexec, $HOME can resolve to
+# root's own home (fine but pointless - a fresh, empty trust store
+# every time) or, if the invoking user's environment gets preserved,
+# to THAT user's real ~/.gnupg - written to with root ownership,
+# breaking their own later, unprivileged use of this tool. CLI-only
+# use is deliberately NOT guarded the same way here - a scripted or
+# headless root context may have no other user to run as, and that's
+# the caller's own call to make.
+if [ "$EUID" -eq 0 ]; then
+    safe_eval_gettext "error: refusing to run as root - run this as your normal desktop user instead" >&2
+    printf '\n' >&2
+    exit 1
+fi
 
 command -v yad >/dev/null || { safe_eval_gettext "error: yad is not installed" >&2; printf '\n' >&2; exit 1; }
 # TRANSLATORS: ${VERIFY} is a file path - keep the placeholder as-is.
@@ -307,7 +337,7 @@ run_about_mode() {
             --window-icon="verify-iso-sig" \
             --image="$ICON_FILE" \
             --pname="$ABOUT_TITLE" \
-            --pversion="$VERSION" \
+            --pversion="$(safe_eval_gettext "Version \${VERSION}" VERSION)" \
             --copyright=$'\u00a9'" MX Linux" \
             --comments="$about_comments" \
             --license=GPL3 \
@@ -326,7 +356,7 @@ run_about_mode() {
         # <a href> renders as a real clickable link even in a plain
         # --text dialog - no --html needed. Line order matches the
         # native --about dialog's own: comments, website, copyright, license.
-        about_text="<span size='x-large'><b>$(pango_escape "$ABOUT_TITLE")</b></span>\n<span size='small'>$(pango_escape "$VERSION")</span>\n\n$(pango_escape "$about_comments_wrapped")\n\n<a href='https://mxlinux.org/'>https://mxlinux.org</a>\n\n$(printf '%b' '\u00a9') MX Linux\n\n<a href='https://www.gnu.org/licenses/gpl-3.0.html'>$(safe_eval_gettext "License: GNU GPL v3 or later")</a>\n"
+        about_text="<span size='x-large'><b>$(pango_escape "$ABOUT_TITLE")</b></span>\n<span size='small'>$(pango_escape "$(safe_eval_gettext "Version \${VERSION}" VERSION)")</span>\n\n$(pango_escape "$about_comments_wrapped")\n\n<a href='https://mxlinux.org/'>https://mxlinux.org</a>\n\n$(printf '%b' '\u00a9') MX Linux\n\n<a href='https://www.gnu.org/licenses/gpl-3.0.html'>$(safe_eval_gettext "License: GNU GPL v3 or later")</a>\n"
         yad --center \
             --fixed \
             --title="$(safe_eval_gettext "About \${ABOUT_TITLE}" ABOUT_TITLE)" \
@@ -464,12 +494,15 @@ run_manage_mode() {
             # TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
             --text="<span size='large'><b>$TITLE</b></span>\n$(safe_eval_gettext "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then click \"\${BTN_FORGET_SELECTED}\"." BTN_FORGET_SELECTED)"
             --button="$BTN_FORGET_SELECTED:0"
-            --button="$(safe_eval_gettext "Close"):1"
             # Even/odd per yad's own EXIT STATUS rule: Export Selected needs
             # the checked rows (even, like Forget Selected); Import from
             # File doesn't (odd).
             --button="$(safe_eval_gettext "Export Selected"):2"
             --button="$(safe_eval_gettext "Import from File"):3"
+            # Close last/rightmost - same convention as the result
+            # dialog's own button order (yad's last button is the
+            # Enter-key default, "Close" is the safe one to land on).
+            --button="$(safe_eval_gettext "Close"):1"
         )
 
         # FPR|VALIDITY|UID|KNOWN|EXPIRE, one line per key. KNOWN flags a
@@ -707,7 +740,7 @@ run_manage_mode() {
         # list just scrolls instead. Height scales with COUNT so the common
         # case shows every row without scrolling, capped so a large
         # selection scrolls rather than growing indefinitely. "+ 2" pads for
-        # a heading that wraps to 4 lines in some locales (French confirmed)
+        # a heading that wraps to 4 lines in some locales (e.g. French)
         # instead of 3.
         CONFIRM_HEIGHT=$(( 190 + (COUNT + 1) * 18 ))
         [ "$CONFIRM_HEIGHT" -gt 500 ] && CONFIRM_HEIGHT=500
@@ -762,13 +795,12 @@ if [ "$GUI_MODE" = picker ]; then
             # fixed-size geometry, see run_picker_mode() below). Reached
             # via the app menu's "Drag & Drop" action.
             --drag-and-drop) DND_MODE=1 ;;
-            # Without this, --help fell through to the "*" branch below
-            # and became the picker's prefill value - the GUI opened
-            # normally (with a blank field, since "--help" isn't a real
-            # file) and blocked the terminal in the foreground until
-            # closed, which read like a hang to whoever ran --help
-            # expecting text output. Kept in plain English, unwrapped by
-            # gettext, matching the CLI's own --help convention.
+            # Without this, --help falls through to the "*" branch below
+            # and becomes the picker's prefill value instead - the GUI
+            # opens with a blank field and blocks the terminal until
+            # closed, reading like a hang to a caller expecting text
+            # output. Kept in plain English, unwrapped by gettext,
+            # matching the CLI's own --help convention.
             -h|--help)
                 cat <<EOF
 Usage: $DISPLAY_NAME [--debug] [--drag-and-drop] [iso-file] [sig-file]
@@ -795,6 +827,67 @@ EOF
             *) FILE_ARGS+=("$arg") ;;
         esac
     done
+
+    # "Run me only once": any launch - a bare one (the desktop icon) or
+    # one with a file argument ("Open With" on a specific ISO) - doesn't
+    # open a second window while another instance is already running.
+    # A file argument is NOT special-cased to always open its own
+    # window: there's no IPC here to hand a freshly-picked file to an
+    # already-running instance, so treating it differently would mean
+    # either silently dropping the file with zero feedback, or letting a
+    # file-argument launch skip the lock entirely - which would mean a
+    # *later* bare launch finds the lock still free and opens yet
+    # another window, since the file-launch never took it either.
+    # Blocking + notifying is the honest answer given what this tool can
+    # actually do without adding real inter-process communication.
+    #
+    # Detected via a flock'd lock file, not wmctrl/xdotool - portable,
+    # and works identically on Wayland (unlike scanning wmctrl -lx,
+    # which can't see any windows there at all). Also self-cleaning: the
+    # kernel drops the lock the instant this process exits, crash
+    # included, so there's no stale-lock cleanup to worry about (unlike
+    # a plain PID file, which would need a "is that PID still actually
+    # alive" check). Raising/focusing the existing window on top of
+    # that is still an X11+wmctrl-only bonus - Wayland has no portable
+    # way for one app to raise another's window at all, so there (or
+    # without wmctrl) this just notifies (if possible) and exits
+    # quietly instead, without spawning a second window.
+    LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/verify-iso-sig-$UID.lock"
+    exec {LOCK_FD}>"$LOCK_FILE"
+    if ! flock -n "$LOCK_FD"; then
+        RAISED=0
+        if [ -z "${WAYLAND_DISPLAY:-}" ] && command -v wmctrl >/dev/null 2>&1; then
+            EXISTING_WID=$(wmctrl -lx 2>/dev/null | awk -v cls="$WM_CLASS" '$3 ~ cls {print $1; exit}') || true
+            if [ -n "$EXISTING_WID" ]; then
+                wmctrl -ia "$EXISTING_WID" >/dev/null 2>&1
+                RAISED=1
+            fi
+        fi
+        if [ "${#FILE_ARGS[@]}" -gt 0 ]; then
+            # A file was picked but can't be handed to the running
+            # instance - always say so, even if the window was raised,
+            # since raising alone doesn't explain why the file itself
+            # didn't open.
+            NOTIFY_MSG=$(safe_eval_gettext "Already running - close it first to check this file.")
+        elif [ "$RAISED" -eq 0 ]; then
+            # No way to raise the existing window either - a
+            # notification is the only feedback left that anything
+            # happened at all; without it, a second click on the
+            # desktop icon looks like nothing happened.
+            NOTIFY_MSG=$(safe_eval_gettext "Already running.")
+        else
+            NOTIFY_MSG=""
+        fi
+        if [ -n "$NOTIFY_MSG" ] && command -v notify-send >/dev/null 2>&1; then
+            # --app-name: without it, notify-send defaults the app-name
+            # field to its own program name ("notify-send") - some
+            # notification popups (e.g. Plasma) show that field
+            # prominently, so without this it looks like the alert came
+            # from a tool called "notify-send" instead of this one.
+            notify-send --app-name="$TITLE" --icon="$ICON_FILE" "$TITLE" "$NOTIFY_MSG" >/dev/null 2>&1 || true
+        fi
+        exit 0
+    fi
 
     # The picker's own form takes a single file (the .iso, or its
     # .sig/.asc/.gpg directly) - prefill is a straight passthrough of
@@ -877,12 +970,43 @@ fi
 # this. A two-file drop is classified order-independent via
 # classify_iso_sig_pair() and handed to the caller as
 # EXPLICIT_ISO/EXPLICIT_SIG, same as the explicit-two-argument entry point.
+
+# Polls for a window matching $WM_CLASS to appear, then iconifies it;
+# returns once it has (or after ~2s if the window never appears). X11
+# only (wmctrl can't see/control real windows under Wayland). Called
+# synchronously by the Help handler below, BEFORE the browser opens -
+# so the browser is confirmed to be the last thing taking focus, with
+# nothing after it to steal focus back.
+minimize_next_own_window() {
+    local wid tries=0
+    while [ "$tries" -lt 20 ]; do
+        # $3 only (the WM_CLASS field), never $0 (the whole line) - a
+        # window's title can coincidentally contain the app's own
+        # class name too.
+        wid=$(wmctrl -lx 2>/dev/null | awk -v cls="$WM_CLASS" '$3 ~ cls {print $1; exit}') || true
+        if [ -n "$wid" ]; then
+            break
+        fi
+        sleep 0.1
+        tries=$((tries + 1))
+    done
+    if [ -n "$wid" ]; then
+        wmctrl -ir "$wid" -b add,hidden >/dev/null 2>&1
+    fi
+}
+
 pick_files() {
     local key res_dnd res_form watcher_pid dnd_pid form_pid form dropped
     local -a DROPPED_LINES DROPPED_PATHS
     local FORM_PLUG_ARGS DND_PLUG_ARGS PANED_ARGS
     local FORM_TITLE_LINE FORM_INTRO_LINE FORM_LINE1 FORM_LINE2 FORM_LINE2_PLAIN
     local PICKER_MIN_WIDTH PICKER_MAX_WIDTH PICKER_WIDTH title_px intro_px line1_px line2_px
+    local FORM_OUT yad_pid
+    # Set to 1 by the Help handler below - makes the *next* picker
+    # re-show start minimized (X11 only) and, once confirmed hidden,
+    # open the browser. Consumed (reset to 0) right after each yad call
+    # regardless of whether it fired.
+    local OPEN_HELP_ON_NEXT_PICKER=0
 
     # Dynamic width: estimate each header line's rendered pixel width
     # from its character count, and widen the picker just enough to keep
@@ -908,10 +1032,10 @@ pick_files() {
     # Empirically-picked per-character pixel averages for this GTK
     # theme/font (title uses Pango size='large', ~20% bigger than body
     # lines); +80 is a fixed margin for window decoration/padding.
-    # Floor raised to 820 (was 560) so the FL field below has room for a
-    # long real filename without ellipsizing - unlike CONFIRM_WIDTH/
-    # TRUST_WIDTH, this can't be computed from the actual filename since
-    # none has been picked yet; 820 is just a calibrated floor.
+    # 820 gives the FL field below room for a long real filename without
+    # ellipsizing - unlike CONFIRM_WIDTH/TRUST_WIDTH, this can't be
+    # computed from the actual filename since none has been picked yet;
+    # 820 is just a calibrated floor.
     PICKER_MIN_WIDTH=820
     PICKER_MAX_WIDTH=900
     title_px=$(( ${#FORM_TITLE_LINE} * 9 + 80 ))
@@ -929,10 +1053,8 @@ pick_files() {
         # The drag-and-drop pane (yad's --paned/--plug) is opt-in via
         # --drag-and-drop ($DND_MODE), not default - unavailable under
         # Wayland regardless ("this mode not supported on wayland").
-        # Fixed-size geometry below (see PANED_ARGS) - re-verify with
-        # disposable throwaway windows before changing this form's
-        # content again. $WAYLAND_DISPLAY is the same check used
-        # elsewhere in this file (the no-GUI-session fallback message).
+        # PANED_ARGS below uses fixed-size geometry, calibrated to this
+        # form's exact content - change with care.
         if [ -n "${WAYLAND_DISPLAY:-}" ] || [ "$DND_MODE" -ne 1 ]; then
             dropped=""
             FORM_ONLY_ARGS=(
@@ -941,21 +1063,46 @@ pick_files() {
                 --title="$TITLE"
                 --class="$WM_CLASS"
                 --window-icon="$ICON_FILE"
-                # No --height/--fixed here (unlike the paned one below) -
-                # yad auto-sizes to content, so each sentence gets its
-                # own line.
+                # No --fixed here (unlike the paned one below) - just a
+                # --height hint for breathing room below the file field,
+                # before the button row; the window still auto-grows if a
+                # language's wrapped text needs more room than this.
                 --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n\n$FORM_INTRO_LINE\n\n$FORM_LINE1\n$FORM_LINE2\n"
                 --field="$(safe_eval_gettext "ISO or signature file"):FL"
                 --width="$PICKER_WIDTH"
-                --button="$(safe_eval_gettext "Verify"):0"
-                --button="$(safe_eval_gettext "Cancel"):1"
+                --height=280
+                # Help/Manage Trusted Keys/About grouped left (none is
+                # part of the actual accept/reject decision for this
+                # file) - yad has no GTK-style "secondary" slot to give
+                # Help a real gap, but grouping keeps the decision pair
+                # (Cancel/Verify) visually separate on the right, with
+                # Verify last/rightmost as yad's Enter-key default.
+                --button="$(safe_eval_gettext "Help"):6"
                 --button="$(safe_eval_gettext "Manage Trusted Keys"):2"
                 --button="$(safe_eval_gettext "About"):4"
+                --button="$(safe_eval_gettext "Cancel"):1"
+                --button="$(safe_eval_gettext "Verify"):0"
             )
-            set +e
-            form=$(yad "${FORM_ONLY_ARGS[@]}" "$PREFILL_FILE")
-            paned_rc=$?
-            set -e
+            if [ "$OPEN_HELP_ON_NEXT_PICKER" -eq 1 ]; then
+                OPEN_HELP_ON_NEXT_PICKER=0
+                FORM_OUT=$(mktemp "$SESSION_TMPDIR/form-out.XXXXXXXXXX")
+                set +e
+                yad "${FORM_ONLY_ARGS[@]}" "$PREFILL_FILE" >"$FORM_OUT" &
+                yad_pid=$!
+                minimize_next_own_window
+                xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                disown
+                wait "$yad_pid"
+                paned_rc=$?
+                set -e
+                form=$(cat "$FORM_OUT")
+                rm -f "$FORM_OUT"
+            else
+                set +e
+                form=$(yad "${FORM_ONLY_ARGS[@]}" "$PREFILL_FILE")
+                paned_rc=$?
+                set -e
+            fi
         else
 
             # Fresh key each attempt - reusing one too soon after killing the
@@ -974,13 +1121,12 @@ pick_files() {
                 # title off the top, clipped behind the window decoration.
                 --text="<span size='large'><b>$FORM_TITLE_LINE</b></span>\n$FORM_INTRO_LINE $FORM_LINE1\n$FORM_LINE2"
                 --field="$(safe_eval_gettext "ISO or signature file"):FL"
-                # Kept for consistency, but don't actually fix the FL
-                # field's own file-chooser popup: confirmed via xprop that
-                # yad never sets _NET_WM_ICON on that internal dialog, so
-                # the WM falls back to WM_CLASS's res_name ("yad", hardcoded
-                # - --class only controls res_class) and shows yad's own
-                # icon instead. Believed to be a yad limitation, not fixable
-                # from here.
+                # Kept for consistency, but doesn't actually fix the FL
+                # field's own file-chooser popup: yad never sets
+                # _NET_WM_ICON on that internal dialog, so the WM falls
+                # back to WM_CLASS's res_name ("yad", hardcoded - --class
+                # only controls res_class) and shows yad's own icon
+                # instead - a yad limitation, not fixable from here.
                 --class="$WM_CLASS"
                 --window-icon="$ICON_FILE"
             )
@@ -1036,23 +1182,42 @@ pick_files() {
                 # clamped near zero, hiding the Form pane. This window's
                 # content is fixed and small, so --fixed avoids the glitch.
                 # The result dialog stays resizable, unlike this picker.
-                # 400/250 is tuned to fit the translated (not just English)
-                # form text without clipping - re-verify with disposable
-                # throwaway windows before changing this form's content again.
+                # Calibrated to fit the translated (not just English) form
+                # text without clipping - change with care.
                 --fixed
-                --button="$(safe_eval_gettext "Verify"):0"
-                --button="$(safe_eval_gettext "Cancel"):1"
+                # Help/Manage Trusted Keys/About grouped left (none is
+                # part of the actual accept/reject decision for this
+                # file) - yad has no GTK-style "secondary" slot to give
+                # Help a real gap, but grouping keeps the decision pair
+                # (Cancel/Verify) visually separate on the right, with
+                # Verify last/rightmost as yad's Enter-key default.
+                --button="$(safe_eval_gettext "Help"):6"
                 --button="$(safe_eval_gettext "Manage Trusted Keys"):2"
                 # Even exit code (4, not 3) - "even means print result" per
                 # `man yad`'s own EXIT STATUS section, needed so $form still
                 # holds whatever was already picked when this fires, matching
                 # "Manage Trusted Keys"'s own code 2 for the same reason.
                 --button="$(safe_eval_gettext "About"):4"
+                --button="$(safe_eval_gettext "Cancel"):1"
+                --button="$(safe_eval_gettext "Verify"):0"
             )
-            set +e
-            yad "${PANED_ARGS[@]}"
-            paned_rc=$?
-            set -e
+            if [ "$OPEN_HELP_ON_NEXT_PICKER" -eq 1 ]; then
+                OPEN_HELP_ON_NEXT_PICKER=0
+                set +e
+                yad "${PANED_ARGS[@]}" &
+                yad_pid=$!
+                minimize_next_own_window
+                xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                disown
+                wait "$yad_pid"
+                paned_rc=$?
+                set -e
+            else
+                set +e
+                yad "${PANED_ARGS[@]}"
+                paned_rc=$?
+                set -e
+            fi
 
             kill "$watcher_pid" "$dnd_pid" "$form_pid" 2>/dev/null || true
             wait "$watcher_pid" 2>/dev/null || true
@@ -1137,6 +1302,33 @@ pick_files() {
                 PREFILL_FILE=$(printf '%s' "$form" | cut -d'|' -f1)
             fi
             run_about_mode
+            continue
+        fi
+
+        # "Help" - opens the README (this tool's help content for now) in
+        # the default browser. Where possible (X11, needs wmctrl), the
+        # picker is reshown minimized and confirmed hidden BEFORE the
+        # browser opens (see OPEN_HELP_ON_NEXT_PICKER above) - so the
+        # browser is the last thing to take focus, with nothing after
+        # it to steal focus back. Without wmctrl (or on Wayland) there's
+        # no way to do that, so the browser just opens directly and the
+        # picker may steal focus back when it reappears. Falls back to
+        # a copyable error dialog with the URL if xdg-open itself isn't
+        # installed.
+        if [ "$paned_rc" -eq 6 ]; then
+            if [ -n "$form" ]; then
+                PREFILL_FILE=$(printf '%s' "$form" | cut -d'|' -f1)
+            fi
+            if command -v xdg-open >/dev/null 2>&1; then
+                if [ -z "${WAYLAND_DISPLAY:-}" ] && command -v wmctrl >/dev/null 2>&1; then
+                    OPEN_HELP_ON_NEXT_PICKER=1
+                else
+                    xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                    disown
+                fi
+            else
+                yad_error "$(safe_eval_gettext "Could not find a way to open a web browser (xdg-open is missing). Open this address yourself:") $HELP_URL"
+            fi
             continue
         fi
 
@@ -1852,9 +2044,13 @@ $KEEPKEY_OUTPUT"
         elif gui_status_has "$OUTPUT" NO_CHECKSUM_LISTING_MATCH; then
             # TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
             NOTE=$(safe_eval_gettext "No direct signature file was found for this ISO, and none of the checksum-listing files found nearby mention this exact ISO filename either. If this distro uses a different naming convention, use \"\${BTN_CHECK_ANOTHER_FILE}\" and point at the right file directly." BTN_CHECK_ANOTHER_FILE)
-        elif [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.sig" ] && [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.asc" ] && [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.gpg" ]; then
+        elif [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.sig" ] && [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.asc" ] \
+             && [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.gpg" ] && [ "$DISPLAY_SIG" != "${DISPLAY_ISO_PATH}.sign" ]; then
+            # Only reachable via CLI args or a two-file drag-and-drop -
+            # the picker's own single-file field always auto-discovers a
+            # correctly-named counterpart, never a mismatched one.
             # TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE} is a translated button label - keep the placeholder as-is.
-            NOTE=$(safe_eval_gettext "The file names don't match, so this signature file may simply not belong to this .iso. Use \"\${BTN_CHECK_ANOTHER_FILE}\" and pick the signature file named exactly like the ISO plus .sig/.asc/.gpg." BTN_CHECK_ANOTHER_FILE)
+            NOTE=$(safe_eval_gettext "This signature file's name doesn't match this ISO's name, so it likely belongs to a different download. Use \"\${BTN_CHECK_ANOTHER_FILE}\" and pick just this ISO, or just its own real signature file - the tool finds the matching one automatically." BTN_CHECK_ANOTHER_FILE)
         elif [ "$(gui_status_field "$OUTPUT" UNRECOGNIZED_KEY)" = "0" ]; then
             NOTE=$(safe_eval_gettext "On top of the signature not matching, this signing key also isn't one this tool already recognizes - treat this file as untrustworthy and re-download from an official source.")
         else
@@ -1878,8 +2074,11 @@ $KEEPKEY_OUTPUT"
         --height=500
         --window-icon="$ICON_FILE"
         --text="$HEADING"
-        --button="$(safe_eval_gettext "OK"):0"
+        # "Check Another File" first (left), "Close" last (right) - yad's
+        # last button is the Enter-key default, and "Close" is the safer
+        # one to trigger by an accidental Enter press.
         --button="$BTN_CHECK_ANOTHER_FILE:2"
+        --button="$(safe_eval_gettext "Close"):0"
     )
     # Herestring, not a pipe: old yad mismanages a GLib IO-watch source ID
     # for a live anonymous pipe into --text-info; bash's `<<<` is backed by

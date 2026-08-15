@@ -1,12 +1,18 @@
+verify-iso-sig (2026.08.03) mx; urgency=medium
+
+  * Add help button.
+  * Use "X-MX-Live" category in .desktop file.
+  * Reorder buttons.
+  * Enable run-once.
+  * Disable running as root.
+
+ -- fehlix <fehlix@mxlinux.org>  Sat, 15 Aug 2026 17:47:51 -0400
+
 verify-iso-sig (2026.08.02) mx; urgency=medium
 
-  * Add "Nothing to verify" and "Key not trusted" results, replacing
-    misleading Verification FAILED cases; fix several related
-    checksum-listing/signature edge cases.
-  * Reword expired-key and unrecognized-key messages for clarity.
-  * Redesign the picker: intro text for first-time users, a clearer
-    warning icon, and drag-and-drop moved to an opt-in "Verify with
-    Drag & Drop" menu action (--drag-and-drop).
+  * Add "Nothing to verify" and "Key not trusted" results.
+  * Reword expired-key and unrecognized-key messages.
+  * Adjust picker intro text.
 
  -- fehlix <fehlix@mxlinux.org>  Thu, 13 Aug 2026 20:10:31 -0400
 

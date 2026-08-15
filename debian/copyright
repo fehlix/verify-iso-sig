@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: verify-iso-sig
-Source: https://github.com/fehlix/verify-iso-sig
+Source: https://github.com/MX-Linux/verify-iso-sig
 
 Files: *
 Copyright: 2026 fehlix <fehlix@mxlinux.org>

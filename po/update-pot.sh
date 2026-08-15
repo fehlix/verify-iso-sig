@@ -13,7 +13,10 @@ cd "$SCRIPT_DIR/.."
 # safe_eval_gettext() is silently dropped, no warning.
 # --language=Shell forced explicitly: verify-iso-sig (the dispatcher)
 # has no .sh suffix for extension-based auto-detection to key off.
+# --no-location: suppresses "#: file:line" comments - pure diff noise
+# on every regen, since line numbers shift with unrelated code edits.
 xgettext --language=Shell --from-code=UTF-8 --add-comments=TRANSLATORS: \
+    --no-location \
     --keyword=safe_eval_gettext \
     --package-name=verify-iso-sig \
     -o po/verify-iso-sig.pot verify-iso-sig-gui.sh verify-iso-sig
@@ -22,7 +25,7 @@ xgettext --language=Shell --from-code=UTF-8 --add-comments=TRANSLATORS: \
 # merges the .desktop.in template's Name=/Comment=/Keywords= (main entry
 # and every [Desktop Action] stanza) into the same .pot instead of
 # overwriting the pass above.
-xgettext --join-existing --language=Desktop \
+xgettext --join-existing --language=Desktop --no-location \
     -o po/verify-iso-sig.pot verify-iso-sig.desktop.in
 
 for po in po/*.po; do

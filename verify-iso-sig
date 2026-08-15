@@ -323,11 +323,10 @@ have_gui_session() {
 # [sig-file] syntax - i.e. this could plausibly mean "show me the
 # picker". -h/--help/-V/--version always go to main() instead. A leading
 # --debug is stripped first, then the SAME "0/1/2 bare files" check
-# applies uniformly to what's left - previously --debug was only
-# special-cased for the 0- and 1-file cases, so "--debug <sig> <iso>"
-# (3 args total) fell through to the catch-all "*) return 1" and
-# silently dropped to CLI mode even with no --cli anywhere, which read
-# as "--debug always forces --cli" (found via real testing).
+# applies uniformly to what's left - --debug must not change how many
+# positional args are expected, or "--debug <sig> <iso>" (3 args total)
+# falls through to the catch-all "*) return 1" and silently drops to
+# CLI mode even with no --cli anywhere.
 looks_like_gui_args() {
     if [ "$#" -ge 1 ] && [ "$1" = "--debug" ]; then
         shift
@@ -925,10 +924,7 @@ key_status() {
 # gpgv check with. "valid" and "expired" both qualify - key expiry is a
 # lifecycle/policy signal (the owner should have renewed it by now), not a
 # cryptographic weakness, and gpgv itself doesn't refuse to verify a
-# signature made with an expired key (confirmed on a real key: a real,
-# currently-published distro signing key reported "expired" via
-# --list-keys, yet a manual "gpgv --keyring ..." against it still printed
-# "Good signature"). "revoked" never qualifies, regardless of context -
+# signature made with an expired key. "revoked" never qualifies, regardless of context -
 # revocation is the key owner's own explicit assertion that the key must
 # never be trusted again, for anything. Recognition (known_key_label()/
 # the "is this key already trusted" checks) also treats "expired" as
@@ -979,10 +975,9 @@ warn_key_expired() {
 try_renew_expired_key() {
     local ks tmp_ring renew_args renew_out
     # Local pubring.kbx first - no network needed, and a personal or
-    # small-circle signing key (confirmed on a real one: the key owner's
-    # own key, renewed locally via their real GPG setup) very often never
-    # gets published to a public keyserver at all, so the fetch loop
-    # below would never find such a renewal on its own. Same bar as that
+    # small-circle signing key very often never gets published to a
+    # public keyserver at all, so the fetch loop below would never find
+    # such a renewal on its own. Same bar as that
     # loop's own check - just "a non-expired copy of this exact already-
     # trusted fingerprint exists" - not requiring it be separately marked
     # explicitly trusted there too: the fingerprint itself was already
@@ -2042,9 +2037,9 @@ verify_iso() {
             # tcf_rc=0 default + "|| tcf_rc=$?", not a bare call followed by
             # "tcf_rc=$?" on its own line: under set -e, a bare non-zero-
             # returning statement trips errexit immediately, before the
-            # next line even runs - confirmed the hard way (return 2, the
-            # normal "nothing to fall back to" case, silently killed the
-            # whole process here with no die() message at all).
+            # next line even runs - including return 2, the normal
+            # "nothing to fall back to" case, which would otherwise
+            # silently kill the whole process with no die() message at all.
             tcf_rc=0
             try_checksum_fallback || tcf_rc=$?
             [ "$tcf_rc" -eq 2 ] || return "$tcf_rc"
@@ -2137,7 +2132,7 @@ verify_iso() {
     tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
     # Try a renewal BEFORE using this status - otherwise recognition
     # below warns about an expiry that's about to be silently fixed
-    # anyway (confirmed confusing in practice).
+    # anyway, which reads as confusing/contradictory.
     if [ "$tg_status" = expired ]; then
         try_renew_expired_key || true
         tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
@@ -2392,7 +2387,7 @@ if [ "$rc" -eq 0 ]; then
     # EXPKEYSIG instead of GOODSIG (same field layout: keyid, then
     # username) when the signing key has expired - key_material_usable()
     # accepts an expired key for this very check, so this case is real,
-    # not theoretical (confirmed on openSUSE's own expired signing key).
+    # not theoretical.
     CLAIMED_UID=$(percent_decode_uid "$(status_field GOODSIG 4-)")
     [ -n "$CLAIMED_UID" ] || CLAIMED_UID=$(percent_decode_uid "$(status_field EXPKEYSIG 4-)")
     if [ -n "$CLAIMED_UID" ]; then
@@ -2420,20 +2415,29 @@ return "$rc"
 # BASH_SOURCE[0] when another script sources this file instead (the GUI,
 # with LIB_MODE=1), leaving that caller to invoke whichever functions it needs.
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Refuses root outright, checked first - same reasoning as
+    # verify-iso-sig-gui.sh's own $EUID check: this tool reads/writes
+    # the real ~/.gnupg ($TRUSTED_GPG/$PUBRING_KBX, both $HOME-based -
+    # not this tool's own throwaway per-run $GNUPGHOME), so root/sudo
+    # risks polluting it, or - under `sudo -E`/bare `su` (neither resets
+    # $HOME) - poisoning the real invoking user's own home with
+    # root-owned files.
+    if [ "$EUID" -eq 0 ]; then
+        die "$(gettext "refusing to run as root - run this as a regular user instead")"
+    fi
+
     FORCE_MODE=""
     MANAGE_KEYS_DISPATCH=0
     DND_DISPATCH=0
     DISPATCH_ARGS=()
     # --cli/--gui/--manage-keys/--drag-and-drop are dispatcher-only flags,
     # recognized anywhere in the argument list - like every other flag
-    # this tool accepts (--debug, --allow-unrecognized-key, ...), not just
-    # as the very first argument. Found via real testing: "--debug --gui
-    # <sig> <iso>" failed with "unknown option '--gui'" (only ${1:-} was
-    # ever checked) while "--gui --debug <sig> <iso>" worked - a
-    # confusing, order-dependent inconsistency with how every other flag
-    # behaves. --drag-and-drop implies --gui (meaningless in CLI mode) -
-    # forcing FORCE_MODE here means the GUI-dispatch branch below needs
-    # no separate check for it.
+    # this tool accepts (--debug, --allow-unrecognized-key, ...), not
+    # just as the very first argument, so a flag order like "--debug
+    # --gui <sig> <iso>" isn't a different case from "--gui --debug
+    # <sig> <iso>". --drag-and-drop implies --gui (meaningless in CLI
+    # mode) - forcing FORCE_MODE here means the GUI-dispatch branch
+    # below needs no separate check for it.
     for DISPATCH_ARG in "$@"; do
         case "$DISPATCH_ARG" in
             --cli) FORCE_MODE=cli ;;
