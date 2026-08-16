@@ -1403,6 +1403,15 @@ run_verify() {
     local PROGRESS_ARGS=(
         --progress
         --pulsate
+        # There's no real percentage to ever report here (that's the
+        # whole point of --pulsate) - --hide-text drops the bar's own
+        # "0%" overlay, which the heartbeat mechanism above never
+        # updates, so it would otherwise sit frozen at 0 forever, right
+        # next to a bar that's now visibly animating. Distinct from
+        # --text= just below (the dialog's own instructional line,
+        # unaffected by this - --hide-text only touches the bar widget's
+        # own internal label).
+        --hide-text
         --no-buttons
         --center
         --title="$TITLE"
@@ -1483,7 +1492,20 @@ run_verify() {
     ' &
     local producer_pid=$!
 
-    yad "${PROGRESS_ARGS[@]}" </dev/null 2>/dev/null &
+    # yad's own pulse animation only steps forward when it actually reads
+    # a new line from stdin - a silent/empty stdin (a plain /dev/null, or
+    # even a real pipe nobody ever writes to) leaves the bar frozen, not
+    # a WSL/environment quirk (confirmed against yad upstream: "no input
+    # data - no pulsate"). This heartbeat feeds it one blank line every
+    # 0.3s for the whole time it's up - content doesn't matter in
+    # --pulsate mode, only that a line arrives at all.
+    local progress_fifo
+    progress_fifo=$(mktemp -u "$SESSION_TMPDIR/progress-stdin.XXXXXXXXXX")
+    mkfifo "$progress_fifo"
+    ( while :; do echo; sleep 0.3; done ) > "$progress_fifo" &
+    local heartbeat_pid=$!
+
+    yad "${PROGRESS_ARGS[@]}" < "$progress_fifo" 2>/dev/null &
     local yad_pid=$!
 
     local finished_pid=""
@@ -1504,6 +1526,8 @@ run_verify() {
         sleep 0.2
         kill -KILL -- "-$producer_pid" 2>/dev/null || true
         wait "$producer_pid" 2>/dev/null || true
+        kill "$heartbeat_pid" 2>/dev/null || true
+        rm -f "$progress_fifo"
         return 0
     fi
 
@@ -1513,6 +1537,8 @@ run_verify() {
     kill "$yad_pid" 2>/dev/null || true
     wait "$yad_pid" 2>/dev/null || true
     wait "$producer_pid" 2>/dev/null || true
+    kill "$heartbeat_pid" 2>/dev/null || true
+    rm -f "$progress_fifo"
     OUTPUT=$(cat "$OUT_FILE")
     RC=$(cat "$RC_FILE")
 }
