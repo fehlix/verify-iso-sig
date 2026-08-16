@@ -1662,14 +1662,19 @@ resolve_checksum_listing_as_iso() {
 # or "<hash> *<name>") and BSD/tag style ("ALGO (<name>) = <hash>", e.g.
 # Fedora's convention) - real checksum files list decoy entries too (e.g.
 # Debian's own "<iso>.log"/"<iso>.packages"/"<iso>.contents"). Sets
-# MATCHED_LINE on success; for a BSD-tag match also sets FOUND_HASHCMD
-# (e.g. "sha256sum") from the line's own algorithm token - both left
-# untouched for a GNU-style match, since that caller already knows its
-# hashcmd from $CHECKSUM_FILES. Sets globals directly rather than
-# echoing to stdout, so callers must NOT invoke this via "$(...)" command
-# substitution - that forks a subshell and the side effects would be lost.
+# MATCHED_LINE on success, and always sets FOUND_HASHCMD too (e.g.
+# "sha256sum") - for a BSD-tag match, from the line's own algorithm
+# token; for a GNU-style match (which carries no algorithm name at all),
+# inferred from the hash's own hex length, since a caller matching a
+# release-specific name via $CHECKSUM_FILE_GLOBS (e.g. Fedora's
+# "<spin>-<version>-<arch>-CHECKSUM") has no $CHECKSUM_FILES entry to
+# resolve a hashcmd from otherwise - left empty only if the hash's length
+# doesn't correspond to any hash this tool supports. Sets globals
+# directly rather than echoing to stdout, so callers must NOT invoke this
+# via "$(...)" command substitution - that forks a subshell and the side
+# effects would be lost.
 find_checksum_line() {
-    local file=$1 target=$2 line rest mode fname algo
+    local file=$1 target=$2 line hash rest mode fname algo hash_len
     while IFS= read -r line || [ -n "$line" ]; do
         if [[ $line =~ ^([A-Za-z0-9-]+)\ \((.+)\)\ =\ ([0-9a-fA-F]+)$ ]]; then
             if [ "${BASH_REMATCH[2]}" = "$target" ]; then
@@ -1680,6 +1685,7 @@ find_checksum_line() {
             fi
             continue
         fi
+        hash=${line%% *}
         rest=${line#* }
         mode=${rest:0:1}
         fname=${rest:1}
@@ -1688,6 +1694,16 @@ find_checksum_line() {
             *) continue ;;
         esac
         if [ "$fname" = "$target" ]; then
+            FOUND_HASHCMD=""
+            if [[ $hash =~ ^[0-9a-fA-F]+$ ]]; then
+                hash_len=${#hash}
+                case "$hash_len" in
+                    32)  FOUND_HASHCMD=md5sum ;;
+                    40)  FOUND_HASHCMD=sha1sum ;;
+                    64)  FOUND_HASHCMD=sha256sum ;;
+                    128) FOUND_HASHCMD=sha512sum ;;
+                esac
+            fi
             MATCHED_LINE=$line
             return 0
         fi
@@ -1870,6 +1886,19 @@ try_checksum_fallback() {
         match_line=$MATCHED_LINE
 
         name_base=$(basename "$name")
+        # $hashcmd is empty here for a $CHECKSUM_FILE_GLOBS match (a
+        # release-specific name has no fixed algorithm) - fall back to
+        # find_checksum_line()'s own hash-length-based guess, same as the
+        # clearsigned branch above. Just resolves which command *would*
+        # be used (for $algo's display purposes and the --is-cached
+        # early return just below, neither of which actually runs it) -
+        # the command -v validation itself is deferred past the child
+        # signature check further down, right before it would actually
+        # run, so a tampered listing is still reported as a failed
+        # signature check first, not an unrelated "unsupported hash
+        # algorithm" for a digest that was never trustworthy to begin
+        # with.
+        [ -n "$hashcmd" ] || hashcmd=$FOUND_HASHCMD
         algo=${hashcmd%sum}
         log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
         status_out "CHECKSUM_FILE $name_base ($algo)"
@@ -1922,6 +1951,13 @@ try_checksum_fallback() {
             name_base=$(basename "$name")
             die "$(eval_gettext "the checksum file '\${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror.")" || return 1
         fi
+
+        # Only checked once the listing's own signature is confirmed GOOD -
+        # an unresolved/unsupported $hashcmd (see its own comment above)
+        # must never be reported before a tampered-but-unsigned digest is
+        # caught by its rightful, more fundamental "failed signature
+        # check" error above.
+        command -v "$hashcmd" >/dev/null 2>&1 || die "$(eval_gettext "checksum file '\${name_base}' uses an unsupported hash algorithm ('\${hashcmd}' not found)")" || return 1
 
         set +e
         HASH_OUTPUT=$(cd "$dir" && printf '%s\n' "$match_line" | "$hashcmd" -c - 2>&1)
