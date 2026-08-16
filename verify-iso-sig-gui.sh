@@ -1380,18 +1380,29 @@ pick_files() {
     done
 }
 
-# Runs verify_iso() (called from run_picker_mode() below). Sets $OUTPUT/$RC.
-# Called in-process but still runs inside a subshell for the progress-
-# dialog timing to work, so any real global side effect (FPR,
-# CHECKSUM_INFO, etc.) is gone the instant it exits - only $OUTPUT
-# (captured via STATUS_FD auto-default to 2, same as a real CLI
-# "--status-fd=2 ... 2>&1") survives, via $OUT_FILE. $1 is the progress text.
+# Runs verify_iso() (called from run_picker_mode() below). Sets $OUTPUT/$RC,
+# or - if the progress dialog gets closed before the real work finishes -
+# sets $INTERRUPTED=1 instead (OUTPUT/RC are then meaningless and must
+# not be read; the caller is expected to bail out immediately). $1 is the
+# progress text.
+#
+# The real work runs as a genuinely separate, setsid'd subprocess (its own
+# process group), not just an in-process subshell - a bash subshell forked
+# via plain "(...)  &" shares this script's own process group, so closing
+# the dialog early couldn't reliably reach every gpg/gpgv/self-reexec
+# child it may have spawned by then, only the immediate one. setsid gives
+# the whole subtree one PGID this function can kill outright by its
+# negative PID. It re-sources $VERIFY itself (a fresh process has none of
+# this already-sourced interpreter's in-memory functions) and receives
+# every value it needs to reproduce the exact same call via exported
+# RV_*-prefixed variables - not a raw CLI re-invocation of positional
+# arguments, which would risk re-classifying an already-resolved ISO/SIG/
+# checksum-listing pairing differently than pick_files() originally did.
 run_verify() {
     local progress_text=$1
     local PROGRESS_ARGS=(
         --progress
         --pulsate
-        --auto-close
         --no-buttons
         --center
         --title="$TITLE"
@@ -1399,52 +1410,109 @@ run_verify() {
         --window-icon="$ICON_FILE"
         --text="$progress_text"
     )
-    set +e
-    (
-        # Every global verify_iso() reads is reset here rather than relying
-        # on lib_init_defaults' one-time defaults - this shell may have
-        # already run a full verify_iso() in an earlier "Check Another
-        # File" loop iteration. Always allow the crypto check to run even
-        # for an unrecognized key - what gates is whether the result counts as verified.
+
+    # Every value the child needs, relayed via the environment since it's
+    # a real separate process - not just an in-process subshell anymore.
+    # Always allow the crypto check to run even for an unrecognized key -
+    # what gates is whether the result counts as verified, not this call.
+    local RV_ISO=$ISO RV_SIG=$SIG RV_EXPORT_KEY_TO=$KEY_EXPORT_FILE RV_DEBUG=$DEBUG
+    # "${PINNED_CHECKSUM_FILE:-}", not a blind "": a recognized
+    # checksum-listing-plus-explicit-ISO pairing pins this once per round
+    # in the caller's scope - a plain reset would drop it every round.
+    # Same reasoning for PINNED_CHECKSUM_ALGO (only classify_plain_
+    # checksum_signature_pair() sets it).
+    local RV_CHECKSUM_FILE=${PINNED_CHECKSUM_FILE:-} RV_CHECKSUM_ALGO=${PINNED_CHECKSUM_ALGO:-}
+    local RV_ISO_DERIVED=${PINNED_ISO_DERIVED_FROM_SIG:-0} RV_NO_DIRECT_SIG
+    # Mirrors main()'s own ISO/SIG classification. "${PINNED_NO_DIRECT_SIG:-0}"
+    # overrides the plain $SIG-emptiness inference for the one sub-case it gets wrong.
+    if [ "${PINNED_NO_DIRECT_SIG:-0}" -eq 1 ]; then
+        RV_NO_DIRECT_SIG=1
+    else
+        [ -n "$SIG" ] && RV_NO_DIRECT_SIG=0 || RV_NO_DIRECT_SIG=1
+    fi
+
+    RV_VERIFY=$VERIFY RV_ISO=$RV_ISO RV_SIG=$RV_SIG RV_EXPORT_KEY_TO=$RV_EXPORT_KEY_TO \
+    RV_CHECKSUM_FILE=$RV_CHECKSUM_FILE RV_CHECKSUM_ALGO=$RV_CHECKSUM_ALGO \
+    RV_NO_DIRECT_SIG=$RV_NO_DIRECT_SIG RV_ISO_DERIVED=$RV_ISO_DERIVED \
+    RV_OUT_FILE=$OUT_FILE RV_RC_FILE=$RC_FILE RV_DEBUG=$RV_DEBUG \
+    setsid bash -c '
+        set -euo pipefail
+        LIB_MODE=1
+        # shellcheck disable=SC1090
+        . "$RV_VERIFY"
+        lib_init_defaults
         KEEP_KEY=0
         IS_CACHED=0
         ALLOW_UNKNOWN=1
         TRUST_KEY=0
         KEEP=0
-        EXPORT_KEY_TO=$KEY_EXPORT_FILE
+        # lib_init_defaults just reset this to 0 - restore the real
+        # --debug state. debug_cmd() calls throughout verify_iso() are
+        # the only way to see the actual gpg/gpgv commands run, and this
+        # is a genuinely separate process now, not an in-process subshell
+        # that already had --debug in effect from the enclosing environment.
+        DEBUG=$RV_DEBUG
+        EXPORT_KEY_TO=$RV_EXPORT_KEY_TO
         FROM_RING_OVERRIDE=""
         VERIFY_AS_CHECKSUM_FILE=0
         NO_CHECKSUM_FALLBACK=0
-        # "${PINNED_CHECKSUM_FILE:-}", not a blind "": a recognized
-        # checksum-listing-plus-explicit-ISO pairing pins this once per
-        # round in the caller's scope - a plain reset would drop it every
-        # time this subshell runs. Same reasoning for PINNED_CHECKSUM_ALGO
-        # (only classify_plain_checksum_signature_pair() sets it).
-        CHECKSUM_FILE_OVERRIDE=${PINNED_CHECKSUM_FILE:-}
-        CHECKSUM_ALGO_OVERRIDE=${PINNED_CHECKSUM_ALGO:-}
+        CHECKSUM_FILE_OVERRIDE=$RV_CHECKSUM_FILE
+        CHECKSUM_ALGO_OVERRIDE=$RV_CHECKSUM_ALGO
         KEYSERVER_OPT=""
         STATUS_FD=""
-        # Mirrors main()'s own ISO/SIG classification. "${PINNED_NO_DIRECT_SIG:-0}"
-        # overrides the plain $SIG-emptiness inference for the one sub-case it gets wrong.
-        if [ "${PINNED_NO_DIRECT_SIG:-0}" -eq 1 ]; then
-            NO_DIRECT_SIG=1
-        else
-            [ -n "$SIG" ] && NO_DIRECT_SIG=0 || NO_DIRECT_SIG=1
-        fi
-        ISO_DERIVED_FROM_SIG=${PINNED_ISO_DERIVED_FROM_SIG:-0}
-        # $OUT_FILE gets the full, unfiltered output (gui_status_field/
+        NO_DIRECT_SIG=$RV_NO_DIRECT_SIG
+        ISO_DERIVED_FROM_SIG=$RV_ISO_DERIVED
+        ISO=$RV_ISO
+        SIG=$RV_SIG
+        # $RV_OUT_FILE gets the full, unfiltered output (gui_status_field/
         # gui_status_has need every tag line intact); the copy mirrored to
-        # stderr drops those machine-readable tag lines so they don't
+        # stderr drops those machine-readable tag lines so they do not
         # duplicate the translated human-readable line next to them.
-        verify_iso 2>&1 | tee "$OUT_FILE" | grep -v '^\[VERIFY-ISO-SIG:\]' >&2
-        echo "${PIPESTATUS[0]}" > "$RC_FILE"
-    # 2>/dev/null on yad itself: old yad mismanages a GLib IO-watch source
-    # ID when its stdin is a genuine anonymous pipe ("GLib-CRITICAL **:
-    # g_source_remove: assertion 'tag > 0' failed"). This pipe can't be
-    # swapped for a herestring - it deliberately carries no content, just
-    # EOF timing (the dialog auto-closes when the subshell exits).
-    ) | yad "${PROGRESS_ARGS[@]}" 2>/dev/null
-    set -e
+        # set +e around the pipeline itself, not just a trailing "|| true" -
+        # under pipefail (set above), any FAILED verification (bad
+        # signature, untrusted key, ...) makes the exit status of the
+        # whole pipeline the same nonzero one verify_iso itself returned,
+        # which errexit would abort on right here, before "$RV_RC_FILE" is
+        # ever written - leaving the parent to read an empty (or, on a
+        # later round, stale) result.
+        set +e
+        verify_iso 2>&1 | tee "$RV_OUT_FILE" | grep -v "^\[VERIFY-ISO-SIG:\]" >&2
+        rc=${PIPESTATUS[0]}
+        set -e
+        echo "$rc" > "$RV_RC_FILE"
+    ' &
+    local producer_pid=$!
+
+    yad "${PROGRESS_ARGS[@]}" </dev/null 2>/dev/null &
+    local yad_pid=$!
+
+    local finished_pid=""
+    wait -n -p finished_pid "$producer_pid" "$yad_pid" 2>/dev/null || true
+
+    INTERRUPTED=0
+    if [ "$finished_pid" = "$yad_pid" ] && kill -0 "$producer_pid" 2>/dev/null; then
+        # The dialog closed (window's own close button, Escape, or a WM
+        # action) before the real work finished - stop it for real.
+        # setsid above gave the whole producer subtree its own process
+        # group, so killing that one negative PID reaches every
+        # gpg/gpgv/self-reexec child it spawned too, not just the
+        # immediate one. A short grace period for a clean SIGTERM exit
+        # (which the child's own EXIT trap - session_tmpdir_cleanup -
+        # still catches, unlike the SIGKILL escalation) before insisting.
+        INTERRUPTED=1
+        kill -TERM -- "-$producer_pid" 2>/dev/null || true
+        sleep 0.2
+        kill -KILL -- "-$producer_pid" 2>/dev/null || true
+        wait "$producer_pid" 2>/dev/null || true
+        return 0
+    fi
+
+    # The real work finished first (the normal case) - close the now-
+    # stale progress window ourselves (no --auto-close/pipe-EOF trick
+    # needed anymore, now the producer isn't piped into yad at all).
+    kill "$yad_pid" 2>/dev/null || true
+    wait "$yad_pid" 2>/dev/null || true
+    wait "$producer_pid" 2>/dev/null || true
     OUTPUT=$(cat "$OUT_FILE")
     RC=$(cat "$RC_FILE")
 }
@@ -1756,6 +1824,12 @@ run_picker_mode() {
     # to learn the signer's claimed identity. What gates on recognition is
     # whether the result gets accepted as "verified".
     run_verify "$VERIFYING_TEXT"
+
+    if [ "$INTERRUPTED" -eq 1 ]; then
+        yad_error "$(safe_eval_gettext "Process was interrupted - the check did not finish, so nothing here has been verified.")"
+        PREFILL_FILE=$ISO
+        continue
+    fi
 
     FPR=$(gui_status_field "$OUTPUT" SIGNATURE_FPR)
 
