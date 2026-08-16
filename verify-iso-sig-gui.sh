@@ -383,6 +383,43 @@ pango_escape() {
     printf '%s' "$s"
 }
 
+# Decodes percent-escapes (e.g. "%20" -> a space) in a dropped file's
+# "file://" URI (see pick_files()'s own DnD handling) - GTK/yad report a
+# drop as a real text/uri-list per RFC 3986, so any space or non-ASCII
+# byte in the original filename arrives percent-encoded; without this,
+# a dropped file like a browser's own "name (1).iso" duplicate-download
+# naming (a literal space) never matches any real path on disk. Not the
+# same escaping as a web form's x-www-form-urlencoded - deliberately
+# doesn't turn "+" into a space, since a literal "+" in a filename is
+# valid and unrelated to this encoding.
+urldecode() {
+    local s=$1 out="" i c hex decoded
+    for ((i = 0; i < ${#s}; i++)); do
+        c=${s:i:1}
+        if [ "$c" = "%" ]; then
+            hex=${s:i+1:2}
+            if [[ $hex =~ ^[0-9A-Fa-f]{2}$ ]]; then
+                # $hex is validated 2-hex-digit only here - the one and
+                # only thing ever handed to printf's %b escape
+                # interpretation, so a literal backslash (or any other
+                # %b-special sequence) already present in the dropped
+                # filename itself can never reach it and be misread as
+                # an escape - every other byte is appended verbatim below.
+                # printf -v, not "out+=$(printf ...)" - command
+                # substitution strips trailing newlines, which would
+                # silently drop a real "%0A" byte (a valid, if unusual,
+                # character in a Unix filename) instead of decoding it.
+                printf -v decoded '%b' "\\x$hex"
+                out+="$decoded"
+                i=$((i + 2))
+                continue
+            fi
+        fi
+        out+="$c"
+    done
+    printf '%s' "$out"
+}
+
 # Shared helpers for the signature naming convention. sig_for_iso() only
 # knows .sig/.asc/.gpg - it guesses an ISO's own direct signature,
 # matching verify-iso-sig's 3-extension direct-sig detection (excludes
@@ -1236,12 +1273,15 @@ pick_files() {
             # (a plain "${dropped#file://}" would only strip the very
             # first occurrence, leaving a second dropped file's own
             # "file://" prefix embedded mid-string instead of a second,
-            # separate path).
+            # separate path). urldecode() undoes the URI's own percent-
+            # encoding (e.g. "%20" for a space) - without it, a dropped
+            # file with a space or non-ASCII character in its name never
+            # matches any real path on disk.
             mapfile -t DROPPED_LINES <<< "$dropped"
             DROPPED_PATHS=()
             for dropped_line in "${DROPPED_LINES[@]}"; do
                 [ -n "$dropped_line" ] || continue
-                DROPPED_PATHS+=("${dropped_line#file://}")
+                DROPPED_PATHS+=("$(urldecode "${dropped_line#file://}")")
             done
             case "${#DROPPED_PATHS[@]}" in
                 1)
