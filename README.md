@@ -20,6 +20,9 @@ for scripts.
 
 - Simple picker window: pick your ISO file, or its signature file. The
   tool finds the other one by itself, if it is in the same folder.
+- Or select 2 or 3 files at once - the ISO plus its checksum listing
+  and/or signature file - via a file manager's "Open With", for when
+  they're not all in the same folder.
 - Optional drag-and-drop mode (X11 only) - turn it on with
   `--drag-and-drop`, or the "Verify with Drag & Drop" entry in your
   application menu.
@@ -99,7 +102,7 @@ can check them yourself before deciding to trust the key.
 For scripts and advanced use:
 
 ```
-verify-iso-sig --cli <iso-file> [signature-file]
+verify-iso-sig --cli <iso-file> [signature-file] [checksum-file]
 ```
 
 See `verify-iso-sig --help` or `verify-iso-sig --man` for the full list

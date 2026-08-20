@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 17:32+0200\n"
+"POT-Creation-Date: 2026-08-20 21:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,6 +86,9 @@ msgid ""
 "verifying an ISO."
 msgstr ""
 
+msgid "Import from File"
+msgstr ""
+
 msgid "Remove"
 msgstr ""
 
@@ -112,9 +115,6 @@ msgid ""
 msgstr ""
 
 msgid "Export Selected"
-msgstr ""
-
-msgid "Import from File"
 msgstr ""
 
 #. TRANSLATORS: shown as-is in the list's "Status" column (a
@@ -223,6 +223,21 @@ msgstr ""
 msgid "Already running."
 msgstr ""
 
+#, sh-format
+msgid "Cannot detect what '${anchor_base}' belongs to:"
+msgstr ""
+
+msgid "Cannot detect how these three files belong together:"
+msgstr ""
+
+msgid ""
+"Cannot detect an ISO, a checksum listing, and its signature among these "
+"three files:"
+msgstr ""
+
+msgid "Too many files were given - at most three are supported."
+msgstr ""
+
 msgid ""
 "This tool checks that a downloaded ISO is authentic and undamaged, using its "
 "signature file or a signed checksum listing."
@@ -262,8 +277,8 @@ msgstr ""
 
 #, sh-format
 msgid ""
-"Drop at most two files (the ISO and its signature file) - ${DROP_COUNT} were "
-"dropped."
+"Drop at most three files (the ISO plus its checksum listing and/or signature "
+"file) - ${DROP_COUNT} were dropped."
 msgstr ""
 
 msgid ""
@@ -274,6 +289,25 @@ msgstr ""
 msgid ""
 "That's a folder, not a file - pick the .iso file itself (or "
 "its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${named_base}' looks like a signature file by its name, but its content "
+"doesn't look like a real one."
+msgstr ""
+
+#, sh-format
+msgid ""
+"Neither '${neither_iso_base}' nor '${neither_sig_base}' looks like a real "
+"ISO signature file, by name or content."
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${not_plausible_iso_base}' and '${not_plausible_sig_base}' both look like "
+"signature or checksum-listing files - pick the actual ISO, plus its checksum "
+"listing or signature file."
 msgstr ""
 
 msgid "No ISO or signature file was selected."
@@ -310,6 +344,11 @@ msgstr ""
 #. signature - this can take a few seconds") onto a second line -
 #. the two need to read as one continuous sentence together.
 msgid "if the signing key needs to be fetched from a keyserver..."
+msgstr ""
+
+msgid ""
+"Process was interrupted - the check did not finish, so nothing here has been "
+"verified."
 msgstr ""
 
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
@@ -571,6 +610,11 @@ msgstr ""
 msgid "list every key saved in trustedkeys.gpg"
 msgstr ""
 
+msgid ""
+"Run with no arguments, or via a file manager's \"Open With\" (up to 3 "
+"files), to open a picker window instead."
+msgstr ""
+
 #. TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
 #, sh-format
 msgid "For every other option (scripting/automation flags) see ${FLAG_MAN}."
@@ -699,8 +743,47 @@ msgstr ""
 
 #, sh-format
 msgid ""
+"cannot detect what '${anchor_base}' belongs to: '${cand1_base}', "
+"'${cand2_base}'."
+msgstr ""
+
+#, sh-format
+msgid ""
+"cannot detect how these three files belong together: '${triple_base1}', "
+"'${triple_base2}', '${triple_base3}'."
+msgstr ""
+
+#, sh-format
+msgid ""
+"cannot detect an ISO, a checksum listing, and its signature among these "
+"three files: '${triple_base1}', '${triple_base2}', '${triple_base3}'."
+msgstr ""
+
+#, sh-format
+msgid ""
 "'${ISO}' is a directory, not a file - point this at the actual .iso file (or "
 "its .sig/.asc/.gpg/.sign signature file) directly."
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${named_base}' looks like a signature file by its name, but its content "
+"doesn't look like a real one - point this tool at the actual signature file, "
+"or a checksum listing."
+msgstr ""
+
+#, sh-format
+msgid ""
+"neither '${iso_base}' nor '${sig_base}' looks like a real ISO signature "
+"file, by name or content - point this tool at the actual ISO and "
+"its .sig/.asc/.gpg/.sign file, or a checksum listing."
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${iso_base}' and '${sig_base}' both look like signature or checksum-listing "
+"files - point this tool at the actual ISO, plus its checksum listing or "
+"signature file."
 msgstr ""
 
 #, sh-format
@@ -885,6 +968,12 @@ msgid ""
 "you want to check instead."
 msgstr ""
 
+#, sh-format
+msgid ""
+"this line claims ${tag_algo}, but its hash is ${hash_len} characters long, "
+"which looks like ${len_algo} instead - using ${len_algo}"
+msgstr ""
+
 #. TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
 #, sh-format
 msgid ""
@@ -897,6 +986,12 @@ msgid ""
 "the checksum file '${name_base}' failed its own signature check - it cannot "
 "be trusted, so the ISO hash inside it cannot be trusted either. Re-download "
 "the ISO and the checksum/signature files, ideally from a different mirror."
+msgstr ""
+
+#, sh-format
+msgid ""
+"${name_base} is named for ${name_algo}, but its content looks like "
+"${content_algo} - using ${content_algo}"
 msgstr ""
 
 #, sh-format
@@ -957,6 +1052,13 @@ msgstr ""
 
 #, sh-format
 msgid "could not extract signing key fingerprint from '${ISO}'"
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${SIG}' looks like a full clearsigned message (e.g. a checksum listing), "
+"not a plain detached signature - point this tool at it on its own, or "
+"together with the ISO it checksums, not as a signature file."
 msgstr ""
 
 #, sh-format

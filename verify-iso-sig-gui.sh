@@ -28,6 +28,9 @@
 # saved in ~/.gnupg/trustedkeys.gpg, also reachable from the picker's
 # own "Manage Trusted Keys" button). Both modes share the yad/gettext/
 # pango helpers below; GUI_MODE picks which top-level flow runs.
+#
+# -e: exit on any error. -u: error on unset vars. pipefail: a pipeline
+# fails if any stage does, not just the last.
 set -euo pipefail
 
 # Same literal value as verify-iso-sig, kept in sync by hand.
@@ -453,89 +456,106 @@ run_manage_mode() {
             # convention - please use your language's own quotation marks
             # instead (e.g. « », „", etc.) if that reads more naturally.
             EMPTY_LIST_LINE2=$(safe_eval_gettext "A key ends up there after you choose to \"Trust\"/\"Keep\" it while verifying an ISO.")
-            yad_info "$EMPTY_LIST_LINE1\n\n$EMPTY_LIST_LINE2"
-            return 0
-        fi
-
-        # Scale the window height to the key count - 320 fits ~5-6 rows.
-        KEY_COUNT=$(printf '%s\n' "$LISTING" | grep -c .)
-        if [ "$KEY_COUNT" -ge 6 ]; then
-            LIST_HEIGHT=480
+            EMPTY_ARGS=(
+                --info
+                --center
+                --title="$TITLE"
+                --class="$WM_CLASS"
+                --window-icon="$ICON_FILE"
+                --width=480
+                --text="$EMPTY_LIST_LINE1\n\n$EMPTY_LIST_LINE2"
+                # Same button code (3) as "Import from File" below, so it
+                # falls into that same handling further down - Forget/
+                # Export make no sense with nothing saved yet, so neither
+                # is offered here.
+                --button="$(safe_eval_gettext "Import from File"):3"
+                --button="$(safe_eval_gettext "Close"):1"
+            )
+            set +e
+            yad "${EMPTY_ARGS[@]}"
+            LIST_RC=$?
+            set -e
         else
-            LIST_HEIGHT=320
-        fi
-
-        LIST_ARGS=(
-            --list
-            --checklist
-            --center
-            --title="$TITLE"
-            --class="$WM_CLASS"
-            --window-icon="$ICON_FILE"
-            # 940, not 860 - a long real-world UID (e.g. a full name plus
-            # email) could otherwise force a horizontal scrollbar across
-            # the Key ID/User ID/Status/Expiration Date columns.
-            --width=940
-            --height="$LIST_HEIGHT"
-            --column="$(safe_eval_gettext "Remove")"
-            --column="$(safe_eval_gettext "Fingerprint")"
-            --column="$(safe_eval_gettext "Key ID")"
-            --column="$(safe_eval_gettext "User ID")"
-            --column="$(safe_eval_gettext "Status")"
-            --column="$(safe_eval_gettext "Expiration Date")"
-            # GTK's own type-ahead search defaults to column 1 (the Remove
-            # checkbox, useless for typed text) - point it at User ID instead.
-            --search-column=4
-            # Fingerprint stays in the list model for --untrust-key below,
-            # but isn't shown - the Key ID column is friendlier at a glance.
-            --hide-column=2
-            --print-column=2
-            --separator=$'\n'
-            # TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
-            --text="<span size='large'><b>$TITLE</b></span>\n$(safe_eval_gettext "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then click \"\${BTN_FORGET_SELECTED}\"." BTN_FORGET_SELECTED)"
-            --button="$BTN_FORGET_SELECTED:0"
-            # Even/odd per yad's own EXIT STATUS rule: Export Selected needs
-            # the checked rows (even, like Forget Selected); Import from
-            # File doesn't (odd).
-            --button="$(safe_eval_gettext "Export Selected"):2"
-            --button="$(safe_eval_gettext "Import from File"):3"
-            # Close last/rightmost - same convention as the result
-            # dialog's own button order (yad's last button is the
-            # Enter-key default, "Close" is the safe one to land on).
-            --button="$(safe_eval_gettext "Close"):1"
-        )
-
-        # FPR|VALIDITY|UID|KNOWN|EXPIRE, one line per key. KNOWN flags a
-        # fingerprint also on the hardcoded MX/antiX allow-list (removing it
-        # here doesn't stop recognition, since that never depends on
-        # trustedkeys.gpg). EXPIRE is a raw Unix epoch, formatted here since
-        # date formatting is a display concern. Key ID shown bare (no "0x").
-        ROWS=()
-        while IFS='|' read -r fpr vstr uid known expire; do
-            [ -n "$fpr" ] || continue
-            case "$vstr" in
-                # TRANSLATORS: shown as-is in the list's "Status" column (a
-                # gpg key's trust validity), one word each.
-                valid)   status=$(safe_eval_gettext "valid") ;;
-                # TRANSLATORS: same "Status" column as "valid" above.
-                expired) status=$(safe_eval_gettext "expired") ;;
-                # TRANSLATORS: same "Status" column as "valid" above.
-                revoked) status=$(safe_eval_gettext "revoked") ;;
-                *)       status="$vstr" ;;
-            esac
-            if [ -n "$expire" ]; then
-                expire_display=$(date -d "@$expire" '+%Y-%m-%d' 2>/dev/null || printf '%s' "$expire")
+            # Scale the window height to the key count - 320 fits ~5-6 rows.
+            KEY_COUNT=$(printf '%s\n' "$LISTING" | grep -c .)
+            if [ "$KEY_COUNT" -ge 6 ]; then
+                LIST_HEIGHT=480
             else
-                # TRANSLATORS: shown in the "Expires" column when the key has
-                # no expiration date set.
-                expire_display=$(safe_eval_gettext "never")
+                LIST_HEIGHT=320
             fi
-            ROWS+=(FALSE "$fpr" "${fpr: -16}" "$(pango_escape "$uid")" "$status" "$expire_display")
-        done <<< "$LISTING"
 
-        set +e
-        SELECTED=$(yad "${LIST_ARGS[@]}" "${ROWS[@]}")
-        LIST_RC=$?
+            LIST_ARGS=(
+                --list
+                --checklist
+                --center
+                --title="$TITLE"
+                --class="$WM_CLASS"
+                --window-icon="$ICON_FILE"
+                # 940, not 860 - a long real-world UID (e.g. a full name plus
+                # email) could otherwise force a horizontal scrollbar across
+                # the Key ID/User ID/Status/Expiration Date columns.
+                --width=940
+                --height="$LIST_HEIGHT"
+                --column="$(safe_eval_gettext "Remove")"
+                --column="$(safe_eval_gettext "Fingerprint")"
+                --column="$(safe_eval_gettext "Key ID")"
+                --column="$(safe_eval_gettext "User ID")"
+                --column="$(safe_eval_gettext "Status")"
+                --column="$(safe_eval_gettext "Expiration Date")"
+                # GTK's own type-ahead search defaults to column 1 (the Remove
+                # checkbox, useless for typed text) - point it at User ID instead.
+                --search-column=4
+                # Fingerprint stays in the list model for --untrust-key below,
+                # but isn't shown - the Key ID column is friendlier at a glance.
+                --hide-column=2
+                --print-column=2
+                --separator=$'\n'
+                # TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
+                --text="<span size='large'><b>$TITLE</b></span>\n$(safe_eval_gettext "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then click \"\${BTN_FORGET_SELECTED}\"." BTN_FORGET_SELECTED)"
+                --button="$BTN_FORGET_SELECTED:0"
+                # Even/odd per yad's own EXIT STATUS rule: Export Selected needs
+                # the checked rows (even, like Forget Selected); Import from
+                # File doesn't (odd).
+                --button="$(safe_eval_gettext "Export Selected"):2"
+                --button="$(safe_eval_gettext "Import from File"):3"
+                # Close last/rightmost - same convention as the result
+                # dialog's own button order (yad's last button is the
+                # Enter-key default, "Close" is the safe one to land on).
+                --button="$(safe_eval_gettext "Close"):1"
+            )
+
+            # FPR|VALIDITY|UID|KNOWN|EXPIRE, one line per key. KNOWN flags a
+            # fingerprint also on the hardcoded MX/antiX allow-list (removing it
+            # here doesn't stop recognition, since that never depends on
+            # trustedkeys.gpg). EXPIRE is a raw Unix epoch, formatted here since
+            # date formatting is a display concern. Key ID shown bare (no "0x").
+            ROWS=()
+            while IFS='|' read -r fpr vstr uid known expire; do
+                [ -n "$fpr" ] || continue
+                case "$vstr" in
+                    # TRANSLATORS: shown as-is in the list's "Status" column (a
+                    # gpg key's trust validity), one word each.
+                    valid)   status=$(safe_eval_gettext "valid") ;;
+                    # TRANSLATORS: same "Status" column as "valid" above.
+                    expired) status=$(safe_eval_gettext "expired") ;;
+                    # TRANSLATORS: same "Status" column as "valid" above.
+                    revoked) status=$(safe_eval_gettext "revoked") ;;
+                    *)       status="$vstr" ;;
+                esac
+                if [ -n "$expire" ]; then
+                    expire_display=$(date -d "@$expire" '+%Y-%m-%d' 2>/dev/null || printf '%s' "$expire")
+                else
+                    # TRANSLATORS: shown in the "Expires" column when the key has
+                    # no expiration date set.
+                    expire_display=$(safe_eval_gettext "never")
+                fi
+                ROWS+=(FALSE "$fpr" "${fpr: -16}" "$(pango_escape "$uid")" "$status" "$expire_display")
+            done <<< "$LISTING"
+
+            set +e
+            SELECTED=$(yad "${LIST_ARGS[@]}" "${ROWS[@]}")
+            LIST_RC=$?
+        fi
         set -e
 
         # 0 = Forget Selected, handled straight after this case. 2/3 are
@@ -898,8 +918,9 @@ EOF
     # file is which (like the CLI's own <iso-file> [sig-file]) -
     # run_picker_mode() uses EXPLICIT_ISO/EXPLICIT_SIG directly, skipping
     # pick_files() and the naming convention, but still shows a
-    # confirmation dialog before verifying. Three or more has no sensible
-    # interpretation - a plain usage error.
+    # confirmation dialog before verifying. Three explicit arguments
+    # (ISO plus checksum plus signature) works the same way. Four or
+    # more has no sensible interpretation - a plain usage error.
     EXPLICIT_ISO=""
     EXPLICIT_SIG=""
     EXPLICIT_CHECKSUM_FILE=""
@@ -911,43 +932,91 @@ EOF
         # classify_checksum_listing_pair()/classify_checksum_signature_
         # pair()/classify_plain_checksum_signature_pair()/classify_plain_
         # checksum_pair()/classify_iso_sig_pair() (verify-iso-sig's own
-        # functions, already sourced) classify the pair order-independent -
-        # same helpers main() uses for its <iso-file> [sig-file] positional
-        # args. EXPLICIT_NO_DIRECT_SIG carries classify_plain_checksum_
-        # pair()'s own NO_DIRECT_SIG result through to run_picker_mode()
-        # below. EXPLICIT_CHECKSUM_SIG carries CHECKSUM_SIG_PREVIEW through
-        # so the confirmation dialog can name all three files (ISO,
-        # checksum listing/file, its signature). EXPLICIT_CHECKSUM_ALGO
-        # carries CHECKSUM_ALGO_OVERRIDE through - only
-        # classify_plain_checksum_signature_pair() sets it, since it's the
-        # only shape whose checksum file isn't a fixed CHECKSUM_FILES
-        # literal try_checksum_fallback() can resolve a hashcmd from on
-        # its own.
+        # functions) classify the pair order-independent, same as main()'s
+        # own <iso-file> [sig-file] positional args. EXPLICIT_NO_DIRECT_SIG/
+        # EXPLICIT_CHECKSUM_SIG/EXPLICIT_CHECKSUM_ALGO carry each
+        # classifier's own NO_DIRECT_SIG/CHECKSUM_SIG_PREVIEW/CHECKSUM_
+        # ALGO_OVERRIDE through to run_picker_mode() and its confirmation dialog.
         2)
             EXPLICIT_CHECKSUM_FILE=""
             EXPLICIT_CHECKSUM_SIG=""
             EXPLICIT_CHECKSUM_ALGO=""
             EXPLICIT_NO_DIRECT_SIG=0
-            if classify_checksum_listing_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}"; then
+            EXPLICIT_NEITHER_SIG=0
+            EXPLICIT_SIG_NAMED_BUT_NOT_SIG=""
+            EXPLICIT_ISO_NOT_PLAUSIBLE=0
+            # && iso_result_plausible: see verify-iso-sig's own dispatch.
+            if classify_checksum_listing_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" && iso_result_plausible; then
                 EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                 EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
-            elif classify_checksum_signature_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}"; then
+            elif classify_checksum_signature_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" && iso_result_plausible; then
                 EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                 EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
-            elif classify_plain_checksum_signature_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}"; then
+            elif classify_plain_checksum_signature_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" && iso_result_plausible; then
                 EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                 EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
                 EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
-            elif classify_plain_checksum_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}"; then
+            elif classify_plain_checksum_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" && iso_result_plausible; then
                 EXPLICIT_NO_DIRECT_SIG=$NO_DIRECT_SIG
+                EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+                EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
+                EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
             else
                 classify_iso_sig_pair "${FILE_ARGS[0]}" "${FILE_ARGS[1]}"
+                EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+                EXPLICIT_NEITHER_SIG=$NEITHER_LOOKS_LIKE_SIGNATURE
+                EXPLICIT_SIG_NAMED_BUT_NOT_SIG=$SIG_NAMED_BUT_NOT_SIGNATURE
+                if [ "$NEITHER_LOOKS_LIKE_SIGNATURE" -eq 0 ] && ! iso_result_plausible; then
+                    EXPLICIT_ISO_NOT_PLAUSIBLE=1
+                fi
             fi
             EXPLICIT_ISO=$ISO
             EXPLICIT_SIG=$SIG
             ;;
+        # Three explicit arguments - an ISO plus its signature/checksum
+        # files, for files not all in the same folder. Falls back to
+        # treating any two of them as an ISO+SIG pair (ignoring the
+        # third) when the triple itself doesn't match a known shape.
+        3)
+            EXPLICIT_CHECKSUM_FILE=""
+            EXPLICIT_CHECKSUM_SIG=""
+            EXPLICIT_CHECKSUM_ALGO=""
+            EXPLICIT_NO_DIRECT_SIG=0
+            EXPLICIT_NEITHER_SIG=0
+            EXPLICIT_SIG_NAMED_BUT_NOT_SIG=""
+            EXPLICIT_ISO_NOT_PLAUSIBLE=0
+            if ! classify_iso_checksum_signature_triple "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" "${FILE_ARGS[2]}" \
+                && ! classify_iso_triple_ignoring_one "${FILE_ARGS[0]}" "${FILE_ARGS[1]}" "${FILE_ARGS[2]}"; then
+                # A GUI popup, not just stderr - no visible terminal when
+                # launched via a file manager's "Open With". Names the
+                # three files given, since the user may no longer see
+                # what was selected.
+                triple_base1=$(basename "${FILE_ARGS[0]}")
+                triple_base2=$(basename "${FILE_ARGS[1]}")
+                triple_base3=$(basename "${FILE_ARGS[2]}")
+                if [ "$TRIPLE_AMBIGUOUS" -eq 1 ]; then
+                    if [ -n "$TRIPLE_AMBIGUOUS_ANCHOR" ]; then
+                        anchor_base=$(basename "$TRIPLE_AMBIGUOUS_ANCHOR")
+                        cand1_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE1")
+                        cand2_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE2")
+                        yad_error "$(safe_eval_gettext "Cannot detect what '\${anchor_base}' belongs to:" anchor_base)\n$cand1_base\n$cand2_base"
+                    else
+                        yad_error "$(safe_eval_gettext "Cannot detect how these three files belong together:")\n$triple_base1\n$triple_base2\n$triple_base3"
+                    fi
+                else
+                    yad_error "$(safe_eval_gettext "Cannot detect an ISO, a checksum listing, and its signature among these three files:")\n$triple_base1\n$triple_base2\n$triple_base3"
+                fi
+                exit 1
+            fi
+            EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+            EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
+            EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
+            EXPLICIT_ISO=$ISO
+            EXPLICIT_SIG=$SIG
+            ;;
         *)
-            echo "error: too many file arguments (expected at most an ISO file and a signature file)" >&2
+            # Same reasoning as above - a GUI popup, not just stderr.
+            yad_error "$(safe_eval_gettext "Too many files were given - at most three are supported.")"
             exit 1
             ;;
     esac
@@ -1255,29 +1324,84 @@ pick_files() {
                     EXPLICIT_CHECKSUM_SIG=""
                     EXPLICIT_CHECKSUM_ALGO=""
                     EXPLICIT_NO_DIRECT_SIG=0
-                    if classify_checksum_listing_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}"; then
+                    EXPLICIT_NEITHER_SIG=0
+                    EXPLICIT_SIG_NAMED_BUT_NOT_SIG=""
+                    EXPLICIT_ISO_NOT_PLAUSIBLE=0
+                    if classify_checksum_listing_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" && iso_result_plausible; then
                         EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                         EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
-                    elif classify_checksum_signature_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}"; then
+                    elif classify_checksum_signature_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" && iso_result_plausible; then
                         EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                         EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
-                    elif classify_plain_checksum_signature_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}"; then
+                    elif classify_plain_checksum_signature_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" && iso_result_plausible; then
                         EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
                         EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
                         EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
-                    elif classify_plain_checksum_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}"; then
+                    elif classify_plain_checksum_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" && iso_result_plausible; then
                         EXPLICIT_NO_DIRECT_SIG=$NO_DIRECT_SIG
+                        # See the top-level two-argument entry point's own
+                        # comment (above, in this file) for why this is needed.
+                        EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+                        EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
+                        EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
                     else
                         classify_iso_sig_pair "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}"
+                        # See the top-level two-argument entry point's own
+                        # comment (above, in this file) for why this is needed.
+                        EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+                        EXPLICIT_NEITHER_SIG=$NEITHER_LOOKS_LIKE_SIGNATURE
+                        EXPLICIT_SIG_NAMED_BUT_NOT_SIG=$SIG_NAMED_BUT_NOT_SIGNATURE
+                        if [ "$NEITHER_LOOKS_LIKE_SIGNATURE" -eq 0 ] && ! iso_result_plausible; then
+                            EXPLICIT_ISO_NOT_PLAUSIBLE=1
+                        fi
                     fi
                     EXPLICIT_ISO=$ISO
                     EXPLICIT_SIG=$SIG
                     return 0
                     ;;
+                3)
+                    # Same triple-classification as the top-level three-
+                    # argument entry point (see run_picker_mode()'s own
+                    # comment on its "3)" case) - reused here rather than
+                    # duplicated, since drag-and-drop is just another way
+                    # the same three files can arrive.
+                    EXPLICIT_CHECKSUM_FILE=""
+                    EXPLICIT_CHECKSUM_SIG=""
+                    EXPLICIT_CHECKSUM_ALGO=""
+                    EXPLICIT_NO_DIRECT_SIG=0
+                    EXPLICIT_NEITHER_SIG=0
+                    EXPLICIT_SIG_NAMED_BUT_NOT_SIG=""
+                    EXPLICIT_ISO_NOT_PLAUSIBLE=0
+                    if ! classify_iso_checksum_signature_triple "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" "${DROPPED_PATHS[2]}" \
+                        && ! classify_iso_triple_ignoring_one "${DROPPED_PATHS[0]}" "${DROPPED_PATHS[1]}" "${DROPPED_PATHS[2]}"; then
+                        triple_base1=$(basename "${DROPPED_PATHS[0]}")
+                        triple_base2=$(basename "${DROPPED_PATHS[1]}")
+                        triple_base3=$(basename "${DROPPED_PATHS[2]}")
+                        if [ "$TRIPLE_AMBIGUOUS" -eq 1 ]; then
+                            if [ -n "$TRIPLE_AMBIGUOUS_ANCHOR" ]; then
+                                anchor_base=$(basename "$TRIPLE_AMBIGUOUS_ANCHOR")
+                                cand1_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE1")
+                                cand2_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE2")
+                                yad_error "$(safe_eval_gettext "Cannot detect what '\${anchor_base}' belongs to:" anchor_base)\n$cand1_base\n$cand2_base"
+                            else
+                                yad_error "$(safe_eval_gettext "Cannot detect how these three files belong together:")\n$triple_base1\n$triple_base2\n$triple_base3"
+                            fi
+                        else
+                            yad_error "$(safe_eval_gettext "Cannot detect an ISO, a checksum listing, and its signature among these three files:")\n$triple_base1\n$triple_base2\n$triple_base3"
+                        fi
+                    else
+                        EXPLICIT_CHECKSUM_FILE=$CHECKSUM_FILE_OVERRIDE
+                        EXPLICIT_CHECKSUM_SIG=$CHECKSUM_SIG_PREVIEW
+                        EXPLICIT_CHECKSUM_ALGO=$CHECKSUM_ALGO_OVERRIDE
+                        EXPLICIT_ISO=$ISO
+                        EXPLICIT_SIG=$SIG
+                        return 0
+                    fi
+                    ;;
                 *)
-                    # No sensible interpretation for 3+ at once.
+                    # No sensible interpretation for 4+ at once.
                     DROP_COUNT=${#DROPPED_PATHS[@]}
-                    yad_error "$(safe_eval_gettext "Drop at most two files (the ISO and its signature file) - \${DROP_COUNT} were dropped." DROP_COUNT)"
+                    yad_error "$(safe_eval_gettext "Drop at most three files (the ISO plus its checksum listing and/or signature file) - \${DROP_COUNT} were dropped." DROP_COUNT)"
                     ;;
             esac
             continue
@@ -1340,18 +1464,17 @@ pick_files() {
     done
 }
 
-# Runs verify_iso() (called from run_picker_mode() below). Sets $OUTPUT/$RC.
-# Called in-process but still runs inside a subshell for the progress-
-# dialog timing to work, so any real global side effect (FPR,
-# CHECKSUM_INFO, etc.) is gone the instant it exits - only $OUTPUT
-# (captured via STATUS_FD auto-default to 2, same as a real CLI
-# "--status-fd=2 ... 2>&1") survives, via $OUT_FILE. $1 is the progress text.
+# Runs verify_iso() in a setsid'd subprocess (own process group,
+# killable as one unit). State passed via RV_* exported vars. Sets
+# $OUTPUT/$RC, or $INTERRUPTED=1 if the dialog closes first. $1:
+# progress text.
 run_verify() {
     local progress_text=$1
     local PROGRESS_ARGS=(
         --progress
         --pulsate
-        --auto-close
+        # --hide-text: hides the unused "0%" label.
+        --hide-text
         --no-buttons
         --center
         --title="$TITLE"
@@ -1359,52 +1482,84 @@ run_verify() {
         --window-icon="$ICON_FILE"
         --text="$progress_text"
     )
-    set +e
-    (
-        # Every global verify_iso() reads is reset here rather than relying
-        # on lib_init_defaults' one-time defaults - this shell may have
-        # already run a full verify_iso() in an earlier "Check Another
-        # File" loop iteration. Always allow the crypto check to run even
-        # for an unrecognized key - what gates is whether the result counts as verified.
+
+    # Relayed to the subprocess via the environment.
+    local RV_ISO=$ISO RV_SIG=$SIG RV_EXPORT_KEY_TO=$KEY_EXPORT_FILE RV_DEBUG=$DEBUG
+    local RV_CHECKSUM_FILE=${PINNED_CHECKSUM_FILE:-} RV_CHECKSUM_ALGO=${PINNED_CHECKSUM_ALGO:-}
+    local RV_ISO_DERIVED=${PINNED_ISO_DERIVED_FROM_SIG:-0} RV_NO_DIRECT_SIG
+    if [ "${PINNED_NO_DIRECT_SIG:-0}" -eq 1 ]; then
+        RV_NO_DIRECT_SIG=1
+    else
+        [ -n "$SIG" ] && RV_NO_DIRECT_SIG=0 || RV_NO_DIRECT_SIG=1
+    fi
+
+    RV_VERIFY=$VERIFY RV_ISO=$RV_ISO RV_SIG=$RV_SIG RV_EXPORT_KEY_TO=$RV_EXPORT_KEY_TO \
+    RV_CHECKSUM_FILE=$RV_CHECKSUM_FILE RV_CHECKSUM_ALGO=$RV_CHECKSUM_ALGO \
+    RV_NO_DIRECT_SIG=$RV_NO_DIRECT_SIG RV_ISO_DERIVED=$RV_ISO_DERIVED \
+    RV_OUT_FILE=$OUT_FILE RV_RC_FILE=$RC_FILE RV_DEBUG=$RV_DEBUG \
+    setsid bash -c '
+        set -euo pipefail
+        LIB_MODE=1
+        . "$RV_VERIFY"
+        lib_init_defaults
         KEEP_KEY=0
         IS_CACHED=0
         ALLOW_UNKNOWN=1
         TRUST_KEY=0
         KEEP=0
-        EXPORT_KEY_TO=$KEY_EXPORT_FILE
+        # lib_init_defaults reset this to 0 - restore --debug from the parent.
+        DEBUG=$RV_DEBUG
+        EXPORT_KEY_TO=$RV_EXPORT_KEY_TO
         FROM_RING_OVERRIDE=""
         VERIFY_AS_CHECKSUM_FILE=0
         NO_CHECKSUM_FALLBACK=0
-        # "${PINNED_CHECKSUM_FILE:-}", not a blind "": a recognized
-        # checksum-listing-plus-explicit-ISO pairing pins this once per
-        # round in the caller's scope - a plain reset would drop it every
-        # time this subshell runs. Same reasoning for PINNED_CHECKSUM_ALGO
-        # (only classify_plain_checksum_signature_pair() sets it).
-        CHECKSUM_FILE_OVERRIDE=${PINNED_CHECKSUM_FILE:-}
-        CHECKSUM_ALGO_OVERRIDE=${PINNED_CHECKSUM_ALGO:-}
+        CHECKSUM_FILE_OVERRIDE=$RV_CHECKSUM_FILE
+        CHECKSUM_ALGO_OVERRIDE=$RV_CHECKSUM_ALGO
         KEYSERVER_OPT=""
         STATUS_FD=""
-        # Mirrors main()'s own ISO/SIG classification. "${PINNED_NO_DIRECT_SIG:-0}"
-        # overrides the plain $SIG-emptiness inference for the one sub-case it gets wrong.
-        if [ "${PINNED_NO_DIRECT_SIG:-0}" -eq 1 ]; then
-            NO_DIRECT_SIG=1
-        else
-            [ -n "$SIG" ] && NO_DIRECT_SIG=0 || NO_DIRECT_SIG=1
-        fi
-        ISO_DERIVED_FROM_SIG=${PINNED_ISO_DERIVED_FROM_SIG:-0}
-        # $OUT_FILE gets the full, unfiltered output (gui_status_field/
-        # gui_status_has need every tag line intact); the copy mirrored to
-        # stderr drops those machine-readable tag lines so they don't
-        # duplicate the translated human-readable line next to them.
-        verify_iso 2>&1 | tee "$OUT_FILE" | grep -v '^\[VERIFY-ISO-SIG:\]' >&2
-        echo "${PIPESTATUS[0]}" > "$RC_FILE"
-    # 2>/dev/null on yad itself: old yad mismanages a GLib IO-watch source
-    # ID when its stdin is a genuine anonymous pipe ("GLib-CRITICAL **:
-    # g_source_remove: assertion 'tag > 0' failed"). This pipe can't be
-    # swapped for a herestring - it deliberately carries no content, just
-    # EOF timing (the dialog auto-closes when the subshell exits).
-    ) | yad "${PROGRESS_ARGS[@]}" 2>/dev/null
-    set -e
+        NO_DIRECT_SIG=$RV_NO_DIRECT_SIG
+        ISO_DERIVED_FROM_SIG=$RV_ISO_DERIVED
+        ISO=$RV_ISO
+        SIG=$RV_SIG
+        # Full output to $RV_OUT_FILE; stderr copy drops tag lines.
+        # set +e: avoid errexit before $RV_RC_FILE is written.
+        set +e
+        verify_iso 2>&1 | tee "$RV_OUT_FILE" | grep -v "^\[VERIFY-ISO-SIG:\]" >&2
+        rc=${PIPESTATUS[0]}
+        set -e
+        echo "$rc" > "$RV_RC_FILE"
+    ' &
+    local producer_pid=$!
+
+    # FIFO heartbeat: --pulsate only advances on new stdin lines.
+    local progress_fifo
+    progress_fifo=$(mktemp -u "$SESSION_TMPDIR/progress-stdin.XXXXXXXXXX")
+    mkfifo "$progress_fifo"
+    ( while :; do echo; sleep 0.3; done ) > "$progress_fifo" &
+    local heartbeat_pid=$!
+    trap 'kill "$heartbeat_pid" 2>/dev/null || true; rm -f "$progress_fifo"' RETURN
+
+    yad "${PROGRESS_ARGS[@]}" < "$progress_fifo" 2>/dev/null &
+    local yad_pid=$!
+
+    local finished_pid=""
+    wait -n -p finished_pid "$producer_pid" "$yad_pid" 2>/dev/null || true
+
+    INTERRUPTED=0
+    if [ "$finished_pid" = "$yad_pid" ] && kill -0 "$producer_pid" 2>/dev/null; then
+        # Kill the whole process group: SIGTERM, then SIGKILL.
+        INTERRUPTED=1
+        kill -TERM -- "-$producer_pid" 2>/dev/null || true
+        sleep 0.2
+        kill -KILL -- "-$producer_pid" 2>/dev/null || true
+        wait "$producer_pid" 2>/dev/null || true
+        return 0
+    fi
+
+    # Work finished first - close the stale progress window.
+    kill "$yad_pid" 2>/dev/null || true
+    wait "$yad_pid" 2>/dev/null || true
+    wait "$producer_pid" 2>/dev/null || true
     OUTPUT=$(cat "$OUT_FILE")
     RC=$(cat "$RC_FILE")
 }
@@ -1519,15 +1674,43 @@ run_picker_mode() {
         PINNED_ISO_DERIVED_FROM_SIG=0
         # Display-only, for the confirmation dialog below - never read by verify_iso().
         CONFIRM_CHECKSUM_SIG=$EXPLICIT_CHECKSUM_SIG
+        NEITHER_IS_SIG=$EXPLICIT_NEITHER_SIG
+        SIG_NAMED_BUT_NOT_SIG=$EXPLICIT_SIG_NAMED_BUT_NOT_SIG
+        ISO_NOT_PLAUSIBLE=$EXPLICIT_ISO_NOT_PLAUSIBLE
         EXPLICIT_ISO=""
         EXPLICIT_SIG=""
         EXPLICIT_CHECKSUM_FILE=""
         EXPLICIT_CHECKSUM_SIG=""
         EXPLICIT_CHECKSUM_ALGO=""
         EXPLICIT_NO_DIRECT_SIG=0
+        EXPLICIT_NEITHER_SIG=0
+        EXPLICIT_SIG_NAMED_BUT_NOT_SIG=""
+        EXPLICIT_ISO_NOT_PLAUSIBLE=0
 
         if [ -d "$ISO" ]; then
             yad_error "$(safe_eval_gettext "That's a folder, not a file - pick the .iso file itself (or its .sig/.asc/.gpg/.sign signature file) directly.")"
+            continue
+        fi
+
+        # Neither file was confirmed a signature by name or content -
+        # refuse rather than showing a confirmation for an unvalidated
+        # pairing. YAD_ERROR_WIDTH forces wrapping for a long basename.
+        if [ "$NEITHER_IS_SIG" -eq 1 ]; then
+            if [ -n "$SIG_NAMED_BUT_NOT_SIG" ]; then
+                named_base=$(basename "$SIG_NAMED_BUT_NOT_SIG")
+                YAD_ERROR_WIDTH=480 yad_error "$(safe_eval_gettext "'\${named_base}' looks like a signature file by its name, but its content doesn't look like a real one." named_base)"
+            else
+                neither_iso_base=$(basename "$ISO")
+                neither_sig_base=$(basename "$SIG")
+                YAD_ERROR_WIDTH=480 yad_error "$(safe_eval_gettext "Neither '\${neither_iso_base}' nor '\${neither_sig_base}' looks like a real ISO signature file, by name or content." neither_iso_base neither_sig_base)"
+            fi
+            continue
+        fi
+
+        if [ "$ISO_NOT_PLAUSIBLE" -eq 1 ]; then
+            not_plausible_iso_base=$(basename "$ISO")
+            not_plausible_sig_base=$(basename "$SIG")
+            YAD_ERROR_WIDTH=480 yad_error "$(safe_eval_gettext "'\${not_plausible_iso_base}' and '\${not_plausible_sig_base}' both look like signature or checksum-listing files - pick the actual ISO, plus its checksum listing or signature file." not_plausible_iso_base not_plausible_sig_base)"
             continue
         fi
     else
@@ -1551,20 +1734,42 @@ run_picker_mode() {
         # sig_for_iso()'s own ".sig" placeholder name (never left blank),
         # so a later "cannot read signature file" error names an actual
         # path instead of an empty string, matching the CLI's own main().
-        case "$FILE_PICKED" in
-            *.sig|*.asc|*.gpg|*.sign)
-                SIG=$FILE_PICKED
-                ISO=$(iso_for_sig "$FILE_PICKED")
-                # Only our own guess from the signature file, not user-given.
-                PINNED_ISO_DERIVED_FROM_SIG=1
-                ;;
-            *)
-                ISO=$FILE_PICKED
-                CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
+        # is_clearsigned_file() checked first: a full clearsigned message
+        # needs no separate signature, whatever its name/extension - used
+        # exactly as picked, not a derived sibling name.
+        if is_clearsigned_file "$FILE_PICKED"; then
+            ISO=$FILE_PICKED
+            CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
+            # $CANDIDATE_SIG can itself be clearsigned - use it as that instead.
+            if [ -r "$CANDIDATE_SIG" ] && is_clearsigned_file "$CANDIDATE_SIG"; then
+                PINNED_CHECKSUM_FILE=$CANDIDATE_SIG
+                SIG=""
+            else
                 SIG=$CANDIDATE_SIG
                 { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } || PINNED_NO_DIRECT_SIG=1
-                ;;
-        esac
+            fi
+        else
+            case "$FILE_PICKED" in
+                *.sig|*.asc|*.gpg|*.sign)
+                    SIG=$FILE_PICKED
+                    ISO=$(iso_for_sig "$FILE_PICKED")
+                    # Only our own guess from the signature file, not user-given.
+                    PINNED_ISO_DERIVED_FROM_SIG=1
+                    ;;
+                *)
+                    ISO=$FILE_PICKED
+                    CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
+                    # $CANDIDATE_SIG can itself be clearsigned - use it as that instead.
+                    if [ -r "$CANDIDATE_SIG" ] && is_clearsigned_file "$CANDIDATE_SIG"; then
+                        PINNED_CHECKSUM_FILE=$CANDIDATE_SIG
+                        SIG=""
+                    else
+                        SIG=$CANDIDATE_SIG
+                        { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } || PINNED_NO_DIRECT_SIG=1
+                    fi
+                    ;;
+            esac
+        fi
     fi
 
     # Preserved so the precheck call below (run directly, not in a
@@ -1717,6 +1922,12 @@ run_picker_mode() {
     # whether the result gets accepted as "verified".
     run_verify "$VERIFYING_TEXT"
 
+    if [ "$INTERRUPTED" -eq 1 ]; then
+        yad_error "$(safe_eval_gettext "Process was interrupted - the check did not finish, so nothing here has been verified.")"
+        PREFILL_FILE=$ISO
+        continue
+    fi
+
     FPR=$(gui_status_field "$OUTPUT" SIGNATURE_FPR)
 
     # Non-empty only when the checksum-file fallback kicked in (no direct
@@ -1729,6 +1940,8 @@ run_picker_mode() {
     # mentions - lets the result heading show that ISO instead of the
     # checksum listing's own name.
     RESOLVED_ISO=$(gui_status_field "$OUTPUT" RESOLVED_ISO)
+    # Same idea as RESOLVED_ISO, for the resolved direct signature file.
+    RESOLVED_SIG=$(gui_status_field "$OUTPUT" RESOLVED_SIG)
 
     # DISPLAY_ISO/DISPLAY_ISO_PATH prefer RESOLVED_ISO over the GUI's own
     # possibly-stale $ISO - computed here (not just below, right before
@@ -1745,7 +1958,12 @@ run_picker_mode() {
     # Covers SIG left blank (verify-iso-sig defaulted to whichever of
     # .sig/.asc/.gpg exists) - computed here, not just before the final
     # HEADING, so the trust dialog's direct-sig branch can name it too.
-    DISPLAY_SIG=${SIG:-$(sig_for_iso "$DISPLAY_ISO_PATH")}
+    # RESOLVED_SIG takes priority when present.
+    if [ -n "$RESOLVED_SIG" ]; then
+        DISPLAY_SIG="$(dirname "$ISO")/$RESOLVED_SIG"
+    else
+        DISPLAY_SIG=${SIG:-$(sig_for_iso "$DISPLAY_ISO_PATH")}
+    fi
 
     # Two scenarios can produce a GOOD-but-unrecognized-key result: a
     # direct ISO signature, or a checksum-file's own signature - same

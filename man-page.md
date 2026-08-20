@@ -15,6 +15,7 @@ verify-iso-sig - verify the GPG signature of a downloaded ISO image
 **verify-iso-sig** \[*iso-file*\]
 
 **verify-iso-sig** \[**--cli**\|**--gui**\] \[*options*\] *iso-file* \[*sig-file*\]
+\[*checksum-listing-file*\]
 
 **verify-iso-sig** \[**--cli**\|**--gui**\] **--manage-keys**
 
@@ -59,10 +60,12 @@ Three signing conventions are supported automatically:
 - **Direct signature**: the ISO itself is signed, with a companion
   *iso-file*`.sig`/`.asc`/`.gpg` (or `.sign`) file. This is checked
   first. When both *iso-file* and *sig-file* are given, either order
-  works as long as exactly one of the two looks like a signature file
-  (`.sig`/`.asc`/`.gpg`/`.sign`) - only genuinely ambiguous pairs (both
-  or neither look like one) fall back to treating the first argument as
-  *iso-file* and the second as *sig-file*.
+  works as long as exactly one of the two looks like a signature file -
+  by extension, or by content when the extension is unusual and
+  doesn't give it away. If both look like one, the first argument is
+  treated as *iso-file* and the second as *sig-file*; if neither looks
+  like one, by name or content, this tool refuses instead of guessing
+  which is which.
 - **Checksum-listing convention**: many distros other than MX Linux/antiX
   sign a checksum-listing file instead of the ISO directly (e.g.
   Debian's `SHA256SUMS`/`SHA256SUMS.sign`, Ubuntu's
@@ -71,8 +74,9 @@ Three signing conventions are supported automatically:
   whole family of ISOs. If no direct signature file exists next to the
   ISO, this tool automatically looks in the ISO's own directory for a
   known checksum-listing file (`SHA512SUMS`, `SHA256SUMS`, `SHA1SUMS`,
-  `MD5SUMS`, or the lowercase `*sum.txt`-style variants - strongest
-  hash first) paired with a signature file
+  `MD5SUMS`, the lowercase `*sum.txt`-style variants - strongest hash
+  first - or any file literally named `checksum`/`checksums`,
+  case-insensitive) paired with a signature file
   (`.sig`/`.asc`/`.gpg`/`.sign`), verifies *that* file's signature
   (using the same recognition rules as a direct signature), and then
   verifies the ISO's own hash against the line in it that names this
@@ -98,6 +102,17 @@ Three signing conventions are supported automatically:
   which ISO to check against it, skipping the "which one did you mean"
   guesswork - the listing's own signature is still found and verified
   the normal way either way.
+
+  All three files - the ISO, the checksum listing, and the listing's
+  own signature - can also be given explicitly at once, in any order,
+  when they are not all in the same directory (auto-discovery only
+  looks next to the ISO). The same also works for a plain per-file
+  checksum (e.g. `.sha512`) instead of a shared listing: give the ISO,
+  the checksum file, and either that file's own signature or the ISO's
+  own direct signature, in any order. If the three files don't fit one
+  of these known shapes (e.g. a real signature file named outside the
+  usual convention), any two of them that do form a valid ISO plus
+  signature pair are used instead, ignoring the third file.
 - **Inline-signed checksum listing**: some distros (e.g. Fedora) sign
   the checksum listing itself instead of attaching a separate signature
   file - the listing begins with a `-----BEGIN PGP SIGNED MESSAGE-----`
@@ -124,13 +139,14 @@ consider it recognized:
    separately-vetted third-party respin keys not on that page. Run
    **--list-known-keys** to print this list directly and offline,
    without needing to visit the wiki.
-2. Whether the key is already cached and valid in
-   `~/.gnupg/trustedkeys.gpg`. Getting a key into that keyring already
-   requires a deliberate **--keep**/**--trust-key**/**--keep-key**
-   decision, a manual `gpg --import`, or importing it through the
-   trusted-keys manager (**--manage-keys**, also reachable from the
-   picker's own "Manage Trusted Keys" button) - so its presence there
-   counts as recognized too, exactly like being on the built-in list.
+2. Whether the key is already cached and usable (valid, or merely
+   expired - see below) in `~/.gnupg/trustedkeys.gpg`. Getting a key
+   into that keyring already requires a deliberate
+   **--keep**/**--trust-key**/**--keep-key** decision, a manual `gpg
+   --import`, or importing it through the trusted-keys manager
+   (**--manage-keys**, also reachable from the picker's own "Manage
+   Trusted Keys" button) - so its presence there counts as recognized
+   too, exactly like being on the built-in list.
 3. Whether the key is in `~/.gnupg/pubring.kbx` (where GUI tools such
    as Seahorse / GNOME "Passwords & Keys" store manually-imported
    keys) **and** has been *explicitly* marked marginally/fully/
@@ -150,13 +166,20 @@ just persists it into the keyring `gpgv` actually reads, the same way
 
 Before ever touching the network: `~/.gnupg/trustedkeys.gpg` (this
 tool's own dedicated keyring) is checked first and reused if the key
-is present and still valid - this works fully offline, as long as a
-previous run (with **--keep**, **--trust-key**, or **--keep-key**) or
-a manual `gpg --import` put it there. `~/.gnupg/pubring.kbx` is
-checked read-only as a fallback - it is never written to. Only if the
-key is missing, expired, or revoked everywhere does this tool fetch it
-from a keyserver, and only with **--keep** is that fetched copy saved
-into `trustedkeys.gpg` for next time.
+is present there, either fully valid or merely expired - this works
+fully offline, as long as a previous run (with **--keep**,
+**--trust-key**, or **--keep-key**) or a manual `gpg --import` put it
+there. Key expiry is a lifecycle signal, not a cryptographic weakness -
+unlike revocation, a permanent assertion from the key's own owner that
+it must never be trusted again - so an expired cached key is still
+used normally, with a warning printed and one quiet, best-effort
+attempt to find a renewed copy first (checking `pubring.kbx`, then a
+keyserver, silently updating `trustedkeys.gpg` in place if a
+non-expired copy turns up). `~/.gnupg/pubring.kbx` is checked
+read-only as a fallback - it is never written to. Only if the key is
+missing everywhere, or revoked, does this tool fetch it from a
+keyserver as part of the actual verification, and only with **--keep**
+is that fetched copy saved into `trustedkeys.gpg` for next time.
 
 # OPTIONS
 

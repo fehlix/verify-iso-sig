@@ -2,7 +2,7 @@
 Type=Application
 Name=ISO Signature Verifier
 Comment=Check the GPG signature of a downloaded ISO (built-in support for MX Linux/antiX signing keys)
-Exec=/usr/bin/verify-iso-sig %f
+Exec=/usr/bin/verify-iso-sig %F
 TryExec=/usr/bin/verify-iso-sig
 Icon=verify-iso-sig
 StartupWMClass=verify-iso-sig

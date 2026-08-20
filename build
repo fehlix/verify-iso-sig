@@ -15,6 +15,9 @@ cd "$SCRIPT_DIR"
 # dependency of the package being built - so check for it by hand.
 if ! command -v debuild >/dev/null 2>&1; then
     echo "error: 'debuild' not found - install it with:" >&2
+    # apt update first - an out-of-sync package cache can make install
+    # wrongly report the package as unavailable.
+    echo "  sudo apt update" >&2
     echo "  sudo apt install devscripts" >&2
     exit 1
 fi

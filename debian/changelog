@@ -1,3 +1,17 @@
+verify-iso-sig (2026.08.04) mx; urgency=medium
+
+  * Make GUI verification interruptible (AdrianTM).
+  * Fix progress bar not animating (AdrianTM).
+  * Infer checksum-listing hash algorithm from digest length (AdrianTM).
+  * Recognize more algorithms/tags/digest lengths.
+  * Accept an ISO plus its checksum/signature files as explicit
+    arguments (two or three files), from the command line, a file
+    manager's "Open With" right-click menu, or drag-and-drop.
+  * Manage Trusted Keys offers "Import from File" directly when no
+    keys are saved yet.
+
+ -- fehlix <fehlix@mxlinux.org>  Thu, 20 Aug 2026 12:08:38 -0400
+
 verify-iso-sig (2026.08.03) mx; urgency=medium
 
   * Add help button.

@@ -10,13 +10,15 @@ Package: verify-iso-sig
 Architecture: all
 Depends: ${misc:Depends},
          bash,
+         file,
          gnupg,
          gpgv,
          yad,
          gettext-base,
          librsvg2-common
 Recommends: wmctrl,
-            xdg-utils
+            xdg-utils,
+            libnotify-bin
 Description: verify the GPG signature of a downloaded ISO image
  A beginner-friendly tool to check whether a downloaded ISO image's GPG
  signature is genuine, with built-in recognition of the documented

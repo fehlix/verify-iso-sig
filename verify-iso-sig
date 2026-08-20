@@ -36,6 +36,9 @@
 #   4. Args matching the picker GUI's own [--debug] [iso-file] [sig-file]
 #      syntax + a display available -> picker GUI.
 #   5. Everything else -> main() below.
+#
+# -e: exit on any error. -u: error on unset vars. pipefail: a pipeline
+# fails if any stage does, not just the last.
 set -euo pipefail
 
 VERSION="2026.08.01"
@@ -146,17 +149,47 @@ CHECKSUM_FILES=(
     "MD5SUMS|md5sum"
     "md5sum.txt|md5sum"
 )
-# Checksum-listing filename patterns with no fixed hashcmd (release-specific
-# names, e.g. Fedora's "<spin>-<version>-<arch>-CHECKSUM") - hashcmd is
-# resolved per-line instead (see find_checksum_line()). Must never overlap
-# a literal CHECKSUM_FILES name above, or that candidate would be tried twice.
-CHECKSUM_FILE_GLOBS=("*-CHECKSUM" "CHECKSUM")
+# Checksum-listing filename patterns with no fixed hashcmd (any name
+# ending in "checksum"/"checksums", case-insensitively - e.g. Fedora's
+# "<spin>-<version>-<arch>-CHECKSUM", or a bare "CHECKSUM") - hashcmd is
+# resolved per-line instead (see find_checksum_line()). Always matched
+# lowercase (see each call site) - keep entries here lowercase too.
+# Must never overlap a literal CHECKSUM_FILES name above, or that
+# candidate would be tried twice.
+CHECKSUM_FILE_GLOBS=("*checksum" "*checksums")
 # Signature suffixes tried per checksum file.
 CHECKSUM_SIG_EXTS=(sig asc gpg sign)
 
 # Unsigned, per-ISO checksum suffixes some distros ship alongside a real
 # direct signature (e.g. <iso>.sig plus a redundant <iso>.sha512).
 PLAIN_CHECKSUM_SUFFIXES=(sha512 sha256 sha1 md5)
+
+# BSD/tag-style algorithm name (lowercased) -> this tool's own hash
+# command, e.g. Fedora's "SHA256 (name) = hash" convention. Add a line
+# here for a new algorithm once a real checksum listing tags with it.
+BSD_TAG_TO_HASHCMD=(
+    "md5|md5sum"
+    "sha1|sha1sum"
+    "sha224|sha224sum"
+    "sha256|sha256sum"
+    "sha384|sha384sum"
+    "sha512|sha512sum"
+    "blake2b|b2sum"
+)
+
+# Hex-digest length (hash_len|hashcmd) - used by find_checksum_line() as
+# a fallback when a line carries no algorithm name at all (GNU-style,
+# e.g. "<hash>  <name>") or an unrecognized one (a BSD-tag name not in
+# $BSD_TAG_TO_HASHCMD above). Add a line here for a new algorithm once a
+# real checksum listing actually uses it untagged.
+HASHCMD_BY_LENGTH=(
+    "32|md5sum"
+    "40|sha1sum"
+    "56|sha224sum"
+    "64|sha256sum"
+    "96|sha384sum"
+    "128|sha512sum"
+)
 
 # Short usage summary; the full reference lives in man-page.md/--man.
 usage() {
@@ -175,12 +208,15 @@ usage() {
     OPT_TRUST_KEY=$(eval_gettext "like \${FLAG_ALLOW_UNKNOWN}, and remembers the key too")
     OPT_LIST_KNOWN_KEYS=$(gettext "list this tool's built-in recognized signing keys")
     OPT_LIST_TRUSTED=$(gettext "list every key saved in trustedkeys.gpg")
+    OPT_GUI_NOTE=$(gettext "Run with no arguments, or via a file manager's \"Open With\" (up to 3 files), to open a picker window instead.")
     # TRANSLATORS: ${FLAG_MAN} is a literal flag name - keep the placeholder as-is.
     OPT_SEE_MAN=$(eval_gettext "For every other option (scripting/automation flags) see \${FLAG_MAN}.")
     cat <<EOF
-$USAGE_LABEL $DISPLAY_NAME [options] <iso-file> [sig-file]
+$USAGE_LABEL $DISPLAY_NAME [options] <iso-file> [sig-file] [checksum-file]
 
 $DESCRIPTION
+
+$OPT_GUI_NOTE
 
   -h, --help                $OPT_HELP
   -V, --version             $OPT_VERSION
@@ -345,6 +381,12 @@ looks_like_gui_args() {
             case "$2" in -*) return 1 ;; esac
             return 0
             ;;
+        3)
+            case "$1" in -*) return 1 ;; esac
+            case "$2" in -*) return 1 ;; esac
+            case "$3" in -*) return 1 ;; esac
+            return 0
+            ;;
         *) return 1 ;;
     esac
 }
@@ -417,8 +459,8 @@ EOF
 }
 
 # True if $1's basename is a known checksum-listing name: a literal
-# $CHECKSUM_FILES entry, or a $CHECKSUM_FILE_GLOBS pattern match (e.g.
-# Fedora's "<spin>-<version>-<arch>-CHECKSUM").
+# $CHECKSUM_FILES entry, or a $CHECKSUM_FILE_GLOBS pattern match (case-
+# insensitive, e.g. Fedora's "<spin>-<version>-<arch>-CHECKSUM").
 looks_like_checksum_listing_name() {
     local base entry glob
     base=$(basename "$1")
@@ -428,8 +470,9 @@ looks_like_checksum_listing_name() {
     for glob in "${CHECKSUM_FILE_GLOBS[@]}"; do
         # shellcheck disable=SC2254
         # Unquoted on purpose: $glob must expand as a glob pattern here
-        # (e.g. "*-CHECKSUM"), not match literally.
-        case "$base" in $glob) return 0 ;; esac
+        # (e.g. "*checksum"), not match literally. ${base,,}: $glob is
+        # already lowercase, matched case-insensitively this way.
+        case "${base,,}" in $glob) return 0 ;; esac
     done
     return 1
 }
@@ -437,13 +480,60 @@ looks_like_checksum_listing_name() {
 # True if $1's first line is a clearsign header - the file is itself an
 # OpenPGP-signed message (RFC 4880 SS7), needing no separate detached
 # signature file. Only the first (declared) signer is ever examined here,
-# same as this file's own existing detached-signature handling.
+# same as this file's own existing detached-signature handling. Uses
+# "head -c 40", not "read -r" - the latter scans the whole file when it
+# has no newline, which a large binary file passed here by mistake
+# (e.g. an ISO) could easily be.
 is_clearsigned_file() {
-    local f=$1 first_line
+    local f=$1 head_bytes
     [ -r "$f" ] || return 1
-    IFS= read -r first_line < "$f" 2>/dev/null
-    first_line=${first_line%$'\r'}
-    [ "$first_line" = "-----BEGIN PGP SIGNED MESSAGE-----" ]
+    # tr -d strips any NUL byte before it reaches "$(...)" - bash itself
+    # (not head) warns "NUL byte ignored" otherwise, which real binary
+    # data passed here (its whole point) will often contain.
+    head_bytes=$(head -c 40 "$f" 2>/dev/null | tr -d '\0')
+    case "$head_bytes" in
+        "-----BEGIN PGP SIGNED MESSAGE-----"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# True if $1's content is confidently something OTHER than a signature,
+# via "file -b" alone - no gpg parse. False (not obviously excluded)
+# for real ambiguous cases: "data" (a real binary signature also looks
+# like this) or any "-----BEGIN PGP..." header (a real "--armor"
+# signature, or "--enarmor"'s generic wrapper - "file -b" alone can't
+# tell those apart from plain text, only the header can). Used to
+# demote a file that already matched a signature extension, without
+# ever paying for a real gpg parse on that path.
+looks_obviously_not_a_signature() {
+    local f=$1 head_bytes type
+    [ -r "$f" ] || return 1
+    head_bytes=$(head -c 40 "$f" 2>/dev/null | tr -d '\0')
+    case "$head_bytes" in
+        "-----BEGIN PGP"*) return 1 ;;
+    esac
+    type=$(file -b "$f" 2>/dev/null) || return 1
+    [ "$type" != "data" ]
+}
+
+# True if $1 parses as OpenPGP data whose first packet is a signature
+# packet (tag 2), regardless of its name or wrapper (binary, --armor,
+# or --enarmor). No keyring/network needed. Content-based fallback only
+# - used when a file's extension isn't a recognized signature suffix.
+is_detached_signature_file() {
+    local f=$1 head_bytes first_packet size
+    [ -r "$f" ] || return 1
+    head_bytes=$(head -c 40 "$f" 2>/dev/null | tr -d '\0')
+    case "$head_bytes" in
+        "-----BEGIN PGP SIGNATURE-----"*) return 0 ;;
+    esac
+    # A real signature is always tiny - skip the gpg parse for anything
+    # over 1 MiB (e.g. an ISO with an unrecognized extension).
+    size=$(stat -c%s "$f" 2>/dev/null) || return 1
+    [ "$size" -le 1048576 ] || return 1
+    debug_cmd gpg --list-packets "$f"
+    first_packet=$(gpg --list-packets "$f" 2>/dev/null | grep -m1 -o ':[a-z ]*packet[a-z ]*:') || true
+    [ "$first_packet" = ":signature packet:" ]
 }
 
 # Classifies a checksum-listing filename (one recognized by
@@ -547,25 +637,30 @@ classify_plain_checksum_signature_pair() {
 
 # Classifies an unsigned per-file checksum (one of $PLAIN_CHECKSUM_
 # SUFFIXES, e.g. "manjaro-....iso.sha512") paired with the ISO it
-# describes. Sets ISO (the non-checksum file), SIG (its real direct
-# signature if one exists, else a ".sig" placeholder), and NO_DIRECT_SIG
-# (1 when no real direct signature was found, letting the checksum-listing
-# fallback get a chance). Returns 1 if neither basename has a known
-# plain-checksum suffix, or both do.
+# describes. Sets ISO, and either SIG (a real direct ISO signature) or
+# CHECKSUM_FILE_OVERRIDE/CHECKSUM_ALGO_OVERRIDE/CHECKSUM_SIG_PREVIEW
+# (the checksum file itself, if the ISO has no direct signature).
+# NO_DIRECT_SIG mirrors which of the two happened. Returns 1 if neither
+# basename has a known plain-checksum suffix, or both do.
 classify_plain_checksum_pair() {
-    local a=$1 b=$2 a_is_plain=0 b_is_plain=0 suffix sigext
+    local a=$1 b=$2 a_is_plain=0 b_is_plain=0 suffix sigext checksum_file
     for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
         case "$(basename "$a")" in *".$suffix") a_is_plain=1 ;; esac
         case "$(basename "$b")" in *".$suffix") b_is_plain=1 ;; esac
     done
     if [ "$a_is_plain" -eq 1 ] && [ "$b_is_plain" -eq 0 ]; then
         ISO=$b
+        checksum_file=$a
     elif [ "$b_is_plain" -eq 1 ] && [ "$a_is_plain" -eq 0 ]; then
         ISO=$a
+        checksum_file=$b
     else
         return 1
     fi
     NO_DIRECT_SIG=0
+    CHECKSUM_FILE_OVERRIDE=""
+    CHECKSUM_ALGO_OVERRIDE=""
+    CHECKSUM_SIG_PREVIEW=""
     for sigext in sig asc gpg; do
         if [ -r "${ISO}.${sigext}" ]; then
             SIG="${ISO}.${sigext}"
@@ -574,18 +669,56 @@ classify_plain_checksum_pair() {
     done
     NO_DIRECT_SIG=1
     SIG="${ISO}.sig"
+    CHECKSUM_FILE_OVERRIDE=$checksum_file
+    for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+        case "$(basename "$checksum_file")" in
+            *".$suffix") CHECKSUM_ALGO_OVERRIDE="${suffix}sum"; break ;;
+        esac
+    done
+    for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+        if [ -r "${checksum_file}.${sigext}" ]; then
+            CHECKSUM_SIG_PREVIEW="${checksum_file}.${sigext}"
+            break
+        fi
+    done
     return 0
 }
 
 # Classifies two explicit file paths into ISO/SIG, order-independent:
 # whichever looks like a signature (.sig/.asc/.gpg/.sign) is SIG, the
-# other is ISO. Falls back to the positional convention (first=ISO,
-# second=SIG) when neither or both match. Callers should try
-# classify_checksum_listing_pair()/classify_plain_checksum_pair() first.
+# other is ISO. Falls back to content (is_detached_signature_file())
+# when neither/both match by name, then to positional order (first=ISO,
+# second=SIG) if content doesn't decide it either - that last resort
+# also sets NEITHER_LOOKS_LIKE_SIGNATURE=1 so a caller can refuse
+# instead of guessing. Callers should try classify_checksum_listing_
+# pair()/classify_plain_checksum_pair() first. A SIG that's actually a
+# full clearsigned message is used as CHECKSUM_FILE_OVERRIDE instead.
 classify_iso_sig_pair() {
-    local a=$1 b=$2 a_is_sig=0 b_is_sig=0
-    case "$a" in *.sig|*.asc|*.gpg|*.sign) a_is_sig=1 ;; esac
-    case "$b" in *.sig|*.asc|*.gpg|*.sign) b_is_sig=1 ;; esac
+    local a=$1 b=$2 a_is_sig=0 b_is_sig=0 a_named_sig=0 b_named_sig=0
+    case "$a" in *.sig|*.asc|*.gpg|*.sign) a_is_sig=1; a_named_sig=1 ;; esac
+    case "$b" in *.sig|*.asc|*.gpg|*.sign) b_is_sig=1; b_named_sig=1 ;; esac
+    # A recognized extension is trusted unless a cheap check (no gpg
+    # parse) confidently shows the content is something else entirely.
+    [ "$a_is_sig" -eq 1 ] && looks_obviously_not_a_signature "$a" && a_is_sig=0
+    [ "$b_is_sig" -eq 1 ] && looks_obviously_not_a_signature "$b" && b_is_sig=0
+    if [ "$a_is_sig" -eq 0 ] && [ "$b_is_sig" -eq 0 ]; then
+        # Only tried when the name alone didn't decide it - an ordinary
+        # .sig/.asc/.gpg/.sign pair never pays this extra gpg call.
+        is_detached_signature_file "$a" && a_is_sig=1
+        is_detached_signature_file "$b" && b_is_sig=1
+    fi
+    NEITHER_LOOKS_LIKE_SIGNATURE=0
+    # SIG_NAMED_BUT_NOT_SIGNATURE: which file (if any) matched by name
+    # but got demoted or never confirmed by content - lets a caller say
+    # "this one looks right by name, but its content isn't a real
+    # signature" instead of the more generic "neither looks like a
+    # signature at all", which would be misleading here.
+    SIG_NAMED_BUT_NOT_SIGNATURE=""
+    if [ "$a_is_sig" -eq 0 ] && [ "$b_is_sig" -eq 0 ]; then
+        NEITHER_LOOKS_LIKE_SIGNATURE=1
+        [ "$a_named_sig" -eq 1 ] && SIG_NAMED_BUT_NOT_SIGNATURE=$a
+        [ "$b_named_sig" -eq 1 ] && SIG_NAMED_BUT_NOT_SIGNATURE=$b
+    fi
     if [ "$a_is_sig" -eq 1 ] && [ "$b_is_sig" -eq 0 ]; then
         SIG=$a
         ISO=$b
@@ -593,6 +726,237 @@ classify_iso_sig_pair() {
         ISO=$a
         SIG=$b
     fi
+    if [ -r "$SIG" ] && is_clearsigned_file "$SIG"; then
+        CHECKSUM_FILE_OVERRIDE=$SIG
+        SIG=""
+    fi
+}
+
+# Classifies three explicit file paths, order-independent, as an ISO
+# plus its checksum/signature files - for files not all in one folder,
+# where auto-discovery can't find the third one on its own. The
+# checksum file is recognized by a shared-listing name (SHA256SUMS
+# etc.) or a plain per-file suffix ($PLAIN_CHECKSUM_SUFFIXES, e.g.
+# "<iso>.sha512"). For the plain-suffix shape, tries the ISO's own
+# direct signature first (checksum file unused), then the checksum
+# file's own signature - same priority as classify_plain_checksum_
+# pair(). A shared-listing name only ever uses the latter.
+# Sets ISO, and either SIG (direct signature) or CHECKSUM_FILE_
+# OVERRIDE/CHECKSUM_ALGO_OVERRIDE/CHECKSUM_SIG_PREVIEW (checksum file's
+# own signature). Returns 1 unless exactly one file is recognized as
+# the checksum file, and exactly one of the remaining two is literally
+# "<that name>.<sigext>".
+classify_iso_checksum_signature_triple() {
+    local files=("$1" "$2" "$3") i chk_i=-1 chk_n=0 sig_i=-1 sig_n=0 \
+        iso_i=-1 chk_base sigext suffix plain_algo="" p q iso_base_try
+    for i in 0 1 2; do
+        looks_like_checksum_listing_name "${files[$i]}" && { chk_i=$i; chk_n=$((chk_n + 1)); }
+    done
+    if [ "$chk_n" -eq 0 ]; then
+        for i in 0 1 2; do
+            for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+                case "$(basename "${files[$i]}")" in
+                    *".$suffix") chk_i=$i; chk_n=$((chk_n + 1)); plain_algo="${suffix}sum" ;;
+                esac
+            done
+        done
+    fi
+    [ "$chk_n" -eq 1 ] || return 1
+    if [ -n "$plain_algo" ]; then
+        # Try both remaining files as "the ISO" - if the other one is
+        # "<that ISO>.<sigext>", it's a real direct signature (tried
+        # before the checksum file's own signature, below).
+        for p in 0 1 2; do
+            [ "$p" -eq "$chk_i" ] && continue
+            for q in 0 1 2; do
+                [ "$q" -eq "$chk_i" ] || [ "$q" -eq "$p" ] && continue
+                iso_base_try=$(basename "${files[$p]}")
+                for sigext in sig asc gpg; do
+                    if [ "$(basename "${files[$q]}")" = "${iso_base_try}.${sigext}" ]; then
+                        ISO=${files[$p]}
+                        SIG=${files[$q]}
+                        CHECKSUM_FILE_OVERRIDE=""
+                        CHECKSUM_ALGO_OVERRIDE=""
+                        CHECKSUM_SIG_PREVIEW=""
+                        return 0
+                    fi
+                done
+            done
+        done
+    fi
+    chk_base=$(basename "${files[$chk_i]}")
+    for i in 0 1 2; do
+        [ "$i" -eq "$chk_i" ] && continue
+        for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+            [ "$(basename "${files[$i]}")" = "${chk_base}.${sigext}" ] && { sig_i=$i; sig_n=$((sig_n + 1)); }
+        done
+    done
+    [ "$sig_n" -eq 1 ] || return 1
+    for i in 0 1 2; do
+        [ "$i" != "$chk_i" ] && [ "$i" != "$sig_i" ] && iso_i=$i
+    done
+    ISO=${files[$iso_i]}
+    SIG=""
+    CHECKSUM_FILE_OVERRIDE=${files[$chk_i]}
+    CHECKSUM_ALGO_OVERRIDE=$plain_algo
+    CHECKSUM_SIG_PREVIEW=${files[$sig_i]}
+}
+
+# True if checksum-listing file $1 names $2's exact basename - guards
+# classify_pair_any_shape() against pairing a real listing with an
+# unrelated third file during three-explicit-file disambiguation.
+checksum_listing_names_iso() {
+    local listing=$1 iso=$2
+    [ -r "$listing" ] || return 1
+    find_checksum_line "$listing" "$(basename "$iso")"
+}
+
+# True if $1's basename is exactly "<$2's basename>.<sigext>"
+# (sig/asc/gpg/sign) - a tie-break preference signal for
+# classify_iso_triple_ignoring_one(), not a hard requirement (a real
+# signature file's name has no required relation to its target).
+sig_names_iso() {
+    local sig_base iso_base sigext
+    sig_base=$(basename "$1")
+    iso_base=$(basename "$2")
+    for sigext in sig asc gpg sign; do
+        [ "$sig_base" = "${iso_base}.${sigext}" ] && return 0
+    done
+    return 1
+}
+
+# True if $1's basename has a $PLAIN_CHECKSUM_SUFFIXES extension (e.g.
+# "manjaro-....iso.sha512") - a real ISO is never named this way itself.
+looks_like_plain_checksum_name() {
+    local suffix
+    for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+        case "$(basename "$1")" in *".$suffix") return 0 ;; esac
+    done
+    return 1
+}
+
+# True if the global $ISO a classify_*_pair() call just produced
+# plausibly is a real ISO, not itself a signature or checksum file.
+iso_result_plausible() {
+    case "$(basename "$ISO")" in
+        *.sig|*.asc|*.gpg|*.sign) return 1 ;;
+    esac
+    looks_like_checksum_listing_name "$ISO" && return 1
+    ! looks_like_plain_checksum_name "$ISO"
+}
+
+# Classifies two file paths via the same classify_*_pair() chain
+# main()'s two-argument dispatch uses. Resets CHECKSUM_FILE_OVERRIDE/
+# CHECKSUM_SIG_PREVIEW/CHECKSUM_ALGO_OVERRIDE/NO_DIRECT_SIG first, so a
+# caller trying several candidate pairs never sees a stale value left
+# by an earlier one. Returns 1 unless real crypto material was
+# actually found - not just "some classifier returned success", since
+# classify_plain_checksum_pair() alone succeeds whenever one file
+# merely has a recognized checksum suffix, with nothing to verify.
+classify_pair_any_shape() {
+    local x=$1 y=$2
+    CHECKSUM_FILE_OVERRIDE=""
+    CHECKSUM_SIG_PREVIEW=""
+    CHECKSUM_ALGO_OVERRIDE=""
+    NO_DIRECT_SIG=0
+    NEITHER_LOOKS_LIKE_SIGNATURE=0
+    if classify_checksum_listing_pair "$x" "$y"; then
+        :
+    elif classify_checksum_signature_pair "$x" "$y"; then
+        :
+    elif classify_plain_checksum_signature_pair "$x" "$y"; then
+        :
+    elif classify_plain_checksum_pair "$x" "$y"; then
+        :
+    else
+        classify_iso_sig_pair "$x" "$y"
+        [ "$NEITHER_LOOKS_LIKE_SIGNATURE" -eq 1 ] && return 1
+    fi
+    iso_result_plausible || return 1
+    # $SIG must be $x or $y themselves, not some other path -
+    # classify_plain_checksum_pair()'s auto-discovery of
+    # "${ISO}.sigext" is correct for its normal two-argument use, but
+    # here any other file in the directory must never affect the
+    # outcome, whatever its content. looks_obviously_not_a_signature()
+    # still guards the rarer case where $x/$y aren't a real signature.
+    if [ -n "$SIG" ] && { [ "$SIG" = "$x" ] || [ "$SIG" = "$y" ]; } \
+       && [ -f "$SIG" ] && [ -r "$SIG" ] && ! looks_obviously_not_a_signature "$SIG"; then
+        return 0
+    fi
+    if [ -n "$CHECKSUM_FILE_OVERRIDE" ]; then
+        if [ -z "$CHECKSUM_ALGO_OVERRIDE" ]; then
+            checksum_listing_names_iso "$CHECKSUM_FILE_OVERRIDE" "$ISO" || return 1
+        fi
+        [ -n "$CHECKSUM_SIG_PREVIEW" ] && return 0
+        is_clearsigned_file "$CHECKSUM_FILE_OVERRIDE" && return 0
+    fi
+    return 1
+}
+
+# Fallback for classify_iso_checksum_signature_triple()'s failure: a
+# real signature named outside either of its two fixed naming
+# conventions is invisible to it - try treating the three given files
+# as an ISO+SIG pair instead, ignoring whichever third file isn't
+# needed. Tries all three 2-of-3 sub-pairs via classify_pair_any_
+# shape(); succeeds only if EXACTLY ONE is meaningful - more than one
+# is genuinely ambiguous about which file to ignore.
+classify_iso_triple_ignoring_one() {
+    local files=("$1" "$2" "$3") i j matched=0 match_i=-1 match_j=-1 \
+        strong_matched=0 strong_i=-1 strong_j=-1
+    local -a midx_count=(0 0 0)
+    for i in 0 1 2; do
+        for j in 0 1 2; do
+            [ "$j" -le "$i" ] && continue
+            if classify_pair_any_shape "${files[$i]}" "${files[$j]}"; then
+                matched=$((matched + 1))
+                match_i=$i
+                match_j=$j
+                midx_count[$i]=$((midx_count[$i] + 1))
+                midx_count[$j]=$((midx_count[$j] + 1))
+                if [ -z "$SIG" ] || sig_names_iso "$SIG" "$ISO"; then
+                    strong_matched=$((strong_matched + 1))
+                    strong_i=$i
+                    strong_j=$j
+                fi
+            fi
+        done
+    done
+    # A signature with no naming correlation to its "ISO" candidate is
+    # weaker evidence than any other match shape - prefer a lone strong
+    # match over reporting a false ambiguity against a weaker one.
+    if [ "$matched" -gt 1 ] && [ "$strong_matched" -eq 1 ]; then
+        matched=1
+        match_i=$strong_i
+        match_j=$strong_j
+    fi
+    # TRIPLE_AMBIGUOUS: more than one pairing is independently valid -
+    # distinct from none matching, so a caller can give an accurate
+    # reason. With exactly two valid pairings (only 3 possible pairs
+    # exist), they always share one common file (the ISO, in every
+    # realistic shape) - ANCHOR/CANDIDATE1/CANDIDATE2 name it and the
+    # two competing files, found via which index appears twice vs. once.
+    # Left empty for the rarer all-three-valid case (caller falls back
+    # to listing all three files generically).
+    TRIPLE_AMBIGUOUS=0
+    TRIPLE_AMBIGUOUS_ANCHOR=""
+    TRIPLE_AMBIGUOUS_CANDIDATE1=""
+    TRIPLE_AMBIGUOUS_CANDIDATE2=""
+    if [ "$matched" -eq 2 ]; then
+        TRIPLE_AMBIGUOUS=1
+        for i in 0 1 2; do
+            if [ "${midx_count[$i]}" -eq 2 ]; then
+                TRIPLE_AMBIGUOUS_ANCHOR=${files[$i]}
+            elif [ -z "$TRIPLE_AMBIGUOUS_CANDIDATE1" ]; then
+                TRIPLE_AMBIGUOUS_CANDIDATE1=${files[$i]}
+            else
+                TRIPLE_AMBIGUOUS_CANDIDATE2=${files[$i]}
+            fi
+        done
+    elif [ "$matched" -gt 2 ]; then
+        TRIPLE_AMBIGUOUS=1
+    fi
+    [ "$matched" -eq 1 ] || return 1
+    classify_pair_any_shape "${files[$match_i]}" "${files[$match_j]}"
 }
 
 main() {
@@ -752,10 +1116,31 @@ elif [ "$LIST_TRUSTED" -eq 1 ] || [ "$LIST_KNOWN_KEYS" -eq 1 ] || [ "$LIST_KEYSE
      || [ -n "$INSPECT_KEY_FILE" ] || [ -n "$IMPORT_TRUSTED_KEYS" ]; then
     [ "$#" -eq 0 ] || usage 1 "$(gettext "this option takes no extra arguments")"
 else
-    [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage 1 "$(gettext "expected an ISO or signature file to check")"
+    [ "$#" -ge 1 ] && [ "$#" -le 3 ] || usage 1 "$(gettext "expected an ISO or signature file to check")"
     NO_DIRECT_SIG=0
     ISO_DERIVED_FROM_SIG=0
-    if [ -n "${2:-}" ]; then
+    if [ -n "${3:-}" ]; then
+        # Three explicit arguments - an ISO plus its checksum/signature
+        # files. Falls back to treating any two as an ISO+SIG pair
+        # (ignoring the third) when the triple doesn't match a known shape.
+        if ! classify_iso_checksum_signature_triple "$1" "$2" "$3" \
+            && ! classify_iso_triple_ignoring_one "$1" "$2" "$3"; then
+            triple_base1=$(basename "$1")
+            triple_base2=$(basename "$2")
+            triple_base3=$(basename "$3")
+            if [ "$TRIPLE_AMBIGUOUS" -eq 1 ]; then
+                if [ -n "$TRIPLE_AMBIGUOUS_ANCHOR" ]; then
+                    anchor_base=$(basename "$TRIPLE_AMBIGUOUS_ANCHOR")
+                    cand1_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE1")
+                    cand2_base=$(basename "$TRIPLE_AMBIGUOUS_CANDIDATE2")
+                    die "$(eval_gettext "cannot detect what '\${anchor_base}' belongs to: '\${cand1_base}', '\${cand2_base}'.")"
+                fi
+                die "$(eval_gettext "cannot detect how these three files belong together: '\${triple_base1}', '\${triple_base2}', '\${triple_base3}'.")"
+            fi
+            die "$(eval_gettext "cannot detect an ISO, a checksum listing, and its signature among these three files: '\${triple_base1}', '\${triple_base2}', '\${triple_base3}'.")"
+        fi
+        [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
+    elif [ -n "${2:-}" ]; then
         # Two explicit arguments - order-independent via, in order,
         # classify_checksum_listing_pair()/classify_checksum_signature_
         # pair()/classify_plain_checksum_signature_pair()/classify_plain_
@@ -769,29 +1154,53 @@ else
         # internal re-exec, verifying a listing's own direct signature) -
         # its "$name"/"$sigfile" pair already IS one of those shapes and
         # must not be reinterpreted, or it recurses into itself.
+        # && iso_result_plausible: an implausible match falls through
+        # to the next classifier, as if it hadn't matched at all.
         if [ "$VERIFY_AS_CHECKSUM_FILE" -eq 1 ]; then
             classify_iso_sig_pair "$1" "$2"
-        elif classify_checksum_listing_pair "$1" "$2"; then
+        elif classify_checksum_listing_pair "$1" "$2" && iso_result_plausible; then
             :
-        elif classify_checksum_signature_pair "$1" "$2"; then
+        elif classify_checksum_signature_pair "$1" "$2" && iso_result_plausible; then
             :
-        elif classify_plain_checksum_signature_pair "$1" "$2"; then
+        elif classify_plain_checksum_signature_pair "$1" "$2" && iso_result_plausible; then
             :
-        elif classify_plain_checksum_pair "$1" "$2"; then
+        elif classify_plain_checksum_pair "$1" "$2" && iso_result_plausible; then
             :
         else
             classify_iso_sig_pair "$1" "$2"
+            if [ "$NEITHER_LOOKS_LIKE_SIGNATURE" -eq 1 ]; then
+                if [ -n "$SIG_NAMED_BUT_NOT_SIGNATURE" ]; then
+                    named_base=$(basename "$SIG_NAMED_BUT_NOT_SIGNATURE")
+                    die "$(eval_gettext "'\${named_base}' looks like a signature file by its name, but its content doesn't look like a real one - point this tool at the actual signature file, or a checksum listing.")"
+                fi
+                iso_base=$(basename "$ISO")
+                sig_base=$(basename "$SIG")
+                die "$(eval_gettext "neither '\${iso_base}' nor '\${sig_base}' looks like a real ISO signature file, by name or content - point this tool at the actual ISO and its .sig/.asc/.gpg/.sign file, or a checksum listing.")"
+            elif ! iso_result_plausible; then
+                iso_base=$(basename "$ISO")
+                sig_base=$(basename "$SIG")
+                die "$(eval_gettext "'\${iso_base}' and '\${sig_base}' both look like signature or checksum-listing files - point this tool at the actual ISO, plus its checksum listing or signature file.")"
+            fi
         fi
         [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
         [ -d "$SIG" ] && die "$(eval_gettext "'\${SIG}' is a directory, not a file - point this at the actual signature file directly.")"
     else
         ISO=$1
         [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
-        if case "$ISO" in *.sig|*.asc|*.gpg|*.sign) true ;; *) false ;; esac; then
-            # A single argument that's itself a signature file - derive the
-            # ISO/checksum-listing name by stripping the extension, then
-            # continue as if passed explicitly as $1 with this as $2.
-            # ISO_DERIVED_FROM_SIG: this name is only a guess, not user-given.
+        if is_clearsigned_file "$ISO"; then
+            # A full clearsigned message (e.g. an inline-signed checksum
+            # listing) needs no separate signature, whatever its name/
+            # extension - left exactly as given. verify_iso()'s own
+            # dispatch also checks is_clearsigned_file(), so this reaches
+            # resolve_checksum_listing_as_iso() using this exact file, not
+            # a derived sibling name.
+            :
+        elif case "$ISO" in *.sig|*.asc|*.gpg|*.sign) true ;; *) false ;; esac; then
+            # A single argument that's a genuine (non-clearsigned) signature
+            # file - derive the ISO/checksum-listing name by stripping the
+            # extension, then continue as if passed explicitly as $1 with
+            # this as $2. ISO_DERIVED_FROM_SIG: this name is only a guess,
+            # not user-given.
             SIG=$ISO
             ISO_DERIVED_FROM_SIG=1
             case "$SIG" in
@@ -801,11 +1210,25 @@ else
                 *.sign) ISO=${SIG%.sign} ;;
             esac
         elif [ -r "${ISO}.sig" ]; then
-            SIG="${ISO}.sig"
+            # A same-named ".sig" can itself be a full clearsigned
+            # checksum listing rather than the ISO's own signature.
+            if is_clearsigned_file "${ISO}.sig"; then
+                CHECKSUM_FILE_OVERRIDE="${ISO}.sig"
+            else
+                SIG="${ISO}.sig"
+            fi
         elif [ -r "${ISO}.asc" ]; then
-            SIG="${ISO}.asc"
+            if is_clearsigned_file "${ISO}.asc"; then
+                CHECKSUM_FILE_OVERRIDE="${ISO}.asc"
+            else
+                SIG="${ISO}.asc"
+            fi
         elif [ -r "${ISO}.gpg" ]; then
-            SIG="${ISO}.gpg"
+            if is_clearsigned_file "${ISO}.gpg"; then
+                CHECKSUM_FILE_OVERRIDE="${ISO}.gpg"
+            else
+                SIG="${ISO}.gpg"
+            fi
         else
             # No direct signature - let the checksum-file fallback try
             # (try_checksum_fallback below); keep the .sig default so the
@@ -1481,12 +1904,11 @@ export_key_to() {
 }
 
 # $ISO's basename ends in ".$1" (one of PLAIN_CHECKSUM_SUFFIXES). Two
-# cases, checked in this order: A) the checksum file itself is signed
-# (e.g. <iso>.sha512.sig) - handed to try_checksum_fallback() via the
-# --checksum-file/--checksum-algo override mechanism. B) unsigned, but
-# the named ISO has its own real direct signature - use that instead,
-# the checksum file's content itself is never trusted. Neither found -
-# refuses outright.
+# cases: A) the checksum file itself is signed - handed to try_
+# checksum_fallback() via CHECKSUM_FILE_OVERRIDE/CHECKSUM_ALGO_OVERRIDE.
+# B) unsigned, but the ISO has its own direct signature - use that
+# instead (redirected to A if that signature is itself clearsigned).
+# Neither found - refuses outright.
 resolve_plain_checksum_as_iso() {
     local suffix=$1 candidate sigext iso_base candidate_base resolved_base candidate_sig_base
 
@@ -1517,6 +1939,18 @@ resolve_plain_checksum_as_iso() {
 
     for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
         if [ -r "${candidate}.${sigext}" ]; then
+            if is_clearsigned_file "${candidate}.${sigext}"; then
+                # The ISO's would-be direct signature is actually a full
+                # clearsigned checksum listing - use it as that instead.
+                CHECKSUM_FILE_OVERRIDE="${candidate}.${sigext}"
+                ISO=$candidate
+                NO_DIRECT_SIG=1
+                resolved_base=$(basename "$ISO")
+                log "$(eval_gettext "resolved ISO: \${resolved_base}")"
+                status_out "RESOLVED_ISO $resolved_base"
+                RESOLVED_ISO=$resolved_base
+                return 0
+            fi
             iso_base=$(basename "$ISO")
             candidate_sig_base="$(basename "$candidate").${sigext}"
             log "$(eval_gettext "'\${iso_base}' is an unsigned per-file checksum - not used for verification. Using '\${candidate_sig_base}' instead, the ISO's own direct signature.")"
@@ -1527,6 +1961,7 @@ resolve_plain_checksum_as_iso() {
             log "$(eval_gettext "resolved ISO: \${resolved_base}")"
             status_out "RESOLVED_ISO $resolved_base"
             RESOLVED_ISO=$resolved_base
+            status_out "RESOLVED_SIG $candidate_sig_base"
             return 0
         fi
     done
@@ -1657,29 +2092,72 @@ resolve_checksum_listing_as_iso() {
     esac
 }
 
+# Looks $1 (a hex digest length) up in $HASHCMD_BY_LENGTH, echoing the
+# matching hashcmd or nothing if the length matches none of them. Safe
+# to call via "$(...)" - unlike find_checksum_line() below, this has no
+# side effects.
+hashcmd_by_length() {
+    local len=$1 entry
+    for entry in "${HASHCMD_BY_LENGTH[@]}"; do
+        [ "$len" = "${entry%%|*}" ] && { printf '%s' "${entry#*|}"; return 0; }
+    done
+}
+
+# Looks lowercased tag name $1 up in $BSD_TAG_TO_HASHCMD, echoing the
+# matching hashcmd or nothing if the name isn't recognized. Safe to call
+# via "$(...)" - no side effects.
+hashcmd_by_tag() {
+    local tag=$1 entry
+    for entry in "${BSD_TAG_TO_HASHCMD[@]}"; do
+        [ "$tag" = "${entry%%|*}" ] && { printf '%s' "${entry#*|}"; return 0; }
+    done
+    # BLAKE2b's variable-length tag ("BLAKE2b-N", bit count) - "b2sum -c"
+    # reads the length from the tag itself, no --length flag needed back.
+    case "$tag" in
+        blake2b-[0-9]*) printf '%s' "b2sum" ;;
+    esac
+}
+
 # Finds the line in checksum file $1 that names basename $2 exactly, or
 # returns non-zero. Recognizes both GNU coreutils style ("<hash>  <name>"
 # or "<hash> *<name>") and BSD/tag style ("ALGO (<name>) = <hash>", e.g.
 # Fedora's convention) - real checksum files list decoy entries too (e.g.
 # Debian's own "<iso>.log"/"<iso>.packages"/"<iso>.contents"). Sets
-# MATCHED_LINE on success; for a BSD-tag match also sets FOUND_HASHCMD
-# (e.g. "sha256sum") from the line's own algorithm token - both left
-# untouched for a GNU-style match, since that caller already knows its
-# hashcmd from $CHECKSUM_FILES. Sets globals directly rather than
-# echoing to stdout, so callers must NOT invoke this via "$(...)" command
-# substitution - that forks a subshell and the side effects would be lost.
+# MATCHED_LINE, FOUND_HASHCMD (the real command to run) and
+# FOUND_HASH_LABEL (the fuller name to show a user, e.g. "blake2b-400"
+# vs just "b2sum") - both left empty if the algorithm can't be
+# resolved. Sets globals directly rather than echoing to stdout, so
+# callers must NOT invoke this via "$(...)" command substitution - that
+# forks a subshell and the side effects would be lost.
 find_checksum_line() {
-    local file=$1 target=$2 line rest mode fname algo
+    local file=$1 target=$2 line hash rest mode fname tag_algo tag_cmd len_cmd len_algo hash_len
     while IFS= read -r line || [ -n "$line" ]; do
         if [[ $line =~ ^([A-Za-z0-9-]+)\ \((.+)\)\ =\ ([0-9a-fA-F]+)$ ]]; then
             if [ "${BASH_REMATCH[2]}" = "$target" ]; then
-                algo=$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')
-                FOUND_HASHCMD="${algo}sum"
+                tag_algo=$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')
+                tag_cmd=$(hashcmd_by_tag "$tag_algo")
+                if [ -n "$tag_cmd" ] && command -v "$tag_cmd" >/dev/null 2>&1; then
+                    FOUND_HASHCMD=$tag_cmd
+                    FOUND_HASH_LABEL=$tag_algo
+                else
+                    hash_len=${#BASH_REMATCH[3]}
+                    len_cmd=$(hashcmd_by_length "$hash_len")
+                    if [ -n "$len_cmd" ]; then
+                        len_algo=${len_cmd%sum}
+                        warn "$(eval_gettext "this line claims \${tag_algo}, but its hash is \${hash_len} characters long, which looks like \${len_algo} instead - using \${len_algo}")"
+                        FOUND_HASHCMD=$len_cmd
+                        FOUND_HASH_LABEL=$len_algo
+                    else
+                        FOUND_HASHCMD=""
+                        FOUND_HASH_LABEL=""
+                    fi
+                fi
                 MATCHED_LINE=$line
                 return 0
             fi
             continue
         fi
+        hash=${line%% *}
         rest=${line#* }
         mode=${rest:0:1}
         fname=${rest:1}
@@ -1688,6 +2166,11 @@ find_checksum_line() {
             *) continue ;;
         esac
         if [ "$fname" = "$target" ]; then
+            FOUND_HASHCMD=""
+            if [[ $hash =~ ^[0-9a-fA-F]+$ ]]; then
+                FOUND_HASHCMD=$(hashcmd_by_length "${#hash}")
+            fi
+            FOUND_HASH_LABEL=${FOUND_HASHCMD%sum}
             MATCHED_LINE=$line
             return 0
         fi
@@ -1706,7 +2189,8 @@ try_checksum_fallback() {
     local dir base candidates entry name hashcmd sigfile sigext glob \
         match_line child_rc hash_rc tried_names=() plain_file \
         name_base algo sigfile_base tried_joined checksum_sig_missing=0 \
-        override_base unsigned_matches=() peek_file
+        override_base unsigned_matches=() peek_file name_algo content_algo \
+        override_is_glob nocaseglob_was candidates_i
 
     dir=$(dirname "$ISO")
     base=$(basename "$ISO")
@@ -1722,11 +2206,25 @@ try_checksum_fallback() {
                 fi
             done
         fi
-        # Left empty for a clearsigned override - resolved per-line further
-        # down instead (a release-specific name has no fixed hashcmd).
+        # Left empty for a clearsigned override, or one whose basename
+        # matches a $CHECKSUM_FILE_GLOBS pattern (a release-specific
+        # name has no fixed hashcmd either way) - resolved per-line
+        # further down instead, exactly like the auto-discovery
+        # ($CHECKSUM_FILE_OVERRIDE unset) path already does for the
+        # same shape of file.
         if [ -z "$hashcmd" ] && ! is_clearsigned_file "$CHECKSUM_FILE_OVERRIDE"; then
-            # TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
-            die "$(eval_gettext "\${FLAG_CHECKSUM_ALGO} is required when \${FLAG_CHECKSUM_FILE} names a file not in the built-in list (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)")" || return 1
+            override_is_glob=0
+            override_base=$(basename "$CHECKSUM_FILE_OVERRIDE")
+            for glob in "${CHECKSUM_FILE_GLOBS[@]}"; do
+                # shellcheck disable=SC2254
+                # Unquoted on purpose: $glob must expand as a glob
+                # pattern here (e.g. "*checksum"), not match literally.
+                case "${override_base,,}" in $glob) override_is_glob=1; break ;; esac
+            done
+            if [ "$override_is_glob" -eq 0 ]; then
+                # TRANSLATORS: ${FLAG_CHECKSUM_ALGO}/${FLAG_CHECKSUM_FILE} are literal flag names - keep placeholders as-is.
+                die "$(eval_gettext "\${FLAG_CHECKSUM_ALGO} is required when \${FLAG_CHECKSUM_FILE} names a file not in the built-in list (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)")" || return 1
+            fi
         fi
         candidates=("$CHECKSUM_FILE_OVERRIDE|$hashcmd")
     else
@@ -1735,11 +2233,21 @@ try_checksum_fallback() {
         done
         # Release-specific listing names (e.g. Fedora's "<spin>-<version>-
         # <arch>-CHECKSUM") - hashcmd left empty, resolved per-line below.
+        # nocaseglob: this is real pathname expansion against files on
+        # disk, not a case pattern match (case-insensitive there via
+        # ${var,,} instead) - restored right after, scoped tightly.
+        # shopt -p's own exit status reflects whether the option is
+        # currently enabled, not whether the query itself succeeded -
+        # "|| true" needed so a normally-disabled nocaseglob doesn't
+        # trip errexit right here.
+        nocaseglob_was=$(shopt -p nocaseglob) || true
+        shopt -s nocaseglob
         for glob in "${CHECKSUM_FILE_GLOBS[@]}"; do
             for name in "$dir"/$glob; do
                 [ -r "$name" ] && candidates+=("$name|")
             done
         done
+        eval "$nocaseglob_was"
         # A plain per-ISO checksum with its own detached signature
         # (openSUSE's own convention, e.g. "<iso>.sha256" + "<iso>.sha256.asc") -
         # tried last, after every shared-listing shape, so "just point this
@@ -1753,7 +2261,13 @@ try_checksum_fallback() {
         done
     fi
 
-    for entry in "${candidates[@]}"; do
+    # Index-based, not "for entry in ${candidates[@]}" - a "for...in"
+    # snapshots the array once, so a clearsigned sigfile appended as a
+    # new candidate below would never be reached.
+    candidates_i=0
+    while [ "$candidates_i" -lt "${#candidates[@]}" ]; do
+        entry=${candidates[$candidates_i]}
+        candidates_i=$((candidates_i + 1))
         name=${entry%%|*}
         hashcmd=${entry#*|}
         [ -r "$name" ] || continue
@@ -1813,10 +2327,17 @@ try_checksum_fallback() {
             rm -f "$plain_file"
 
             name_base=$(basename "$name")
-            [ -n "$hashcmd" ] || hashcmd=$FOUND_HASHCMD
+            if [ -n "$hashcmd" ] && [ -n "$FOUND_HASHCMD" ] && [ "$hashcmd" != "$FOUND_HASHCMD" ]; then
+                name_algo=${hashcmd%sum}
+                content_algo=${FOUND_HASHCMD%sum}
+                [ -z "$FOUND_HASH_LABEL" ] || content_algo=$FOUND_HASH_LABEL
+                warn "$(eval_gettext "\${name_base} is named for \${name_algo}, but its content looks like \${content_algo} - using \${content_algo}")"
+            fi
+            [ -z "$FOUND_HASHCMD" ] || hashcmd=$FOUND_HASHCMD
             command -v "$hashcmd" >/dev/null 2>&1 || die "$(eval_gettext "checksum file '\${name_base}' uses an unsupported hash algorithm ('\${hashcmd}' not found)")" || return 1
 
             algo=${hashcmd%sum}
+            [ -z "$FOUND_HASH_LABEL" ] || algo=$FOUND_HASH_LABEL
             log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
             # "+sig" (status-tag/GUI-facing only, not the log() line above)
             # flags that this listing carries its own inline signature -
@@ -1850,6 +2371,12 @@ try_checksum_fallback() {
                 break
             fi
         done
+        # $sigfile can itself be a clearsigned checksum listing rather
+        # than a real detached signature - add it as its own candidate.
+        if [ -n "$sigfile" ] && is_clearsigned_file "$sigfile"; then
+            candidates+=("$sigfile|")
+            continue
+        fi
         if [ -z "$sigfile" ]; then
             # Distinct from "found the sig, but ISO isn't listed" below.
             checksum_sig_missing=1
@@ -1870,7 +2397,22 @@ try_checksum_fallback() {
         match_line=$MATCHED_LINE
 
         name_base=$(basename "$name")
+        # Falls back to find_checksum_line()'s hash-length guess when
+        # the filename gave no algorithm, and overrides a known-from-
+        # filename algorithm too if the content disagrees (e.g. a
+        # sha256sum.txt that actually holds sha512 digests). The
+        # command -v check itself is deferred until after the
+        # signature check below, so a tampered listing fails as an
+        # invalid signature, not an unsupported-algorithm error.
+        if [ -n "$hashcmd" ] && [ -n "$FOUND_HASHCMD" ] && [ "$hashcmd" != "$FOUND_HASHCMD" ]; then
+            name_algo=${hashcmd%sum}
+            content_algo=${FOUND_HASHCMD%sum}
+            [ -z "$FOUND_HASH_LABEL" ] || content_algo=$FOUND_HASH_LABEL
+            warn "$(eval_gettext "\${name_base} is named for \${name_algo}, but its content looks like \${content_algo} - using \${content_algo}")"
+        fi
+        [ -z "$FOUND_HASHCMD" ] || hashcmd=$FOUND_HASHCMD
         algo=${hashcmd%sum}
+        [ -z "$FOUND_HASH_LABEL" ] || algo=$FOUND_HASH_LABEL
         log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
         status_out "CHECKSUM_FILE $name_base ($algo)"
         CHECKSUM_INFO="$name_base ($algo)"
@@ -1922,6 +2464,11 @@ try_checksum_fallback() {
             name_base=$(basename "$name")
             die "$(eval_gettext "the checksum file '\${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror.")" || return 1
         fi
+
+        # Checked only after the signature check above, so a tampered
+        # listing fails as an invalid signature, not an unsupported-
+        # algorithm error.
+        command -v "$hashcmd" >/dev/null 2>&1 || die "$(eval_gettext "checksum file '\${name_base}' uses an unsupported hash algorithm ('\${hashcmd}' not found)")" || return 1
 
         set +e
         HASH_OUTPUT=$(cd "$dir" && printf '%s\n' "$match_line" | "$hashcmd" -c - 2>&1)
@@ -1977,7 +2524,7 @@ try_checksum_fallback() {
 # --is-cached (network-free precheck), and --keep-key (cache a key
 # without verifying anything).
 verify_iso() {
-    local tcf_rc
+    local tcf_rc clearsigned_copy
     # CHECKSUM_INFO/CHECKSUM_SIG_INFO/RESOLVED_ISO/CLAIMED_UID mirror an
     # existing status_out() tag, so a caller that sourced this file can
     # read the outcome directly instead of parsing the tag stream. Reset
@@ -2010,7 +2557,10 @@ verify_iso() {
 
     if [ "$KEEP_KEY" -ne 1 ]; then
         if [ "$VERIFY_AS_CHECKSUM_FILE" -ne 1 ] && [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -ne 1 ]; then
-            if looks_like_checksum_listing_name "$ISO"; then
+            # is_clearsigned_file() catches a listing whose content gives
+            # it away regardless of name (e.g. a .sig/.asc/.gpg/.sign
+            # argument that's actually a full clearsigned message).
+            if looks_like_checksum_listing_name "$ISO" || is_clearsigned_file "$ISO"; then
                 resolve_checksum_listing_as_iso || return 1
             fi
             # $ISO may already have been reassigned to a real *.iso by the
@@ -2086,6 +2636,8 @@ verify_iso() {
     if [ -z "$FPR" ]; then
         if [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ]; then
             die "$(eval_gettext "could not extract signing key fingerprint from '\${ISO}'")" || return 1
+        elif is_clearsigned_file "$SIG"; then
+            die "$(eval_gettext "'\${SIG}' looks like a full clearsigned message (e.g. a checksum listing), not a plain detached signature - point this tool at it on its own, or together with the ISO it checksums, not as a signature file.")" || return 1
         else
             die "$(eval_gettext "could not extract signing key fingerprint from '\${SIG}'")" || return 1
         fi
@@ -2370,8 +2922,17 @@ fi
 ISO_BASE=$(basename "$ISO")
 if [ "$VERIFY_AS_CLEARSIGNED_CHECKSUM_FILE" -eq 1 ]; then
     log "$(eval_gettext "verifying inline-signed checksum file '\${ISO_BASE}'")"
-    debug_cmd gpgv --status-fd 3 --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$ISO"
-    run_gpgv_status --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$ISO"
+    # A temp copy, not $ISO directly: gpgv itself prints "WARNING: not a
+    # detached signature; file 'X' was NOT verified!" whenever a same-
+    # directory sibling matching $ISO's basename minus a .sig/.asc/.gpg/
+    # .sign suffix exists (harmless, but confusing to show). $SESSION_
+    # TMPDIR has no such sibling and this temp name has no such suffix,
+    # so the warning can never fire here.
+    clearsigned_copy=$(mktemp "$SESSION_TMPDIR/clearsigned-verify.XXXXXXXXXX")
+    cp "$ISO" "$clearsigned_copy"
+    debug_cmd gpgv --status-fd 3 --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$clearsigned_copy"
+    run_gpgv_status --keyring "gnupg-ring:${VERIFY_RING}" --output "$EXTRACT_PLAINTEXT_TO" "$clearsigned_copy"
+    rm -f "$clearsigned_copy"
 else
     SIG_BASE=$(basename "$SIG")
     log "$(eval_gettext "verifying '\${SIG_BASE}' against '\${ISO_BASE}'")"

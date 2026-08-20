@@ -6,7 +6,7 @@
 # even with no real content change.
 /verify-iso-sig.desktop
 /verify-iso-sig.1
-/locale/*/LC_MESSAGES/*.mo
+/locale/
 /help/
 
 # Debian packaging build state (debhelper's own scratch area) - always
