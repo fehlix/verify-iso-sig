@@ -1,0 +1,205 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.0
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: all source
+Version: 2026.08.04
+Checksums-Md5:
+ 474642149276e106c9c19ecd04824c1f 1516 verify-iso-sig_2026.08.04.dsc
+ 2fa5f3ac261669865edf94a84a1a8fd8 528180 verify-iso-sig_2026.08.04_all.deb
+Checksums-Sha1:
+ 432a9b6c55de58a6eab9692eab6da5bf0f003706 1516 verify-iso-sig_2026.08.04.dsc
+ 36cbd692b893b588fdcafc18bd907a2ba8a290f9 528180 verify-iso-sig_2026.08.04_all.deb
+Checksums-Sha256:
+ 146d7b19f20b3d58e8955abab31607818fc4a6dbbaf2e9a7d7216b1f2fc29608 1516 verify-iso-sig_2026.08.04.dsc
+ 2ca213f8e3160be46bd7ef5a4c695ed6d9c811e2b0f0034bd082bb10869db1e1 528180 verify-iso-sig_2026.08.04_all.deb
+Build-Origin: Debian
+Build-Architecture: amd64
+Build-Date: Thu, 20 Aug 2026 22:35:46 +0200
+Build-Tainted-By:
+ usr-local-has-includes
+ usr-local-has-libraries
+ usr-local-has-programs
+Installed-Build-Depends:
+ autoconf (= 2.72-3.1),
+ automake (= 1:1.17-4),
+ autopoint (= 0.23.1-2),
+ autotools-dev (= 20240727.1),
+ base-files (= 13.8+deb13u6),
+ base-passwd (= 3.6.7),
+ bash (= 5.2.37-2+b9),
+ bash-completion (= 1:2.16.0-7),
+ binutils (= 2.44-3),
+ binutils-common (= 2.44-3),
+ binutils-x86-64-linux-gnu (= 2.44-3),
+ bsdextrautils (= 2.41-5),
+ bsdmainutils (= 12.1.8),
+ bsdutils (= 1:2.41-5),
+ build-essential (= 12.12),
+ bzip2 (= 1.0.8-6),
+ coreutils (= 9.7-3),
+ cpp (= 4:14.2.0-1),
+ cpp-14 (= 14.2.0-19),
+ cpp-14-x86-64-linux-gnu (= 14.2.0-19),
+ cpp-x86-64-linux-gnu (= 4:14.2.0-1),
+ dash (= 0.5.12-12),
+ debconf (= 1.5.91),
+ debhelper (= 13.24.2),
+ debianutils (= 5.23.2),
+ dh-autoreconf (= 20),
+ dh-strip-nondeterminism (= 1.14.1-2),
+ diffutils (= 1:3.10-4),
+ dpkg (= 1.22.22),
+ dpkg-dev (= 1.22.22),
+ dwz (= 0.15-1+b1),
+ file (= 1:5.46-5),
+ findutils (= 4.10.0-3),
+ g++ (= 4:14.2.0-1),
+ g++-14 (= 14.2.0-19),
+ g++-14-x86-64-linux-gnu (= 14.2.0-19),
+ g++-x86-64-linux-gnu (= 4:14.2.0-1),
+ gawk (= 1:5.2.1-2+b1),
+ gcc (= 4:14.2.0-1),
+ gcc-14 (= 14.2.0-19),
+ gcc-14-base (= 14.2.0-19),
+ gcc-14-x86-64-linux-gnu (= 14.2.0-19),
+ gcc-x86-64-linux-gnu (= 4:14.2.0-1),
+ gettext (= 0.23.1-2),
+ gettext-base (= 0.23.1-2),
+ grep (= 3.11-4),
+ groff-base (= 1.23.0-9),
+ gzip (= 1.13-1),
+ hostname (= 3.25),
+ init-system-helpers (= 1.69~deb13u1),
+ intltool-debian (= 0.35.0+20060710.6),
+ libacl1 (= 2.3.2-2+b1),
+ libarchive-zip-perl (= 1.68-1),
+ libasan8 (= 14.2.0-19),
+ libatomic1 (= 14.2.0-19),
+ libattr1 (= 1:2.5.2-3),
+ libaudit-common (= 1:4.0.2-2),
+ libaudit1 (= 1:4.0.2-2+b2),
+ libbinutils (= 2.44-3),
+ libblkid1 (= 2.41-5),
+ libbz2-1.0 (= 1.0.8-6),
+ libc-bin (= 2.41-12+deb13u3),
+ libc-dev-bin (= 2.41-12+deb13u3),
+ libc6 (= 2.41-12+deb13u3),
+ libc6-dev (= 2.41-12+deb13u3),
+ libcap-ng0 (= 0.8.5-4+b1),
+ libcap2 (= 1:2.75-10+deb13u1+b1),
+ libcc1-0 (= 14.2.0-19),
+ libcrypt-dev (= 1:4.4.38-1),
+ libcrypt1 (= 1:4.4.38-1),
+ libctf-nobfd0 (= 2.44-3),
+ libctf0 (= 2.44-3),
+ libdb5.3t64 (= 5.3.28+dfsg2-9),
+ libdebconfclient0 (= 0.280),
+ libdebhelper-perl (= 13.24.2),
+ libdpkg-perl (= 1.22.22),
+ libelf1t64 (= 0.192-4),
+ libffi8 (= 3.4.8-2),
+ libfile-stripnondeterminism-perl (= 1.14.1-2),
+ libgcc-14-dev (= 14.2.0-19),
+ libgcc-s1 (= 14.2.0-19),
+ libgdbm-compat4t64 (= 1.24-2),
+ libgdbm6t64 (= 1.24-2),
+ libgmp10 (= 2:6.3.0+dfsg-3),
+ libgomp1 (= 14.2.0-19),
+ libgprofng0 (= 2.44-3),
+ libhwasan0 (= 14.2.0-19),
+ libisl23 (= 0.27-1),
+ libitm1 (= 14.2.0-19),
+ libjansson4 (= 2.14-2+b3),
+ liblastlog2-2 (= 2.41-5),
+ liblsan0 (= 14.2.0-19),
+ liblua5.4-0 (= 5.4.7-1+b2),
+ liblzma5 (= 5.8.1-1+deb13u1),
+ libmagic-mgc (= 1:5.46-5),
+ libmagic1t64 (= 1:5.46-5),
+ libmd0 (= 1.1.0-2+b1),
+ libmount1 (= 2.41-5),
+ libmpc3 (= 1.3.1-1+b3),
+ libmpfr6 (= 4.2.2-1),
+ libnuma1 (= 2.0.19-1),
+ libpam-modules (= 1.7.0-5),
+ libpam-modules-bin (= 1.7.0-5),
+ libpam-runtime (= 1.7.0-5),
+ libpam0g (= 1.7.0-5),
+ libpcre2-8-0 (= 10.46-1~deb13u1),
+ libperl5.40 (= 5.40.1-6),
+ libpipeline1 (= 1.5.8-1),
+ libquadmath0 (= 14.2.0-19),
+ libreadline8t64 (= 8.2-6),
+ libseccomp2 (= 2.6.0-2),
+ libselinux1 (= 3.8.1-1),
+ libsframe1 (= 2.44-3),
+ libsigsegv2 (= 2.14-1+b2),
+ libsmartcols1 (= 2.41-5),
+ libsqlite3-0 (= 3.46.1-7+deb13u1),
+ libssl3t64 (= 3.5.6-1~deb13u2),
+ libstdc++-14-dev (= 14.2.0-19),
+ libstdc++6 (= 14.2.0-19),
+ libsystemd0 (= 257.13-1~deb13u1),
+ libtinfo6 (= 6.5+20250216-2),
+ libtool (= 2.5.4-4),
+ libtsan2 (= 14.2.0-19),
+ libubsan1 (= 14.2.0-19),
+ libuchardet0 (= 0.0.8-1+b2),
+ libudev1 (= 257.13-1~deb13u1),
+ libunistring5 (= 1.3-2),
+ libuuid1 (= 2.41-5),
+ libxml2 (= 2.12.7+dfsg+really2.9.14-2.1+deb13u3),
+ libyaml-0-2 (= 0.2.5-2),
+ libzstd1 (= 1.5.7+dfsg-1),
+ linux-libc-dev (= 6.18.15-1~mx25ahs),
+ m4 (= 1.4.19-8),
+ make (= 4.4.1-2),
+ man-db (= 2.13.1-1),
+ mawk (= 1.3.4.20250131-1),
+ ncal (= 12.1.8),
+ ncurses-base (= 6.5+20250216-2),
+ ncurses-bin (= 6.5+20250216-2),
+ openssl-provider-legacy (= 3.5.6-1~deb13u2),
+ pandoc (= 3.1.11.1+ds-2),
+ pandoc-data (= 3.1.11.1-3),
+ patch (= 2.8-2),
+ perl (= 5.40.1-6),
+ perl-base (= 5.40.1-6),
+ perl-modules-5.40 (= 5.40.1-6),
+ po-debconf (= 1.0.21+nmu1),
+ readline-common (= 8.2-6),
+ rpcsvc-proto (= 1.4.3-1),
+ sed (= 4.9-2+deb13u1),
+ sensible-utils (= 0.0.25),
+ sysvinit-utils (= 3.14-4),
+ tar (= 1.35+dfsg-3.1),
+ util-linux (= 2.41-5),
+ xz-utils (= 5.8.1-1+deb13u1),
+ zlib1g (= 1:1.3.dfsg+really1.3.1-1+b1)
+Environment:
+ DEB_BUILD_OPTIONS="parallel=16"
+ LANG="de_DE.UTF-8"
+ LC_ALL="en_US.UTF-8"
+ LC_TIME="de_DE.UTF-8"
+ SOURCE_DATE_EPOCH="1787242118"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqHZSMTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6cJiD/4rAnK/2UnZ0F8J9KSwxG0gGfNpbIub
+JfFbEkxqmHWMVB5ZWcvESi4GmZGwVubCHHa+qGiAM0/Xtfd28erglXAYxK7asJkL
+BNzFvAxM6j69RQXOHkoyzUZBFuVI9K5InjdpxYkj2STWQj20IoouZpfz3JN/mI1K
+sVpPGl1l7pJ8snyHDiFD8Vw0MeXt7P0Uhu9n8H12509mj3wFWpmYEllhcmvvXTD5
+y5MA27/uO/0muDV1LdGy3hCOiJ85Jcm7OiGf+QR0Q+ajyRWYa/6ss7EdCxP0B7My
++QKoh8yUnsXHzdrCjKjvU/R6BOQfOfhqfotA8R6G6gKjaHYPqPYt+zh/eS5bjTLS
+Rf85xkxrFgGuYgym35Aq2AUQL3Uqt01XyrgSLNpWdFeJr9IV2Gh2Txvhslz5uHz8
+naHoOX1NIevtDgX/eay7zk6tOtMt3ay6Z8+2TuVu1XnBI3SBKEt1ojnrnKp7ZyMe
+L2pLQ7mcZYncF0Bp2iq6CLW4dzwlR6bJLtI3gG3GDn2bK0ec08HrTCgquNkMe260
+Ax/sNfiberk9X+CHgNQrt3rrD89CynT/ME0OLcMokmZ65Y0rwdbXxfKkOa+qGQmr
+0DVtsDczmMzETCBWsxk810ABOJBSvGabTM4TYzzXAXHjxrLXk24Uo7JzyNm0gF8V
+KmWjFX+8c5/7Cw==
+=n/Vi
+-----END PGP SIGNATURE-----

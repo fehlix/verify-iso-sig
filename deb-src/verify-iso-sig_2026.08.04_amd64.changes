@@ -1,0 +1,60 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Thu, 20 Aug 2026 12:08:38 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.08.04
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.08.04) mx; urgency=medium
+ .
+   * Make GUI verification interruptible (AdrianTM).
+   * Fix progress bar not animating (AdrianTM).
+   * Infer checksum-listing hash algorithm from digest length (AdrianTM).
+   * Recognize more algorithms/tags/digest lengths.
+   * Accept an ISO plus its checksum/signature files as explicit
+     arguments (two or three files), from the command line, a file
+     manager's "Open With" right-click menu, or drag-and-drop.
+   * Manage Trusted Keys offers "Import from File" directly when no
+     keys are saved yet.
+Checksums-Sha1:
+ 432a9b6c55de58a6eab9692eab6da5bf0f003706 1516 verify-iso-sig_2026.08.04.dsc
+ 288e7308080717eeaf1d9295ec022bdf1ccc0d28 528796 verify-iso-sig_2026.08.04.tar.xz
+ 36cbd692b893b588fdcafc18bd907a2ba8a290f9 528180 verify-iso-sig_2026.08.04_all.deb
+ 7a430f33def2f55688c9a6524ec1f071edc1b790 6244 verify-iso-sig_2026.08.04_amd64.buildinfo
+Checksums-Sha256:
+ 146d7b19f20b3d58e8955abab31607818fc4a6dbbaf2e9a7d7216b1f2fc29608 1516 verify-iso-sig_2026.08.04.dsc
+ 3146e97f71231c6499fd98372fc3c09db5070bbe040032cb6d661af9088340e7 528796 verify-iso-sig_2026.08.04.tar.xz
+ 2ca213f8e3160be46bd7ef5a4c695ed6d9c811e2b0f0034bd082bb10869db1e1 528180 verify-iso-sig_2026.08.04_all.deb
+ 67ad103fb538bbba183570088953bd33c6b1c458abe9425dc39144bf2642ce94 6244 verify-iso-sig_2026.08.04_amd64.buildinfo
+Files:
+ 474642149276e106c9c19ecd04824c1f 1516 utils optional verify-iso-sig_2026.08.04.dsc
+ d3ad3e706406ef2b1272319a3481a158 528796 utils optional verify-iso-sig_2026.08.04.tar.xz
+ 2fa5f3ac261669865edf94a84a1a8fd8 528180 utils optional verify-iso-sig_2026.08.04_all.deb
+ 6fd8f86a77a86fdcfa2cb5472373dc52 6244 utils optional verify-iso-sig_2026.08.04_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqHZSQTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6WbYD/9SAiLl7QC9+fZ2gHNqRtix/pBfn/cU
+YDPZfnihtv39RB8soO6gsdqtG1td5FxHtyBW6DbOvzGPHEC09PLpnAbDf0hl9LYH
+0EZ1iU8a9IZOwLr46KRaQevFf8XEopXdOZ+OikPjIkCF7fLp/tCl9NOPNzd08QoG
+L1wsCBQwFpq58TwkdlS8YbOfxsOalHBZD743KpWza71MI8/Ia79Kutii+1aRzABr
+hViBocHn0z0V3TflPVgRcicz37og8lsm2Jd0fx++1KOP1kVj4mM+aSmH+oCD1ubL
+CNt8Ane0IlOLL93oZF8Jc9iIevn8cPT6NQu56bkHbEUvFI2EuXyxTFVqzWKwpW0S
+a5aLKTHtCy1mCsC06rArNLFKYnEAvc74u9LFbl7F3MYyCVLVEpVfyUdunFyBJr8Z
+dxxOK8oONc/SRYi5pqoX8UExui7+Qj15V9TxxsZz27KhJHrr44w5BTOgX/CiOYOt
+ZuOP9/gvkzf4ncJIvyfOppQeToKAWemRDl39BQ7qcS/ubb79q3DeozetdTU3dSdJ
+cSJa2j8DtLzVRJp6zulYu5CxHRyn3FVog0W4qAB3vwD841Qz6JCx92Nb/QBvVK6l
+bt2MdL7yMSFN7gGtBDu1JhayGeGBWgDtKGYbxbM9CaOjXADY/E6FMJF2Aineohzq
+cPcrTZfcTOo6lg==
+=Icqz
+-----END PGP SIGNATURE-----
