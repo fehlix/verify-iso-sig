@@ -1,3 +1,13 @@
+verify-iso-sig (2026.08.05) mx; urgency=medium
+
+  * Make --untrust-key durable against pubring.kbx auto-re-trust.
+  * Rename GUI "Forget Selected" to "Untrust Selected"
+  * Recognize a cleartext-signed per-ISO checksum (e.g. "<iso>.sha512.asc")
+  * Register shared-mime-info types and icons for "*.sha256.asc"/
+    "*.sha512.asc" and for "*.iso.sig", with "Open With" support.
+
+ -- fehlix <fehlix@mxlinux.org>  Thu, 27 Aug 2026 20:43:19 -0400
+
 verify-iso-sig (2026.08.04) mx; urgency=medium
 
   * Make GUI verification interruptible (AdrianTM).

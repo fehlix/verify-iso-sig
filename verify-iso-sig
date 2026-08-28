@@ -312,6 +312,7 @@ percent_decode_uid() {
 
 TRUSTED_GPG="$HOME/.gnupg/trustedkeys.gpg"
 PUBRING_KBX="$HOME/.gnupg/pubring.kbx"
+UNTRUSTED_KEYS_FILE="$HOME/.gnupg/verify-iso-sig-untrusted-keys"
 
 # Sets every global the mode functions below depend on. Called from
 # main() for direct CLI execution; a library caller (LIB_MODE=1) must
@@ -497,6 +498,24 @@ is_clearsigned_file() {
     esac
 }
 
+# True if ISO path $1 has a "<iso>.<suffix>.<sigext>" clearsigned
+# per-ISO checksum next to it (e.g. "<iso>.sha512.asc"). Checked ahead
+# of a direct ISO signature during single-argument auto-discovery. Sets
+# CLEARSIGNED_PLAIN_CHECKSUM to the matched path (strongest hash first).
+find_clearsigned_plain_checksum() {
+    local iso=$1 suffix sigext candidate
+    for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+        for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+            candidate="${iso}.${suffix}.${sigext}"
+            if [ -r "$candidate" ] && is_clearsigned_file "$candidate"; then
+                CLEARSIGNED_PLAIN_CHECKSUM=$candidate
+                return 0
+            fi
+        done
+    done
+    return 1
+}
+
 # True if $1's content is confidently something OTHER than a signature,
 # via "file -b" alone - no gpg parse. False (not obviously excluded)
 # for real ambiguous cases: "data" (a real binary signature also looks
@@ -598,18 +617,12 @@ classify_checksum_signature_pair() {
     return 1
 }
 
-# Classifies a plain per-ISO checksum's own detached signature (e.g.
-# openSUSE's "<iso>.sha256.asc", signing "<iso>.sha256" itself - not the
-# ISO) paired with the ISO it describes. Distinct from
-# classify_checksum_signature_pair() (fixed CHECKSUM_FILES listing names
-# like SHA256SUMS.gpg) and from classify_plain_checksum_pair() (an
-# unsigned plain checksum with no signature of its own). Sets ISO (the
-# non-checksum-signature argument), CHECKSUM_FILE_OVERRIDE (the derived
-# "<iso>.<suffix>" checksum file, not the signature file), CHECKSUM_ALGO_
-# OVERRIDE ("<suffix>sum", required since try_checksum_fallback() only
-# resolves hashcmd from a CHECKSUM_FILES literal name otherwise), and
-# CHECKSUM_SIG_PREVIEW (the matched signature argument). Returns 1 if
-# neither argument matches a "<other-arg-basename>.<suffix>.<sigext>" shape.
+# Classifies a "<iso-basename>.<suffix>.<sigext>" argument paired with
+# the ISO it describes - either a detached signature over a separate
+# "<iso>.<suffix>" sibling (openSUSE), or a clearsigned checksum in its
+# own right (e.g. "<iso>.sha512.asc", no sibling). Sets ISO, CHECKSUM_
+# FILE_OVERRIDE, CHECKSUM_ALGO_OVERRIDE, and CHECKSUM_SIG_PREVIEW (empty
+# for the clearsigned case). Returns 1 if no argument matches this shape.
 classify_plain_checksum_signature_pair() {
     local a=$1 b=$2 suffix sigext a_base b_base match=""
     a_base=$(basename "$a")
@@ -625,10 +638,15 @@ classify_plain_checksum_signature_pair() {
             else
                 continue
             fi
-            CHECKSUM_FILE_OVERRIDE="$(dirname "$match")/$(basename "$ISO").${suffix}"
             CHECKSUM_ALGO_OVERRIDE="${suffix}sum"
-            CHECKSUM_SIG_PREVIEW=$match
             SIG=""
+            if is_clearsigned_file "$match"; then
+                CHECKSUM_FILE_OVERRIDE=$match
+                CHECKSUM_SIG_PREVIEW=""
+            else
+                CHECKSUM_FILE_OVERRIDE="$(dirname "$match")/$(basename "$ISO").${suffix}"
+                CHECKSUM_SIG_PREVIEW=$match
+            fi
             return 0
         done
     done
@@ -1186,6 +1204,13 @@ else
         [ -d "$SIG" ] && die "$(eval_gettext "'\${SIG}' is a directory, not a file - point this at the actual signature file directly.")"
     else
         ISO=$1
+        # Default - overwritten below by whichever branch finds a real
+        # direct signature file. Every clearsigned/checksum-listing shape
+        # has no direct signature at all, but keeps this placeholder path
+        # too (never actually read on that path) so a "cannot read
+        # signature file" error still names something if --no-checksum-
+        # fallback ever forces that path to be checked anyway.
+        SIG="${ISO}.sig"
         [ -d "$ISO" ] && die "$(eval_gettext "'\${ISO}' is a directory, not a file - point this at the actual .iso file (or its .sig/.asc/.gpg/.sign signature file) directly.")"
         if is_clearsigned_file "$ISO"; then
             # A full clearsigned message (e.g. an inline-signed checksum
@@ -1209,6 +1234,8 @@ else
                 *.gpg)  ISO=${SIG%.gpg}  ;;
                 *.sign) ISO=${SIG%.sign} ;;
             esac
+        elif find_clearsigned_plain_checksum "$ISO"; then
+            CHECKSUM_FILE_OVERRIDE=$CLEARSIGNED_PLAIN_CHECKSUM
         elif [ -r "${ISO}.sig" ]; then
             # A same-named ".sig" can itself be a full clearsigned
             # checksum listing rather than the ISO's own signature.
@@ -1606,23 +1633,27 @@ list_keyservers() {
     return 0
 }
 
-# --untrust-key=<fpr>: removes that fingerprint from $TRUSTED_GPG.
+# --untrust-key=<fpr>: removes it from $TRUSTED_GPG if present, and
+# always records it in $UNTRUSTED_KEYS_FILE, blocking every recognition
+# path (KNOWN_KEYS, $TRUSTED_GPG, pubring.kbx trust). Doesn't die if the
+# key wasn't cached yet.
 untrust_key() {
     setup_gnupg_homedir
     trap cleanup RETURN
     FPR=$UNTRUST_KEY
-    [ -f "$TRUSTED_GPG" ] && [ "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" != missing ] \
-        || die "$(eval_gettext "'\${UNTRUST_KEY}' is not in \${TRUSTED_GPG}")" || return 1
-    debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY"
-    if out=$(gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY" 2>&1); then
-        rm -f "${TRUSTED_GPG}~"
-        log "$(eval_gettext "removed \${UNTRUST_KEY} from \${TRUSTED_GPG}")"
-    else
-        rm -f "${TRUSTED_GPG}~"
-        # `|| return 1`: under `set -e`, a failing die() (LIB_MODE=1) would
-        # otherwise abort the whole process instead of unwinding via return.
-        die "$(eval_gettext "could not remove '\${UNTRUST_KEY}' from \${TRUSTED_GPG}: \${out}")" || return 1
+    if [ -f "$TRUSTED_GPG" ] && [ "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" != missing ]; then
+        debug_cmd gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY"
+        if out=$(gpg --batch --no-default-keyring --keyring "gnupg-ring:${TRUSTED_GPG}" --delete-key --yes "$UNTRUST_KEY" 2>&1); then
+            rm -f "${TRUSTED_GPG}~"
+            log "$(eval_gettext "removed \${UNTRUST_KEY} from \${TRUSTED_GPG}")"
+        else
+            rm -f "${TRUSTED_GPG}~"
+            # `|| return 1`: under `set -e`, a failing die() (LIB_MODE=1) would
+            # otherwise abort the whole process instead of unwinding via return.
+            die "$(eval_gettext "could not remove '\${UNTRUST_KEY}' from \${TRUSTED_GPG}: \${out}")" || return 1
+        fi
     fi
+    add_untrusted_override "$UNTRUST_KEY"
     return 0
 }
 
@@ -1713,6 +1744,32 @@ pubring_key_explicitly_trusted() {
     esac
 }
 
+# True if $FPR is on the user's own "never auto-trust this again" list.
+key_explicitly_untrusted() {
+    [ -f "$UNTRUSTED_KEYS_FILE" ] || return 1
+    grep -qxF "$FPR" "$UNTRUSTED_KEYS_FILE" 2>/dev/null
+}
+
+# Records $1 (idempotent).
+add_untrusted_override() {
+    local fpr=$1
+    mkdir -p "$(dirname "$UNTRUSTED_KEYS_FILE")"
+    grep -qxF "$fpr" "$UNTRUSTED_KEYS_FILE" 2>/dev/null && return 0
+    printf '%s\n' "$fpr" >> "$UNTRUSTED_KEYS_FILE"
+    chmod 600 "$UNTRUSTED_KEYS_FILE"
+}
+
+# Clears $1 from the override list, if present.
+remove_untrusted_override() {
+    local fpr=$1 tmp
+    [ -f "$UNTRUSTED_KEYS_FILE" ] || return 0
+    grep -qxF "$fpr" "$UNTRUSTED_KEYS_FILE" 2>/dev/null || return 0
+    tmp=$(mktemp "$SESSION_TMPDIR/untrusted-keys.XXXXXXXXXX")
+    grep -vxF "$fpr" "$UNTRUSTED_KEYS_FILE" > "$tmp" 2>/dev/null || true
+    mv "$tmp" "$UNTRUSTED_KEYS_FILE"
+    log "$(eval_gettext "\${fpr} removed from the explicitly-untrusted list - it can be auto-recognized again")"
+}
+
 # Exports $FPR out of keyring $1 (prefix $2, see key_status) into a fresh
 # legacy-format keyring gpgv can read, pointing VERIFY_RING at it. Returns
 # non-zero, leaving VERIFY_RING untouched, if the export/import fails, so
@@ -1784,6 +1841,7 @@ keep_in_trusted_gpg() {
     # $TRUSTED_GPG is persistent, not a throwaway temp file - clean up
     # gpg's own "~" backup of it here.
     rm -f "${TRUSTED_GPG}~"
+    [ "$rc" -eq 0 ] && remove_untrusted_override "$FPR"
     return "$rc"
 }
 
@@ -2259,6 +2317,17 @@ try_checksum_fallback() {
         for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
             candidates+=("$dir/${base}.${suffix}|${suffix}sum")
         done
+        # Clearsigned per-ISO checksum, e.g. "<iso>.sha512.asc" - only
+        # added when actually clearsigned, so the detached case above
+        # (its "<iso>.<suffix>" sibling) isn't double-added.
+        for suffix in "${PLAIN_CHECKSUM_SUFFIXES[@]}"; do
+            for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
+                if [ -r "$dir/${base}.${suffix}.${sigext}" ] \
+                   && is_clearsigned_file "$dir/${base}.${suffix}.${sigext}"; then
+                    candidates+=("$dir/${base}.${suffix}.${sigext}|${suffix}sum")
+                fi
+            done
+        done
     fi
 
     # Index-based, not "for entry in ${candidates[@]}" - a "for...in"
@@ -2290,6 +2359,21 @@ try_checksum_fallback() {
             rm -f "$peek_file"
 
             tried_names+=("$(basename "$name")")
+
+            # --is-cached: skip the real verify/child-re-exec below, just
+            # report the signing key's cache status (same shortcut the
+            # detached-checksum-listing branch further down already has).
+            if [ "$IS_CACHED" -eq 1 ]; then
+                debug_cmd gpgv --status-fd 3 "$name"
+                run_gpgv_status "$name"
+                FPR=$(status_field ERRSIG 9)
+                [ -n "$FPR" ] || FPR=$(printf '%s' "$GPGV_OUTPUT" | grep -m1 -oE '[[:xdigit:]]{40}' || true)
+                [ -n "$FPR" ] || return 1
+                key_material_usable "$(key_status "$TRUSTED_GPG" "gnupg-ring:")" && return 0
+                key_material_usable "$(key_status "$PUBRING_KBX" "")" && return 0
+                return 1
+            fi
+
             plain_file=$(mktemp "$SESSION_TMPDIR/checksum-plain.XXXXXXXXXX")
 
             CHILD_ARGS=(--verify-as-clearsigned-checksum-file --no-checksum-fallback "--extract-plaintext-to=$plain_file")
@@ -2677,10 +2761,9 @@ verify_iso() {
     # fetching or trusting the key material itself. Recognition accepts
     # "expired" here too, same as key_material_usable()'s other call
     # sites: trustedkeys.gpg membership is the durable trust signal
-    # (matching KNOWN_KEYS, which never re-checks expiry at all) -
-    # untrusting a key is what --untrust-key is for, not letting its
-    # self-declared validity window lapse. "revoked" still never
-    # qualifies, forcing the normal unrecognized-key consent flow again.
+    # (matching KNOWN_KEYS, which never re-checks expiry at all).
+    # "revoked" still never qualifies, forcing the normal
+    # unrecognized-key consent flow again.
     tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
     # Try a renewal BEFORE using this status - otherwise recognition
     # below warns about an expiry that's about to be silently fixed
@@ -2690,13 +2773,14 @@ verify_iso() {
         tg_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
     fi
     pk_status=$(key_status "$PUBRING_KBX" "")
-    if label=$(known_key_label "$FPR"); then
+    if ! key_explicitly_untrusted && label=$(known_key_label "$FPR"); then
         log "$(eval_gettext "recognized signing key: \${label}")"
-    elif key_material_usable "$tg_status"; then
+    elif ! key_explicitly_untrusted && key_material_usable "$tg_status"; then
         RECOGNIZED_VIA_TRUSTED_GPG=1
         log "$(eval_gettext "recognized: key already cached and trusted in \${TRUSTED_GPG}")"
         [ "$tg_status" = expired ] && warn_key_expired "$TRUSTED_GPG" "gnupg-ring:"
-    elif key_material_usable "$pk_status" && pubring_key_explicitly_trusted; then
+    elif key_material_usable "$pk_status" && pubring_key_explicitly_trusted \
+         && ! key_explicitly_untrusted; then
         log "$(eval_gettext "recognized: key already present in \${PUBRING_KBX} and explicitly marked trusted there")"
         [ "$pk_status" = expired ] && warn_key_expired "$PUBRING_KBX" ""
         # The trust decision was already made by the user - just moving it
@@ -2717,7 +2801,12 @@ verify_iso() {
         # from its displayed technical body once the key is trusted -
         # matching the tags, not the (localized) info() text itself.
         status_out "UNRECOGNIZED_KEY_WARNINGS_BEGIN"
-        info "$(eval_gettext "\${FPR} is not one of this tool's built-in recognized keys - verify its fingerprint independently before trusting it (e.g. against the distro's own official website or keyserver listing)")"
+        if key_explicitly_untrusted; then
+            info "$(eval_gettext "\${FPR} has been explicitly untrusted - you've told this tool not to auto-trust it anymore, whatever the reason it would otherwise be recognized. Pass \${FLAG_TRUST_KEY} again if you've changed your mind")"
+            status_out "EXPLICITLY_UNTRUSTED"
+        else
+            info "$(eval_gettext "\${FPR} is not one of this tool's built-in recognized keys - verify its fingerprint independently before trusting it (e.g. against the distro's own official website or keyserver listing)")"
+        fi
         # 0/1, not just a bare tag - the GUI needs to tell which of the two
         # differently-worded branches fired (direct ISO signature vs. some
         # kind of checksum-listing signature, detached or inline-signed).
@@ -2743,7 +2832,7 @@ if [ "$KEEP_KEY" -eq 1 ] && [ -n "$FROM_RING_OVERRIDE" ] && [ -r "$FROM_RING_OVE
     keepkey_status=$(key_status "$TRUSTED_GPG" "gnupg-ring:")
     if key_material_usable "$keepkey_status"; then
         [ "$keepkey_status" = expired ] && warn_key_expired "$TRUSTED_GPG" "gnupg-ring:"
-        log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} (reused the copy fetched during verification - no extra keyserver lookup needed)")"
+        log "$(eval_gettext "kept \${FPR} in \${TRUSTED_GPG} - already fetched during verification, no second fetch needed")"
         status_out "KEPT_IN_TRUSTED_GPG"
         return 0
     fi

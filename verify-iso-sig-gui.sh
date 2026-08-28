@@ -24,7 +24,7 @@
 # unused. Real dead variables are still worth checking for by hand.
 # yad GUI for verify-iso-sig - two modes in one process: the picker
 # (pick an ISO/signature file and check it - the default) and the
-# trusted-keys manager (--manage-keys - list/forget/export/import keys
+# trusted-keys manager (--manage-keys - list/untrust/export/import keys
 # saved in ~/.gnupg/trustedkeys.gpg, also reachable from the picker's
 # own "Manage Trusted Keys" button). Both modes share the yad/gettext/
 # pango helpers below; GUI_MODE picks which top-level flow runs.
@@ -35,10 +35,6 @@ set -euo pipefail
 
 # Same literal value as verify-iso-sig, kept in sync by hand.
 VERSION="2026.08.01"
-
-# Literal, never-translated command reference used inside one
-# translatable message in manager mode below.
-CMD_LIST_KNOWN_KEYS="verify-iso-sig --list-known-keys"
 
 # readlink -f, not a plain dirname, so this works even when this file
 # itself is a symlink.
@@ -430,15 +426,15 @@ format_fingerprint() {
 
 # The picker's own "Manage Trusted Keys" button calls this in-process -
 # both modes share the same already-sourced, already-LIB_MODE=1 process.
-# TITLE/BTN_FORGET_SELECTED/BTN_IMPORT_SELECTED/YAD_ERROR_WIDTH are
+# TITLE/BTN_UNTRUST_SELECTED/BTN_IMPORT_SELECTED/YAD_ERROR_WIDTH are
 # `local` so a picker-triggered call shadows the picker's own globals
 # only for this call's duration. Every failure `return`s rather than
 # `exit`s, so a picker-triggered call can't kill the whole GUI process -
 # the bottom dispatch converts a direct-entry call's return into a real exit.
 run_manage_mode() {
-    local TITLE BTN_FORGET_SELECTED BTN_IMPORT_SELECTED YAD_ERROR_WIDTH
+    local TITLE BTN_UNTRUST_SELECTED BTN_IMPORT_SELECTED YAD_ERROR_WIDTH
     TITLE=$(safe_eval_gettext "Manage Trusted Keys")
-    BTN_FORGET_SELECTED=$(safe_eval_gettext "Forget Selected")
+    BTN_UNTRUST_SELECTED=$(safe_eval_gettext "Untrust Selected")
     BTN_IMPORT_SELECTED=$(safe_eval_gettext "Import Selected")
     YAD_ERROR_WIDTH="480"
 
@@ -465,7 +461,7 @@ run_manage_mode() {
                 --width=480
                 --text="$EMPTY_LIST_LINE1\n\n$EMPTY_LIST_LINE2"
                 # Same button code (3) as "Import from File" below, so it
-                # falls into that same handling further down - Forget/
+                # falls into that same handling further down - Untrust/
                 # Export make no sense with nothing saved yet, so neither
                 # is offered here.
                 --button="$(safe_eval_gettext "Import from File"):3"
@@ -510,11 +506,11 @@ run_manage_mode() {
                 --hide-column=2
                 --print-column=2
                 --separator=$'\n'
-                # TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
-                --text="<span size='large'><b>$TITLE</b></span>\n$(safe_eval_gettext "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then click \"\${BTN_FORGET_SELECTED}\"." BTN_FORGET_SELECTED)"
-                --button="$BTN_FORGET_SELECTED:0"
+                # TRANSLATORS: ${BTN_UNTRUST_SELECTED} is the translated button label - keep the placeholder as-is.
+                --text="<span size='large'><b>$TITLE</b></span>\n$(safe_eval_gettext "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to untrust, then click \"\${BTN_UNTRUST_SELECTED}\"." BTN_UNTRUST_SELECTED)"
+                --button="$BTN_UNTRUST_SELECTED:0"
                 # Even/odd per yad's own EXIT STATUS rule: Export Selected needs
-                # the checked rows (even, like Forget Selected); Import from
+                # the checked rows (even, like Untrust Selected); Import from
                 # File doesn't (odd).
                 --button="$(safe_eval_gettext "Export Selected"):2"
                 --button="$(safe_eval_gettext "Import from File"):3"
@@ -558,7 +554,7 @@ run_manage_mode() {
         fi
         set -e
 
-        # 0 = Forget Selected, handled straight after this case. 2/3 are
+        # 0 = Untrust Selected, handled straight after this case. 2/3 are
         # handled inline here, then loop back. Anything else (1 = Close,
         # Escape) returns to the caller.
         case "$LIST_RC" in
@@ -734,7 +730,7 @@ run_manage_mode() {
             *) return 0 ;;
         esac
 
-        [ -n "$SELECTED" ] || { yad_error "$(safe_eval_gettext "No key was checked - nothing to forget.")"; continue; }
+        [ -n "$SELECTED" ] || { yad_error "$(safe_eval_gettext "No key was checked - nothing to untrust.")"; continue; }
 
         # Same defensive parsing as the export/import paths - reused for
         # both the confirmation listing and the removal loop below.
@@ -745,12 +741,12 @@ run_manage_mode() {
         done <<< "$SELECTED"
         COUNT=${#SELECTED_FPRS[@]}
 
-        # Spells out exactly which keys are about to be forgotten (Key ID -
+        # Spells out exactly which keys are about to be untrusted (Key ID -
         # User ID) rather than just a bare count.
-        FORGET_LIST=""
+        UNTRUST_LIST=""
         for fpr in "${SELECTED_FPRS[@]}"; do
             uid=$(printf '%s\n' "$LISTING" | awk -F'|' -v f="$fpr" '$1 == f { print $3; exit }')
-            FORGET_LIST="$FORGET_LIST${fpr: -16}  $(pango_escape "$uid")
+            UNTRUST_LIST="$UNTRUST_LIST${fpr: -16}  $(pango_escape "$uid")
 "
         done
 
@@ -775,12 +771,12 @@ run_manage_mode() {
             --window-icon="$ICON_FILE"
             --width=720
             --height="$CONFIRM_HEIGHT"
-            # TRANSLATORS: ${COUNT}/${CMD_LIST_KNOWN_KEYS} are literal - keep placeholders as-is.
-            --text="<b>$(safe_eval_gettext "Forget \${COUNT} selected key(s) from trustedkeys.gpg?" COUNT)</b>\n\n$(safe_eval_gettext "If any of them is also one of this tool's built-in recognized keys (run '\${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized automatically next time - this only removes the local cache entry, not that recognition." CMD_LIST_KNOWN_KEYS)"
-            --button="$(safe_eval_gettext "Forget"):0"
+            # TRANSLATORS: ${COUNT} is literal - keep the placeholder as-is.
+            --text="<b>$(safe_eval_gettext "Untrust \${COUNT} selected key(s)?" COUNT)</b>\n\n$(safe_eval_gettext "This tool will stop automatically trusting the selected key(s) - whether they're one of its built-in recognized keys, or separately marked trusted in your own GnuPG keyring. This isn't permanent - trust a key again anytime (verify something signed by it and accept it, or import the key again) and it'll be trusted normally from then on.")"
+            --button="$(safe_eval_gettext "Untrust"):0"
             --button="$(safe_eval_gettext "Cancel"):1"
         )
-        if ! printf '%s' "$FORGET_LIST" | yad "${CONFIRM_ARGS[@]}"; then
+        if ! printf '%s' "$UNTRUST_LIST" | yad "${CONFIRM_ARGS[@]}"; then
             continue
         fi
 
@@ -1758,14 +1754,19 @@ run_picker_mode() {
                     ;;
                 *)
                     ISO=$FILE_PICKED
-                    CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
-                    # $CANDIDATE_SIG can itself be clearsigned - use it as that instead.
-                    if [ -r "$CANDIDATE_SIG" ] && is_clearsigned_file "$CANDIDATE_SIG"; then
-                        PINNED_CHECKSUM_FILE=$CANDIDATE_SIG
+                    if find_clearsigned_plain_checksum "$ISO"; then
+                        PINNED_CHECKSUM_FILE=$CLEARSIGNED_PLAIN_CHECKSUM
                         SIG=""
                     else
-                        SIG=$CANDIDATE_SIG
-                        { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } || PINNED_NO_DIRECT_SIG=1
+                        CANDIDATE_SIG=$(sig_for_iso "$FILE_PICKED")
+                        # $CANDIDATE_SIG can itself be clearsigned - use it as that instead.
+                        if [ -r "$CANDIDATE_SIG" ] && is_clearsigned_file "$CANDIDATE_SIG"; then
+                            PINNED_CHECKSUM_FILE=$CANDIDATE_SIG
+                            SIG=""
+                        else
+                            SIG=$CANDIDATE_SIG
+                            { [ -f "$CANDIDATE_SIG" ] && [ -r "$CANDIDATE_SIG" ]; } || PINNED_NO_DIRECT_SIG=1
+                        fi
                     fi
                     ;;
             esac
@@ -1825,9 +1826,15 @@ run_picker_mode() {
         if [ -n "$PINNED_CHECKSUM_FILE" ]; then
             LABEL_CHECKSUM_FILE=$(safe_eval_gettext "SHA:")
             CHECKSUM_FILE_BASE=$(basename "$PINNED_CHECKSUM_FILE")
-            CONFIRM_VERIFY_TEXT="$(safe_eval_gettext "About to verify:")\n<b>$LABEL_ISO</b> $(pango_escape "$ISO_BASE")\n<b>$LABEL_CHECKSUM_FILE</b> $(pango_escape "$CHECKSUM_FILE_BASE")"
-            [ $(( ${#LABEL_CHECKSUM_FILE} + ${#CHECKSUM_FILE_BASE} )) -gt "$CONFIRM_LONGEST_LINE" ] \
-                && CONFIRM_LONGEST_LINE=$(( ${#LABEL_CHECKSUM_FILE} + ${#CHECKSUM_FILE_BASE} ))
+            # Empty CONFIRM_CHECKSUM_SIG means signed inline - show the same
+            # "(algo+sig)" the result screen shows, when the algo is known.
+            CHECKSUM_FILE_DISPLAY=$CHECKSUM_FILE_BASE
+            if [ -z "$CONFIRM_CHECKSUM_SIG" ] && [ -n "$PINNED_CHECKSUM_ALGO" ]; then
+                CHECKSUM_FILE_DISPLAY="$CHECKSUM_FILE_BASE (${PINNED_CHECKSUM_ALGO%sum}+sig)"
+            fi
+            CONFIRM_VERIFY_TEXT="$(safe_eval_gettext "About to verify:")\n<b>$LABEL_ISO</b> $(pango_escape "$ISO_BASE")\n<b>$LABEL_CHECKSUM_FILE</b> $(pango_escape "$CHECKSUM_FILE_DISPLAY")"
+            [ $(( ${#LABEL_CHECKSUM_FILE} + ${#CHECKSUM_FILE_DISPLAY} )) -gt "$CONFIRM_LONGEST_LINE" ] \
+                && CONFIRM_LONGEST_LINE=$(( ${#LABEL_CHECKSUM_FILE} + ${#CHECKSUM_FILE_DISPLAY} ))
             if [ -n "$CONFIRM_CHECKSUM_SIG" ]; then
                 LABEL_CHECKSUM_SIG=$(safe_eval_gettext "SIG:")
                 CHECKSUM_SIG_BASE=$(basename "$CONFIRM_CHECKSUM_SIG")
@@ -1978,13 +1985,20 @@ run_picker_mode() {
         FPR_PRETTY=$(format_fingerprint "$FPR")
         # TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
         TRUST_CONFIRM_SENTENCE=$(safe_eval_gettext "By clicking \"\${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID or fingerprint yourself and want to trust and remember this key for future checks." BTN_TRUST_THIS_KEY)
+        if gui_status_has "$OUTPUT" EXPLICITLY_UNTRUSTED; then
+            ISO_UNRECOGNIZED_HEADING=$(safe_eval_gettext "You've told this tool not to automatically trust this signing key anymore.")
+            CHECKSUM_UNRECOGNIZED_HEADING=$(safe_eval_gettext "You've told this tool not to automatically trust this checksum-listing signing key anymore.")
+        else
+            ISO_UNRECOGNIZED_HEADING=$(safe_eval_gettext "This ISO's signing key isn't one this tool already recognizes.")
+            CHECKSUM_UNRECOGNIZED_HEADING=$(safe_eval_gettext "This checksum-listing file's signing key isn't one this tool already recognizes.")
+        fi
         # UNRECOGNIZED_KEY's own value is $VERIFY_AS_CHECKSUM_FILE (0/1)
         # from the CLI - "0" means direct-ISO-signature wording, else checksum-listing.
         if [ "$(gui_status_field "$OUTPUT" UNRECOGNIZED_KEY)" = "0" ]; then
             # TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
             # as bold text, not literal characters).
             SIGCHECK_LINE=$(safe_eval_gettext "Signature check: <b>GOOD</b> - the ISO exactly matches this key.")
-            NOTE_SELF_DECLARED=$(safe_eval_gettext "Note: that identity is self-declared by whoever created the key - it is NOT independently verified, unlike the Key ID or fingerprint. Only trust this key if you've confirmed the Key ID or fingerprint yourself (e.g. from the respin/distro's own official site, or its keyserver listing).")
+            NOTE_SELF_DECLARED=$(safe_eval_gettext "Note: that identity is just self-declared text - whoever made the key could have typed anything there. The Key ID and fingerprint are different: they can't be faked, so they're what you can actually check against an independent source. Only trust this key if you've confirmed the Key ID or fingerprint yourself (e.g. from the respin/distro's own official site, or its keyserver listing).")
             TRUST_LABEL_ISO=$(safe_eval_gettext "ISO:")
             TRUST_LABEL_SIG=$(safe_eval_gettext "SIG:")
             DISPLAY_SIG_BASE=$(basename "$DISPLAY_SIG")
@@ -1992,12 +2006,12 @@ run_picker_mode() {
             TRUST_LONGEST_LINE=$(( ${#TRUST_LABEL_ISO} + ${#DISPLAY_ISO} ))
             [ $(( ${#TRUST_LABEL_SIG} + ${#DISPLAY_SIG_BASE} )) -gt "$TRUST_LONGEST_LINE" ] \
                 && TRUST_LONGEST_LINE=$(( ${#TRUST_LABEL_SIG} + ${#DISPLAY_SIG_BASE} ))
-            TRUST_TEXT="$(safe_eval_gettext "This ISO's signing key isn't one this tool already recognizes.")\n\n$TRUST_FILE_LINE\n\n$(safe_eval_gettext "Key ID:") <b>$KEY_ID</b>\n$(safe_eval_gettext "Claimed identity:") <b>$CLAIMED_ID_SAFE</b>\n$(safe_eval_gettext "Fingerprint:") <b>$FPR_PRETTY</b>\n$SIGCHECK_LINE\n\n$NOTE_SELF_DECLARED\n\n$TRUST_CONFIRM_SENTENCE"
+            TRUST_TEXT="$ISO_UNRECOGNIZED_HEADING\n\n$TRUST_FILE_LINE\n\n$(safe_eval_gettext "Key ID:") <b>$KEY_ID</b>\n$(safe_eval_gettext "Claimed identity:") <b>$CLAIMED_ID_SAFE</b>\n$(safe_eval_gettext "Fingerprint:") <b>$FPR_PRETTY</b>\n$SIGCHECK_LINE\n\n$NOTE_SELF_DECLARED\n\n$TRUST_CONFIRM_SENTENCE"
         else
             # TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
             # as bold text, not literal characters).
             SIGCHECK_LINE=$(safe_eval_gettext "Signature check: <b>GOOD</b> - the checksum listing exactly matches this key (the ISO's own hash is checked separately, next).")
-            NOTE_SELF_DECLARED=$(safe_eval_gettext "Note: that identity is self-declared by whoever created the key - it is NOT independently verified, unlike the Key ID or fingerprint. Only trust this key if you've confirmed it yourself (e.g. from the distro's own official website or keyserver listing).")
+            NOTE_SELF_DECLARED=$(safe_eval_gettext "Note: that identity is just self-declared text - whoever made the key could have typed anything there. The Key ID and fingerprint are different: they can't be faked, so they're what you can actually check against an independent source. Only trust this key if you've confirmed it yourself (e.g. from the distro's own official website or keyserver listing).")
             TRUST_LABEL_ISO=$(safe_eval_gettext "ISO:")
             TRUST_LABEL_SHA=$(safe_eval_gettext "SHA:")
             # ISO/SHA/SIG order matches the confirm and final result dialogs.
@@ -2014,7 +2028,7 @@ run_picker_mode() {
                 [ $(( ${#TRUST_LABEL_SIG} + ${#CHECKSUM_SIG_INFO} )) -gt "$TRUST_LONGEST_LINE" ] \
                     && TRUST_LONGEST_LINE=$(( ${#TRUST_LABEL_SIG} + ${#CHECKSUM_SIG_INFO} ))
             fi
-            TRUST_TEXT="$(safe_eval_gettext "This checksum-listing file's signing key isn't one this tool already recognizes.")\n\n$TRUST_FILE_LINE\n\n$(safe_eval_gettext "Key ID:") <b>$KEY_ID</b>\n$(safe_eval_gettext "Claimed identity:") <b>$CLAIMED_ID_SAFE</b>\n$(safe_eval_gettext "Fingerprint:") <b>$FPR_PRETTY</b>\n$SIGCHECK_LINE\n\n$NOTE_SELF_DECLARED\n\n$TRUST_CONFIRM_SENTENCE"
+            TRUST_TEXT="$CHECKSUM_UNRECOGNIZED_HEADING\n\n$TRUST_FILE_LINE\n\n$(safe_eval_gettext "Key ID:") <b>$KEY_ID</b>\n$(safe_eval_gettext "Claimed identity:") <b>$CLAIMED_ID_SAFE</b>\n$(safe_eval_gettext "Fingerprint:") <b>$FPR_PRETTY</b>\n$SIGCHECK_LINE\n\n$NOTE_SELF_DECLARED\n\n$TRUST_CONFIRM_SENTENCE"
         fi
         # Same width formula/clamp as CONFIRM_WIDTH (see its own comment) -
         # a floor of 520 keeps this dialog's existing compact look for a
@@ -2103,12 +2117,14 @@ $KEEPKEY_OUTPUT"
         NOTHING_TO_VERIFY_CASE=CHECKSUM_LISTING_FOUND_UNSIGNED
     fi
 
-    if gui_status_has "$OUTPUT" KEPT_IN_TRUSTED_GPG; then
-        KEY_SOURCE=$(safe_eval_gettext "key saved locally - future checks won't need the network")
+    if gui_status_has "$OUTPUT" FETCHING && gui_status_has "$OUTPUT" KEPT_IN_TRUSTED_GPG; then
+        KEY_SOURCE=$(safe_eval_gettext "key fetched and saved locally - future checks won't need the network")
     elif gui_status_has "$OUTPUT" ALREADY_IN_TRUSTED_GPG; then
         KEY_SOURCE=$(safe_eval_gettext "used an already-cached key, no network needed")
     elif gui_status_has "$OUTPUT" ALREADY_IN_PUBRING; then
         KEY_SOURCE=$(safe_eval_gettext "used a key from your personal keyring (pubring.kbx)")
+    elif gui_status_has "$OUTPUT" KEPT_IN_TRUSTED_GPG; then
+        KEY_SOURCE=$(safe_eval_gettext "key saved locally for faster future checks")
     elif gui_status_has "$OUTPUT" FETCHING; then
         KEY_SOURCE=$(safe_eval_gettext "fetched the signing key from a keyserver")
     else

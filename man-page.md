@@ -55,11 +55,13 @@ actually available. The rest of this manual describes the command-line
 tool's own behavior; the picker GUI covers the same ground
 interactively. See also **--manage-keys**.
 
-Three signing conventions are supported automatically:
+Four signing conventions are supported automatically:
 
 - **Direct signature**: the ISO itself is signed, with a companion
-  *iso-file*`.sig`/`.asc`/`.gpg` (or `.sign`) file. This is checked
-  first. When both *iso-file* and *sig-file* are given, either order
+  *iso-file*`.sig`/`.asc`/`.gpg` (or `.sign`) file. When only *iso-file*
+  is given, this is checked after the inline-signed per-ISO checksum
+  below (see that entry for why); when both *iso-file* and *sig-file*
+  are given, either order
   works as long as exactly one of the two looks like a signature file -
   by extension, or by content when the extension is unusual and
   doesn't give it away. If both look like one, the first argument is
@@ -124,6 +126,20 @@ Three signing conventions are supported automatically:
   exactly like the checksum-listing convention above, including
   two-argument pinning and the "pointed straight at the listing"
   redirect just described.
+- **Inline-signed per-ISO checksum**: a plain per-ISO checksum (see
+  above) can also be a cleartext-signed message in its own right,
+  instead of a plain digest plus a separate detached signature file
+  (e.g. `<iso-file>.sha512.asc` containing a
+  `-----BEGIN PGP SIGNED MESSAGE-----` block, with no plain
+  `<iso-file>.sha512` file at all) - recognized and verified the same
+  way as an inline-signed checksum listing, with no separate
+  `.sig`/`.asc`/`.gpg`/`.sign` file needed. When only *iso-file* is
+  given (no explicit *sig-file*), this is checked *before* a direct
+  signature - a distro that publishes both while transitioning to this
+  newer, self-contained convention has the newer one win. Passing the
+  `.sig`/`.asc`/`.gpg`/`.sign` file explicitly as *sig-file* still
+  always uses exactly that file, regardless of what else exists next
+  to the ISO.
 
 # RECOGNITION RULES
 
@@ -281,12 +297,14 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     verifies, also saves the key into `~/.gnupg/trustedkeys.gpg` so
     future runs recognize it automatically - use this for a signing
     key you've checked and decided to trust (e.g. a respin/variant not
-    on the MX/antiX wiki page).
+    on the MX/antiX wiki page). Also clears a prior **--untrust-key**
+    decision for that key, if there was one.
 
 **--no-checksum-fallback**
-:   Disable the checksum-listing convention entirely - restores the
-    plain "cannot read signature file" error when no direct signature
-    exists.
+:   Disable every checksum-based convention entirely (shared listing,
+    per-ISO checksum, or per-ISO clearsigned checksum alike) - restores
+    the plain "cannot read signature file" error when no direct
+    signature exists.
 
 **--checksum-file**=*path*, **--checksum-file** *path*
 :   Force a specific checksum-listing file instead of auto-detecting
@@ -372,9 +390,18 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
 :   A separate mode: removes exactly that fingerprint from
     `~/.gnupg/trustedkeys.gpg` (the reverse of
     **--keep**/**--trust-key**/**--keep-key**) - use this to undo a
-    trust decision made by mistake. Dies with a clear error if
-    `trustedkeys.gpg` doesn't exist or doesn't contain that
-    fingerprint.
+    trust decision made by mistake. Also durably records this
+    fingerprint in `~/.gnupg/verify-iso-sig-untrusted-keys` (see
+    **FILES**) as one that should never be auto-trusted again,
+    overriding every
+    recognition path this tool has - a built-in recognized key, a key
+    separately marked trusted in your own `~/.gnupg` keyring (Seahorse,
+    or `gpg --edit-key ... trust`), or anything already cached - all
+    the same. Without this, any of those would just get silently
+    re-added the next time it's seen. **--trust-key** clears this
+    override again for that key. Never dies just because the
+    fingerprint isn't currently cached in
+    `trustedkeys.gpg` - untrusting ahead of time works too.
 
 **--export-trusted-keys**=*path*, **--export-trusted-keys** *path* \[*fingerprint...*\]
 :   A separate mode: exports key(s) from `~/.gnupg/trustedkeys.gpg` to
@@ -435,6 +462,11 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
 :   This tool's own keyring of keys explicitly trusted via
     **--keep**/**--trust-key**/**--keep-key**, or copied in
     automatically from an explicit pubring.kbx trust decision.
+
+`~/.gnupg/verify-iso-sig-untrusted-keys`
+:   Fingerprints **--untrust-key** has durably overridden (one per
+    line), regardless of what recognizes them elsewhere. Cleared per-
+    fingerprint by **--trust-key**.
 
 `~/.gnupg/pubring.kbx`
 :   The user's normal GnuPG keyring (e.g. managed by Seahorse/GNOME

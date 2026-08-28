@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 21:57+0200\n"
+"POT-Creation-Date: 2026-08-27 18:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,7 +63,7 @@ msgstr ""
 msgid "Manage Trusted Keys"
 msgstr ""
 
-msgid "Forget Selected"
+msgid "Untrust Selected"
 msgstr ""
 
 msgid "Import Selected"
@@ -107,11 +107,11 @@ msgstr ""
 msgid "Expiration Date"
 msgstr ""
 
-#. TRANSLATORS: ${BTN_FORGET_SELECTED} is the translated button label - keep the placeholder as-is.
+#. TRANSLATORS: ${BTN_UNTRUST_SELECTED} is the translated button label - keep the placeholder as-is.
 #, sh-format
 msgid ""
-"Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to forget, then "
-"click \"${BTN_FORGET_SELECTED}\"."
+"Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to untrust, then "
+"click \"${BTN_UNTRUST_SELECTED}\"."
 msgstr ""
 
 msgid "Export Selected"
@@ -195,23 +195,23 @@ msgstr ""
 msgid "Could not import keys:"
 msgstr ""
 
-msgid "No key was checked - nothing to forget."
+msgid "No key was checked - nothing to untrust."
 msgstr ""
 
-#. TRANSLATORS: ${COUNT}/${CMD_LIST_KNOWN_KEYS} are literal - keep placeholders as-is.
+#. TRANSLATORS: ${COUNT} is literal - keep the placeholder as-is.
 #, sh-format
-msgid "Forget ${COUNT} selected key(s) from trustedkeys.gpg?"
+msgid "Untrust ${COUNT} selected key(s)?"
 msgstr ""
 
-#, sh-format
 msgid ""
-"If any of them is also one of this tool's built-in recognized keys (run "
-"'${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized "
-"automatically next time - this only removes the local cache entry, not that "
-"recognition."
+"This tool will stop automatically trusting the selected key(s) - whether "
+"they're one of its built-in recognized keys, or separately marked trusted in "
+"your own GnuPG keyring. This isn't permanent - trust a key again anytime "
+"(verify something signed by it and accept it, or import the key again) and "
+"it'll be trusted normally from then on."
 msgstr ""
 
-msgid "Forget"
+msgid "Untrust"
 msgstr ""
 
 msgid "Some keys could not be removed:"
@@ -359,19 +359,35 @@ msgid ""
 "checks."
 msgstr ""
 
+msgid ""
+"You've told this tool not to automatically trust this signing key anymore."
+msgstr ""
+
+msgid ""
+"You've told this tool not to automatically trust this checksum-listing "
+"signing key anymore."
+msgstr ""
+
+msgid "This ISO's signing key isn't one this tool already recognizes."
+msgstr ""
+
+msgid ""
+"This checksum-listing file's signing key isn't one this tool already "
+"recognizes."
+msgstr ""
+
 #. TRANSLATORS: keep the <b>/</b> tags exactly as-is (they render
 #. as bold text, not literal characters).
 msgid "Signature check: <b>GOOD</b> - the ISO exactly matches this key."
 msgstr ""
 
 msgid ""
-"Note: that identity is self-declared by whoever created the key - it is NOT "
-"independently verified, unlike the Key ID or fingerprint. Only trust this "
-"key if you've confirmed the Key ID or fingerprint yourself (e.g. from the "
-"respin/distro's own official site, or its keyserver listing)."
-msgstr ""
-
-msgid "This ISO's signing key isn't one this tool already recognizes."
+"Note: that identity is just self-declared text - whoever made the key could "
+"have typed anything there. The Key ID and fingerprint are different: they "
+"can't be faked, so they're what you can actually check against an "
+"independent source. Only trust this key if you've confirmed the Key ID or "
+"fingerprint yourself (e.g. from the respin/distro's own official site, or "
+"its keyserver listing)."
 msgstr ""
 
 msgid "Key ID:"
@@ -391,15 +407,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Note: that identity is self-declared by whoever created the key - it is NOT "
-"independently verified, unlike the Key ID or fingerprint. Only trust this "
-"key if you've confirmed it yourself (e.g. from the distro's own official "
-"website or keyserver listing)."
-msgstr ""
-
-msgid ""
-"This checksum-listing file's signing key isn't one this tool already "
-"recognizes."
+"Note: that identity is just self-declared text - whoever made the key could "
+"have typed anything there. The Key ID and fingerprint are different: they "
+"can't be faked, so they're what you can actually check against an "
+"independent source. Only trust this key if you've confirmed it yourself "
+"(e.g. from the distro's own official website or keyserver listing)."
 msgstr ""
 
 msgid ""
@@ -425,13 +437,16 @@ msgstr ""
 msgid "No thanks"
 msgstr ""
 
-msgid "key saved locally - future checks won't need the network"
+msgid "key fetched and saved locally - future checks won't need the network"
 msgstr ""
 
 msgid "used an already-cached key, no network needed"
 msgstr ""
 
 msgid "used a key from your personal keyring (pubring.kbx)"
+msgstr ""
+
+msgid "key saved locally for faster future checks"
 msgstr ""
 
 msgid "fetched the signing key from a keyserver"
@@ -808,10 +823,6 @@ msgid "no renewal found - continuing with the existing (expired) key"
 msgstr ""
 
 #, sh-format
-msgid "'${UNTRUST_KEY}' is not in ${TRUSTED_GPG}"
-msgstr ""
-
-#, sh-format
 msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
 msgstr ""
 
@@ -856,6 +867,12 @@ msgstr ""
 msgid ""
 "'${INSPECT_KEY_FILE}' contains private/secret key material - refusing to "
 "treat it as a public trusted-signing key"
+msgstr ""
+
+#, sh-format
+msgid ""
+"${fpr} removed from the explicitly-untrusted list - it can be auto-"
+"recognized again"
 msgstr ""
 
 #, sh-format
@@ -1094,6 +1111,13 @@ msgstr ""
 
 #, sh-format
 msgid ""
+"${FPR} has been explicitly untrusted - you've told this tool not to auto-"
+"trust it anymore, whatever the reason it would otherwise be recognized. Pass "
+"${FLAG_TRUST_KEY} again if you've changed your mind"
+msgstr ""
+
+#, sh-format
+msgid ""
 "${FPR} is not one of this tool's built-in recognized keys - verify its "
 "fingerprint independently before trusting it (e.g. against the distro's own "
 "official website or keyserver listing)"
@@ -1117,8 +1141,8 @@ msgstr ""
 
 #, sh-format
 msgid ""
-"kept ${FPR} in ${TRUSTED_GPG} (reused the copy fetched during verification - "
-"no extra keyserver lookup needed)"
+"kept ${FPR} in ${TRUSTED_GPG} - already fetched during verification, no "
+"second fetch needed"
 msgstr ""
 
 #, sh-format
