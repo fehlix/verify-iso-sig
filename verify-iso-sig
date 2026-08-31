@@ -164,6 +164,24 @@ CHECKSUM_SIG_EXTS=(sig asc gpg sign)
 # direct signature (e.g. <iso>.sig plus a redundant <iso>.sha512).
 PLAIN_CHECKSUM_SUFFIXES=(sha512 sha256 sha1 md5)
 
+# Broken/not-reliable algorithms - still usable, but flagged.
+WEAK_HASHCMDS=(md5sum sha1sum)
+hashcmd_is_weak() {
+    local h
+    for h in "${WEAK_HASHCMDS[@]}"; do
+        [ "$1" = "$h" ] && return 0
+    done
+    return 1
+}
+
+# $1: hashcmd. $2: short algo name (e.g. "md5").
+warn_if_weak_hashcmd() {
+    hashcmd_is_weak "$1" || return 0
+    local algo=$2
+    warn "$(eval_gettext "\${algo} is a broken checksum algorithm - a matching hash doesn't prove the ISO is genuine. Prefer a real signature or a stronger checksum (SHA256/SHA512) when available.")"
+    status_out "WEAK_CHECKSUM_ALGO $algo"
+}
+
 # BSD/tag-style algorithm name (lowercased) -> this tool's own hash
 # command, e.g. Fedora's "SHA256 (name) = hash" convention. Add a line
 # here for a new algorithm once a real checksum listing tags with it.
@@ -1968,17 +1986,44 @@ export_key_to() {
 # instead (redirected to A if that signature is itself clearsigned).
 # Neither found - refuses outright.
 resolve_plain_checksum_as_iso() {
-    local suffix=$1 candidate sigext iso_base candidate_base resolved_base candidate_sig_base
+    local suffix=$1 candidate sigext iso_base candidate_base resolved_base candidate_sig_base \
+        dir line hash rest mode fname iso_candidates=() candidates_joined clearsigned_base
 
     candidate=${ISO%."$suffix"}
     if [ ! -f "$candidate" ]; then
-        status_out "PLAIN_CHECKSUM_TARGET_MISSING"
-        candidate_base=$(basename "$candidate")
-        # Emitted even on this failure path so a caller like the GUI still
-        # learns the intended ISO name, instead of the raw ".sha512"-suffixed one.
-        status_out "RESOLVED_ISO $candidate_base"
-        RESOLVED_ISO=$candidate_base
-        die "$(eval_gettext "neither '\${candidate_base}' nor a signature file for it were found in this folder - nothing to check yet.")" || return 1
+        # Filename-derived guess doesn't exist - fall back to content:
+        # use the one named file that's actually present, same approach
+        # as resolve_checksum_listing_as_iso()'s own content scan.
+        dir=$(dirname "$ISO")
+        while IFS= read -r line || [ -n "$line" ]; do
+            hash=${line%% *}
+            rest=${line#* }
+            mode=${rest:0:1}
+            fname=${rest:1}
+            case "$mode" in
+                ' '|'*') ;;
+                *) continue ;;
+            esac
+            [ -r "$dir/$fname" ] && iso_candidates+=("$fname")
+        done < "$ISO"
+        case "${#iso_candidates[@]}" in
+            1) candidate="$dir/${iso_candidates[0]}" ;;
+            0)
+                status_out "PLAIN_CHECKSUM_TARGET_MISSING"
+                candidate_base=$(basename "$candidate")
+                # Emitted even on this failure path so a caller like the GUI still
+                # learns the intended ISO name, instead of the raw ".sha512"-suffixed one.
+                status_out "RESOLVED_ISO $candidate_base"
+                RESOLVED_ISO=$candidate_base
+                die "$(eval_gettext "neither '\${candidate_base}' nor a signature file for it were found in this folder - nothing to check yet.")" || return 1
+                ;;
+            *)
+                iso_base=$(basename "$ISO")
+                candidates_joined="${iso_candidates[*]}"
+                status_out "PLAIN_CHECKSUM_TARGET_AMBIGUOUS"
+                die "$(eval_gettext "'\${iso_base}' names multiple files present in this folder: \${candidates_joined} - point this tool at the specific .iso file you want to check instead.")" || return 1
+                ;;
+        esac
     fi
 
     for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
@@ -1994,6 +2039,22 @@ resolve_plain_checksum_as_iso() {
             return 0
         fi
     done
+
+    # Same precedence as bare-ISO auto-discovery: clearsigned checksum
+    # wins over a direct signature.
+    if find_clearsigned_plain_checksum "$candidate"; then
+        iso_base=$(basename "$ISO")
+        clearsigned_base=$(basename "$CLEARSIGNED_PLAIN_CHECKSUM")
+        log "$(eval_gettext "'\${iso_base}' is unsigned - not used for verification. Using '\${clearsigned_base}' instead, a self-contained clearsigned checksum for the ISO.")"
+        CHECKSUM_FILE_OVERRIDE=$CLEARSIGNED_PLAIN_CHECKSUM
+        ISO=$candidate
+        NO_DIRECT_SIG=1
+        resolved_base=$(basename "$ISO")
+        log "$(eval_gettext "resolved ISO: \${resolved_base}")"
+        status_out "RESOLVED_ISO $resolved_base"
+        RESOLVED_ISO=$resolved_base
+        return 0
+    fi
 
     for sigext in "${CHECKSUM_SIG_EXTS[@]}"; do
         if [ -r "${candidate}.${sigext}" ]; then
@@ -2011,7 +2072,7 @@ resolve_plain_checksum_as_iso() {
             fi
             iso_base=$(basename "$ISO")
             candidate_sig_base="$(basename "$candidate").${sigext}"
-            log "$(eval_gettext "'\${iso_base}' is an unsigned per-file checksum - not used for verification. Using '\${candidate_sig_base}' instead, the ISO's own direct signature.")"
+            log "$(eval_gettext "'\${iso_base}' is unsigned - not used for verification. Using '\${candidate_sig_base}' instead, the ISO's own direct signature.")"
             ISO=$candidate
             SIG="${candidate}.${sigext}"
             NO_DIRECT_SIG=0
@@ -2029,7 +2090,7 @@ resolve_plain_checksum_as_iso() {
     candidate_base=$(basename "$candidate")
     status_out "RESOLVED_ISO $candidate_base"
     RESOLVED_ISO=$candidate_base
-    die "$(eval_gettext "'\${iso_base}' is an unsigned checksum file, and '\${candidate_base}' has no direct .sig/.asc/.gpg/.sign of its own either - nothing here can be cryptographically verified.")" || return 1
+    die "$(eval_gettext "'\${iso_base}' is an unsigned checksum file, and '\${candidate_base}' has no direct .sig/.asc/.gpg/.sign of its own, nor a self-contained clearsigned checksum (e.g. '.sha512.asc') either - nothing here can be cryptographically verified.")" || return 1
 }
 
 # Echoes the line in checksum file $1 that names basename $2 exactly, or
@@ -2423,6 +2484,7 @@ try_checksum_fallback() {
             algo=${hashcmd%sum}
             [ -z "$FOUND_HASH_LABEL" ] || algo=$FOUND_HASH_LABEL
             log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
+            warn_if_weak_hashcmd "$hashcmd" "$algo"
             # "+sig" (status-tag/GUI-facing only, not the log() line above)
             # flags that this listing carries its own inline signature -
             # otherwise "(sha256)" looks identical to an unsigned listing.
@@ -2498,6 +2560,7 @@ try_checksum_fallback() {
         algo=${hashcmd%sum}
         [ -z "$FOUND_HASH_LABEL" ] || algo=$FOUND_HASH_LABEL
         log "$(eval_gettext "using checksum file: \${name_base} (\${algo})")"
+        warn_if_weak_hashcmd "$hashcmd" "$algo"
         status_out "CHECKSUM_FILE $name_base ($algo)"
         CHECKSUM_INFO="$name_base ($algo)"
         sigfile_base=$(basename "$sigfile")

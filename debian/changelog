@@ -1,3 +1,19 @@
+verify-iso-sig (2026.08.06) mx; urgency=medium
+
+  * Get the ISO name from a plain checksum file's own content when
+    needed.
+  * Prefer a clearsigned per-ISO checksum over a direct .sig when
+    resolving a plain checksum, matching bare-ISO auto-discovery.
+  * GUI: the run-once lock now also covers --manage-keys.
+  * GUI: fixed a lock-release gap after a backgrounded child.
+  * GUI: the run-once notification now names whichever window is
+    already open.
+  * GUI: fixed the progress popup not closing when yad is a wrapper
+    script rather than the real binary.
+  * Warn when a checksum relies on MD5 or SHA1.
+
+ -- fehlix <fehlix@mxlinux.org>  Mon, 31 Aug 2026 15:36:52 -0400
+
 verify-iso-sig (2026.08.05) mx; urgency=medium
 
   * Make --untrust-key durable against pubring.kbx auto-re-trust.

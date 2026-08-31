@@ -172,17 +172,27 @@ safe_eval_gettext() {
 
 # TITLE and the mode-specific button labels are set per-mode: picker's
 # own values here as plain globals; the manager's own are set as locals
-# inside run_manage_mode() itself. YAD_ERROR_WIDTH="" means yad_error()
-# emits no --width flag in picker mode.
+# inside run_manage_mode() itself (this global TITLE is just a stand-in
+# for the shared run-once lock check below, which runs before either
+# mode's own real setup). YAD_ERROR_WIDTH="" means yad_error() emits no
+# --width flag in picker mode.
+#
+# Both titles are computed unconditionally so acquire_single_instance_
+# lock() can name either mode, not just this launch's own.
+PICKER_TITLE=$(safe_eval_gettext "Verify ISO signature")
+MANAGE_TITLE=$(safe_eval_gettext "Manage Trusted Keys")
 case "$GUI_MODE" in
     picker)
-        TITLE=$(safe_eval_gettext "Verify ISO signature")
+        TITLE=$PICKER_TITLE
         # Translated once here, then referenced everywhere this button
         # label is also quoted inline inside a longer sentence, so both
         # can't drift out of sync via two separately-translated strings.
         BTN_TRUST_THIS_KEY=$(safe_eval_gettext "Trust this key")
         BTN_CHECK_ANOTHER_FILE=$(safe_eval_gettext "Check Another File")
         YAD_ERROR_WIDTH=""
+        ;;
+    manage)
+        TITLE=$MANAGE_TITLE
         ;;
 esac
 ICON_FILE="$SCRIPT_DIR/verify-iso-sig.svg"
@@ -793,6 +803,11 @@ $OUT"
     done
 }
 
+# Declared here (not just inside the picker-only block below) so the
+# shared run-once lock check further down can reference it regardless
+# of $GUI_MODE.
+FILE_ARGS=()
+
 # --debug is a plain command-line flag for this script (meant for
 # launching from a terminal, e.g. `./verify-iso-sig-gui.sh --debug` or
 # `./verify-iso-sig-gui.sh --debug some.iso`) rather than a form checkbox -
@@ -803,7 +818,6 @@ $OUT"
 if [ "$GUI_MODE" = picker ]; then
     DEBUG=0
     DND_MODE=0
-    FILE_ARGS=()
     for arg in "$@"; do
         case "$arg" in
             --debug) DEBUG=1 ;;
@@ -843,68 +857,72 @@ EOF
             *) FILE_ARGS+=("$arg") ;;
         esac
     done
+fi
 
-    # "Run me only once": any launch - a bare one (the desktop icon) or
-    # one with a file argument ("Open With" on a specific ISO) - doesn't
-    # open a second window while another instance is already running.
-    # A file argument is NOT special-cased to always open its own
-    # window: there's no IPC here to hand a freshly-picked file to an
-    # already-running instance, so treating it differently would mean
-    # either silently dropping the file with zero feedback, or letting a
-    # file-argument launch skip the lock entirely - which would mean a
-    # *later* bare launch finds the lock still free and opens yet
-    # another window, since the file-launch never took it either.
-    # Blocking + notifying is the honest answer given what this tool can
-    # actually do without adding real inter-process communication.
-    #
-    # Detected via a flock'd lock file, not wmctrl/xdotool - portable,
-    # and works identically on Wayland (unlike scanning wmctrl -lx,
-    # which can't see any windows there at all). Also self-cleaning: the
-    # kernel drops the lock the instant this process exits, crash
-    # included, so there's no stale-lock cleanup to worry about (unlike
-    # a plain PID file, which would need a "is that PID still actually
-    # alive" check). Raising/focusing the existing window on top of
-    # that is still an X11+wmctrl-only bonus - Wayland has no portable
-    # way for one app to raise another's window at all, so there (or
-    # without wmctrl) this just notifies (if possible) and exits
-    # quietly instead, without spawning a second window.
+# "Run me only once" - covers a bare launch, a file argument, and
+# --manage-keys alike, via a flock'd lock file.
+
+# Title for mode name $1 ("picker"/"manage") - may be the other mode.
+mode_title() {
+    case "$1" in
+        picker) printf '%s' "$PICKER_TITLE" ;;
+        manage) printf '%s' "$MANAGE_TITLE" ;;
+    esac
+}
+
+# $1: "file" if a file argument was passed. Returns 1 (caller should
+# exit) for a second instance, 0 otherwise. Opened with ">>", not ">" -
+# a second process's own open must not truncate the first process's
+# already-written mode before it's read.
+acquire_single_instance_lock() {
+    local has_file=${1:-} existing_mode other_title msg
     LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/verify-iso-sig-$UID.lock"
-    exec {LOCK_FD}>"$LOCK_FILE"
-    if ! flock -n "$LOCK_FD"; then
-        RAISED=0
-        if [ -z "${WAYLAND_DISPLAY:-}" ] && command -v wmctrl >/dev/null 2>&1; then
-            EXISTING_WID=$(wmctrl -lx 2>/dev/null | awk -v cls="$WM_CLASS" '$3 ~ cls {print $1; exit}') || true
-            if [ -n "$EXISTING_WID" ]; then
-                wmctrl -ia "$EXISTING_WID" >/dev/null 2>&1
-                RAISED=1
-            fi
-        fi
-        if [ "${#FILE_ARGS[@]}" -gt 0 ]; then
-            # A file was picked but can't be handed to the running
-            # instance - always say so, even if the window was raised,
-            # since raising alone doesn't explain why the file itself
-            # didn't open.
-            NOTIFY_MSG=$(safe_eval_gettext "Already running - close it first to check this file.")
-        elif [ "$RAISED" -eq 0 ]; then
-            # No way to raise the existing window either - a
-            # notification is the only feedback left that anything
-            # happened at all; without it, a second click on the
-            # desktop icon looks like nothing happened.
-            NOTIFY_MSG=$(safe_eval_gettext "Already running.")
-        else
-            NOTIFY_MSG=""
-        fi
-        if [ -n "$NOTIFY_MSG" ] && command -v notify-send >/dev/null 2>&1; then
-            # --app-name: without it, notify-send defaults the app-name
-            # field to its own program name ("notify-send") - some
-            # notification popups (e.g. Plasma) show that field
-            # prominently, so without this it looks like the alert came
-            # from a tool called "notify-send" instead of this one.
-            notify-send --app-name="$TITLE" --icon="$ICON_FILE" "$TITLE" "$NOTIFY_MSG" >/dev/null 2>&1 || true
-        fi
-        exit 0
+    exec {LOCK_FD}>>"$LOCK_FILE"
+    if flock -n "$LOCK_FD"; then
+        printf '%s' "$GUI_MODE" > "$LOCK_FILE"
+        return 0
     fi
+    existing_mode=$(<"$LOCK_FILE")
+    RAISED=0
+    if [ -z "${WAYLAND_DISPLAY:-}" ] && command -v wmctrl >/dev/null 2>&1; then
+        EXISTING_WID=$(wmctrl -lx 2>/dev/null | awk -v cls="$WM_CLASS" '$3 ~ cls {print $1; exit}') || true
+        if [ -n "$EXISTING_WID" ]; then
+            wmctrl -ia "$EXISTING_WID" >/dev/null 2>&1
+            RAISED=1
+        fi
+    fi
+    other_title=$(mode_title "$existing_mode")
+    if [ "$has_file" = file ]; then
+        if [ -n "$other_title" ]; then
+            msg=$(safe_eval_gettext "'\${other_title}' is already open - close it first to check this file." other_title)
+        else
+            msg=$(safe_eval_gettext "Already running - close it first to check this file.")
+        fi
+    elif [ "$RAISED" -eq 1 ] && [ "$existing_mode" = "$GUI_MODE" ]; then
+        msg=""
+    elif [ -n "$other_title" ]; then
+        msg=$(safe_eval_gettext "'\${other_title}' is already open." other_title)
+    else
+        msg=$(safe_eval_gettext "Already running.")
+    fi
+    if [ -n "$msg" ] && { [ "$RAISED" -eq 0 ] || [ "$has_file" = file ] || [ "$existing_mode" != "$GUI_MODE" ]; }; then
+        # Also to stderr - a terminal launch has no notification daemon.
+        printf '%s\n' "$msg" >&2
+        # --app-name: without it, notify-send's own name shows instead.
+        if command -v notify-send >/dev/null 2>&1; then
+            notify-send --app-name="$TITLE" --icon="$ICON_FILE" "$TITLE" "$msg" >/dev/null 2>&1 || true
+        fi
+    fi
+    return 1
+}
 
+if [ "${#FILE_ARGS[@]}" -gt 0 ]; then
+    acquire_single_instance_lock file || exit 0
+else
+    acquire_single_instance_lock || exit 0
+fi
+
+if [ "$GUI_MODE" = picker ]; then
     # The picker's own form takes a single file (the .iso, or its
     # .sig/.asc/.gpg directly) - prefill is a straight passthrough of
     # whatever one path is already known; classification into ISO/SIG
@@ -1152,10 +1170,10 @@ pick_files() {
                 OPEN_HELP_ON_NEXT_PICKER=0
                 FORM_OUT=$(mktemp "$SESSION_TMPDIR/form-out.XXXXXXXXXX")
                 set +e
-                yad "${FORM_ONLY_ARGS[@]}" "$PREFILL_FILE" >"$FORM_OUT" &
+                yad "${FORM_ONLY_ARGS[@]}" "$PREFILL_FILE" >"$FORM_OUT" {LOCK_FD}>&- &
                 yad_pid=$!
                 minimize_next_own_window
-                xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                xdg-open "$HELP_URL" >/dev/null 2>&1 {LOCK_FD}>&- &
                 disown
                 wait "$yad_pid"
                 paned_rc=$?
@@ -1200,7 +1218,7 @@ pick_files() {
             # from an invalid LANG) must never land in it - it would make the
             # `[ -s "$res_form" ]` check below see it as real content and
             # relaunch in a tight infinite loop.
-            yad "${FORM_PLUG_ARGS[@]}" "$PREFILL_FILE" > "$res_form" &
+            yad "${FORM_PLUG_ARGS[@]}" "$PREFILL_FILE" > "$res_form" {LOCK_FD}>&- &
             form_pid=$!
 
             DND_PLUG_ARGS=(
@@ -1211,7 +1229,7 @@ pick_files() {
             )
             # Same reasoning as $res_form above - stderr must not land here,
             # since the watcher below treats ANY content as "a file was dropped".
-            yad "${DND_PLUG_ARGS[@]}" > "$res_dnd" &
+            yad "${DND_PLUG_ARGS[@]}" > "$res_dnd" {LOCK_FD}>&- &
             dnd_pid=$!
 
             (
@@ -1226,7 +1244,7 @@ pick_files() {
                     fi
                     sleep 0.2
                 done
-            ) &
+            ) {LOCK_FD}>&- &
             watcher_pid=$!
 
             PANED_ARGS=(
@@ -1269,10 +1287,10 @@ pick_files() {
             if [ "$OPEN_HELP_ON_NEXT_PICKER" -eq 1 ]; then
                 OPEN_HELP_ON_NEXT_PICKER=0
                 set +e
-                yad "${PANED_ARGS[@]}" &
+                yad "${PANED_ARGS[@]}" {LOCK_FD}>&- &
                 yad_pid=$!
                 minimize_next_own_window
-                xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                xdg-open "$HELP_URL" >/dev/null 2>&1 {LOCK_FD}>&- &
                 disown
                 wait "$yad_pid"
                 paned_rc=$?
@@ -1443,7 +1461,7 @@ pick_files() {
                 if [ -z "${WAYLAND_DISPLAY:-}" ] && command -v wmctrl >/dev/null 2>&1; then
                     OPEN_HELP_ON_NEXT_PICKER=1
                 else
-                    xdg-open "$HELP_URL" >/dev/null 2>&1 &
+                    xdg-open "$HELP_URL" >/dev/null 2>&1 {LOCK_FD}>&- &
                     disown
                 fi
             else
@@ -1524,18 +1542,21 @@ run_verify() {
         rc=${PIPESTATUS[0]}
         set -e
         echo "$rc" > "$RV_RC_FILE"
-    ' &
+    ' {LOCK_FD}>&- &
     local producer_pid=$!
 
     # FIFO heartbeat: --pulsate only advances on new stdin lines.
     local progress_fifo
     progress_fifo=$(mktemp -u "$SESSION_TMPDIR/progress-stdin.XXXXXXXXXX")
     mkfifo "$progress_fifo"
-    ( while :; do echo; sleep 0.3; done ) > "$progress_fifo" &
+    ( while :; do echo; sleep 0.3; done ) > "$progress_fifo" {LOCK_FD}>&- &
     local heartbeat_pid=$!
     trap 'kill "$heartbeat_pid" 2>/dev/null || true; rm -f "$progress_fifo"' RETURN
 
-    yad "${PROGRESS_ARGS[@]}" < "$progress_fifo" 2>/dev/null &
+    # setsid: makes $yad_pid its own process group, so a group kill
+    # below also reaches a no-exec yad wrapper's real child process
+    # (e.g. antiX's stderr-hiding /usr/local/bin/yad).
+    setsid yad "${PROGRESS_ARGS[@]}" < "$progress_fifo" 2>/dev/null {LOCK_FD}>&- &
     local yad_pid=$!
 
     local finished_pid=""
@@ -1553,7 +1574,7 @@ run_verify() {
     fi
 
     # Work finished first - close the stale progress window.
-    kill "$yad_pid" 2>/dev/null || true
+    kill -- "-$yad_pid" 2>/dev/null || true
     wait "$yad_pid" 2>/dev/null || true
     wait "$producer_pid" 2>/dev/null || true
     OUTPUT=$(cat "$OUT_FILE")
@@ -2268,7 +2289,7 @@ $KEEPKEY_OUTPUT"
             # TRANSLATORS: ${DISPLAY_ISO_SAFE} is the ISO's filename - keep the placeholder as-is.
             NOTE=$(safe_eval_gettext "Neither '\${DISPLAY_ISO_SAFE}' nor a signature file for it were found in this folder - nothing to check yet." DISPLAY_ISO_SAFE)
         elif gui_status_has "$OUTPUT" PLAIN_CHECKSUM_NOTHING_VERIFIABLE; then
-            NOTE=$(safe_eval_gettext "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing or a direct .sig/.asc/.gpg file for this ISO.")
+            NOTE=$(safe_eval_gettext "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing, a direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. '.sha512.asc') for this ISO.")
         elif gui_status_has "$OUTPUT" CHECKSUM_SIG_FAILED; then
             NOTE=$(safe_eval_gettext "The checksum file that lists this ISO's hash failed its own verification (bad/untrusted signature, or its key couldn't be confirmed) - nothing in it can be trusted. Re-download the checksum/signature files (and probably the ISO too), ideally from a different mirror.")
         elif gui_status_has "$OUTPUT" CHECKSUM_HASH_MISMATCH; then
@@ -2291,6 +2312,13 @@ $KEEPKEY_OUTPUT"
             NOTE=$(safe_eval_gettext "The ISO may be corrupted, or the download was incomplete or tampered with - try re-downloading it, ideally from a different mirror.")
         fi
         HEADING="$HEADING\n\n<i>$NOTE</i>"
+    fi
+
+    if gui_status_has "$OUTPUT" WEAK_CHECKSUM_ALGO; then
+        WEAK_ALGO_SAFE=$(pango_escape "$(gui_status_field "$OUTPUT" WEAK_CHECKSUM_ALGO)")
+        # TRANSLATORS: ${WEAK_ALGO_SAFE} is a literal algorithm name (e.g. "md5") - keep the placeholder as-is.
+        WEAK_ALGO_NOTE=$(safe_eval_gettext "This relies on \${WEAK_ALGO_SAFE}, a broken checksum algorithm - a matching hash doesn't prove the ISO is genuine. Prefer a real signature or a stronger checksum (SHA256/SHA512) when available." WEAK_ALGO_SAFE)
+        HEADING="$HEADING\n\n<i>$WEAK_ALGO_NOTE</i>"
     fi
 
     RESULT_ARGS=(

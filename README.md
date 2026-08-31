@@ -8,8 +8,9 @@ changed by someone else - in just a few clicks.
 ## What is this?
 
 When you download a Linux ISO (for example MX Linux, antiX, or
-Debian), the makers also publish a small signed file next to it. This
-signed file proves the ISO is genuine and was not changed on the way.
+Debian), the makers also publish a small signature file next to it.
+This signature file proves the ISO is genuine and was not changed on
+the way.
 
 Checking this normally means knowing your way around GnuPG - its
 commands, its keys, and how they fit together. **ISO Signature
@@ -59,6 +60,11 @@ Both direct ISO signing (`.sig`) and self-contained checksum signing
 ![MX-25.2_July_x64.iso.sig shown with its own icon and type in a file manager](screenshots/filemanager-sig.png)
 
 ![MX-25.2_August_x64.iso.sha512.asc shown with its own icon and type in a file manager](screenshots/filemanager-checksum.png)
+
+Since this tool is the only one registered for these two file types, a
+click or double-click on the `.sig` or `.sha512.asc` file opens it
+directly, ready to verify - no need to open the picker and browse for
+the file yourself first.
 
 ## How to use it
 
@@ -161,6 +167,15 @@ also confirms the ISO really came from the MX Linux/antiX team. A
 checksum alone can't do that. If you have the signature file, checking
 it is enough - no need to also check the checksum separately.
 
+### Can I just point the tool at the checksum file, not the ISO?
+
+Yes - a plain `.sha256`/`.sha512` file works as the sole file you pick
+too, not just as part of a pair. This is purely a convenience: the
+checksum file itself isn't signed, so it can't prove anything on its
+own - the tool just reads the ISO's name out of it, then finds and
+checks that ISO's real `.sig` (or a self-contained clearsigned
+checksum, if that's what's there instead) the normal way.
+
 ### I got the ISO via the official .torrent - do I still need to check the signature or checksum?
 
 Yes. A `.torrent` file (and its tracker entry) isn't signed, same as a
@@ -232,6 +247,16 @@ of the tool. Run it as yourself instead.
 
 Open "Manage Trusted Keys" (from the picker, or your application
 menu), select the key, and click "Untrust Selected".
+
+### I double-clicked a file, but nothing opened - just a brief notification. Why?
+
+This tool only ever runs one window at a time - whichever one you
+already have open (the picker, or "Manage Trusted Keys") blocks a
+second one, even if you reach it a different way (a file's "Open
+With", the application menu, or a terminal). This also applies if you
+opened Manage Trusted Keys from inside the picker - the picker itself
+is gone at that point, but the same single window still counts.
+Close what's open first, then try again.
 
 ### Can I run this with no GUI at all, e.g. over SSH?
 

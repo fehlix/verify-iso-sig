@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-27 18:35+0200\n"
+"POT-Creation-Date: 2026-08-30 23:06+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,6 +18,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Verify ISO signature"
+msgstr ""
+
+msgid "Manage Trusted Keys"
 msgstr ""
 
 msgid "Trust this key"
@@ -58,9 +61,6 @@ msgid "About ${ABOUT_TITLE}"
 msgstr ""
 
 msgid "Close"
-msgstr ""
-
-msgid "Manage Trusted Keys"
 msgstr ""
 
 msgid "Untrust Selected"
@@ -217,7 +217,15 @@ msgstr ""
 msgid "Some keys could not be removed:"
 msgstr ""
 
+#, sh-format
+msgid "'${other_title}' is already open - close it first to check this file."
+msgstr ""
+
 msgid "Already running - close it first to check this file."
+msgstr ""
+
+#, sh-format
+msgid "'${other_title}' is already open."
 msgstr ""
 
 msgid "Already running."
@@ -539,8 +547,9 @@ msgstr ""
 msgid ""
 "This checksum file isn't signed, and the ISO it describes has no signature "
 "of its own either - there's nothing here this tool can cryptographically "
-"verify. Check whether the distro provides a signed checksum listing or a "
-"direct .sig/.asc/.gpg file for this ISO."
+"verify. Check whether the distro provides a signed checksum listing, a "
+"direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. "
+"'.sha512.asc') for this ISO."
 msgstr ""
 
 msgid ""
@@ -587,6 +596,21 @@ msgstr ""
 msgid ""
 "The ISO may be corrupted, or the download was incomplete or tampered with - "
 "try re-downloading it, ideally from a different mirror."
+msgstr ""
+
+#. TRANSLATORS: ${WEAK_ALGO_SAFE} is a literal algorithm name (e.g. "md5") - keep the placeholder as-is.
+#, sh-format
+msgid ""
+"This relies on ${WEAK_ALGO_SAFE}, a broken checksum algorithm - a matching "
+"hash doesn't prove the ISO is genuine. Prefer a real signature or a stronger "
+"checksum (SHA256/SHA512) when available."
+msgstr ""
+
+#, sh-format
+msgid ""
+"${algo} is a broken checksum algorithm - a matching hash doesn't prove the "
+"ISO is genuine. Prefer a real signature or a stronger checksum (SHA256/"
+"SHA512) when available."
 msgstr ""
 
 msgid "Usage:"
@@ -936,20 +960,35 @@ msgid ""
 msgstr ""
 
 #, sh-format
+msgid ""
+"'${iso_base}' names multiple files present in this folder: "
+"${candidates_joined} - point this tool at the specific .iso file you want to "
+"check instead."
+msgstr ""
+
+#, sh-format
 msgid "resolved ISO: ${resolved_base}"
 msgstr ""
 
 #, sh-format
 msgid ""
-"'${iso_base}' is an unsigned per-file checksum - not used for verification. "
-"Using '${candidate_sig_base}' instead, the ISO's own direct signature."
+"'${iso_base}' is unsigned - not used for verification. Using "
+"'${clearsigned_base}' instead, a self-contained clearsigned checksum for the "
+"ISO."
+msgstr ""
+
+#, sh-format
+msgid ""
+"'${iso_base}' is unsigned - not used for verification. Using "
+"'${candidate_sig_base}' instead, the ISO's own direct signature."
 msgstr ""
 
 #, sh-format
 msgid ""
 "'${iso_base}' is an unsigned checksum file, and '${candidate_base}' has no "
-"direct .sig/.asc/.gpg/.sign of its own either - nothing here can be "
-"cryptographically verified."
+"direct .sig/.asc/.gpg/.sign of its own, nor a self-contained clearsigned "
+"checksum (e.g. '.sha512.asc') either - nothing here can be cryptographically "
+"verified."
 msgstr ""
 
 #, sh-format
