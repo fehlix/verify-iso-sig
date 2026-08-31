@@ -5,19 +5,19 @@ Format: 1.0
 Source: verify-iso-sig
 Binary: verify-iso-sig
 Architecture: all source
-Version: 2026.08.05
+Version: 2026.08.06
 Checksums-Md5:
- 1e55d6316e73633014b6721b74e12d16 1516 verify-iso-sig_2026.08.05.dsc
- e81144370be64cc9e9e359ca784594ae 600492 verify-iso-sig_2026.08.05_all.deb
+ f7581036c5d1b3e7ddd91ae3870ba397 1516 verify-iso-sig_2026.08.06.dsc
+ 587a5c665c4a08321f03ffee0522fb8b 602788 verify-iso-sig_2026.08.06_all.deb
 Checksums-Sha1:
- 9abcfef91ee2cf4fce1b8c6364fb1cbd96be6c79 1516 verify-iso-sig_2026.08.05.dsc
- 6e3b7c9360b8e1e1f32d1a62311ae3c3361d68bc 600492 verify-iso-sig_2026.08.05_all.deb
+ 5e7e3db057b404ae52480531360fdfbd0174bd92 1516 verify-iso-sig_2026.08.06.dsc
+ c71c436b2e7e8afffa63a87c5f434adfe22cd53d 602788 verify-iso-sig_2026.08.06_all.deb
 Checksums-Sha256:
- af02293854b01bd0b612431376cbf452450669e851a2567d15529494336aa89c 1516 verify-iso-sig_2026.08.05.dsc
- d6faae6ec9abcc1225b4e1a12083079a70a301098ae553108c21f8ee834de83c 600492 verify-iso-sig_2026.08.05_all.deb
+ f4a2c8c06f09b8906c91886e3ded1d6657150753daca7350178edeca04794fac 1516 verify-iso-sig_2026.08.06.dsc
+ 487fa95a201f4346e2f0fb0f99b29d25bbba205293aa651978b9d33f978775c2 602788 verify-iso-sig_2026.08.06_all.deb
 Build-Origin: Debian
 Build-Architecture: amd64
-Build-Date: Fri, 28 Aug 2026 02:52:46 +0200
+Build-Date: Mon, 31 Aug 2026 21:38:32 +0200
 Build-Tainted-By:
  usr-local-has-includes
  usr-local-has-libraries
@@ -34,9 +34,9 @@ Installed-Build-Depends:
  binutils (= 2.44-3),
  binutils-common (= 2.44-3),
  binutils-x86-64-linux-gnu (= 2.44-3),
- bsdextrautils (= 2.41-5),
+ bsdextrautils (= 2.41.5-0+deb13u1),
  bsdmainutils (= 12.1.8),
- bsdutils (= 1:2.41-5),
+ bsdutils (= 1:2.41.5-0+deb13u1),
  build-essential (= 12.12),
  bzip2 (= 1.0.8-6),
  coreutils (= 9.7-3),
@@ -82,7 +82,7 @@ Installed-Build-Depends:
  libaudit-common (= 1:4.0.2-2),
  libaudit1 (= 1:4.0.2-2+b2),
  libbinutils (= 2.44-3),
- libblkid1 (= 2.41-5),
+ libblkid1 (= 2.41.5-0+deb13u1),
  libbz2-1.0 (= 1.0.8-6),
  libc-bin (= 2.41-12+deb13u3),
  libc-dev-bin (= 2.41-12+deb13u3),
@@ -113,14 +113,14 @@ Installed-Build-Depends:
  libisl23 (= 0.27-1),
  libitm1 (= 14.2.0-19),
  libjansson4 (= 2.14-2+b3),
- liblastlog2-2 (= 2.41-5),
+ liblastlog2-2 (= 2.41.5-0+deb13u1),
  liblsan0 (= 14.2.0-19),
  liblua5.4-0 (= 5.4.7-1+b2),
  liblzma5 (= 5.8.1-1+deb13u1),
  libmagic-mgc (= 1:5.46-5),
  libmagic1t64 (= 1:5.46-5),
  libmd0 (= 1.1.0-2+b1),
- libmount1 (= 2.41-5),
+ libmount1 (= 2.41.5-0+deb13u1),
  libmpc3 (= 1.3.1-1+b3),
  libmpfr6 (= 4.2.2-1),
  libnuma1 (= 2.0.19-1),
@@ -137,9 +137,9 @@ Installed-Build-Depends:
  libselinux1 (= 3.8.1-1),
  libsframe1 (= 2.44-3),
  libsigsegv2 (= 2.14-1+b2),
- libsmartcols1 (= 2.41-5),
+ libsmartcols1 (= 2.41.5-0+deb13u1),
  libsqlite3-0 (= 3.46.1-7+deb13u1),
- libssl3t64 (= 3.5.6-1~deb13u2),
+ libssl3t64 (= 3.5.7-1~deb13u2),
  libstdc++-14-dev (= 14.2.0-19),
  libstdc++6 (= 14.2.0-19),
  libsystemd0 (= 257.13-1~deb13u1),
@@ -150,7 +150,7 @@ Installed-Build-Depends:
  libuchardet0 (= 0.0.8-1+b2),
  libudev1 (= 257.13-1~deb13u1),
  libunistring5 (= 1.3-2),
- libuuid1 (= 2.41-5),
+ libuuid1 (= 2.41.5-0+deb13u1),
  libxml2 (= 2.12.7+dfsg+really2.9.14-2.1+deb13u3),
  libyaml-0-2 (= 0.2.5-2),
  libzstd1 (= 1.5.7+dfsg-1),
@@ -162,7 +162,7 @@ Installed-Build-Depends:
  ncal (= 12.1.8),
  ncurses-base (= 6.5+20250216-2),
  ncurses-bin (= 6.5+20250216-2),
- openssl-provider-legacy (= 3.5.6-1~deb13u2),
+ openssl-provider-legacy (= 3.5.7-1~deb13u2),
  pandoc (= 3.1.11.1+ds-2),
  pandoc-data (= 3.1.11.1-3),
  patch (= 2.8-2),
@@ -176,29 +176,29 @@ Installed-Build-Depends:
  sensible-utils (= 0.0.25),
  sysvinit-utils (= 3.14-4),
  tar (= 1.35+dfsg-3.1),
- util-linux (= 2.41-5),
+ util-linux (= 2.41.5-0+deb13u1),
  xz-utils (= 5.8.1-1+deb13u1),
  zlib1g (= 1:1.3.dfsg+really1.3.1-1+b1)
 Environment:
  DEB_BUILD_OPTIONS="parallel=16"
- LANG="C.UTF-8"
+ LANG="en_US.UTF-8"
  LC_TIME="de_DE.UTF-8"
- SOURCE_DATE_EPOCH="1787877799"
+ SOURCE_DATE_EPOCH="1788205012"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqQ2+cTHGZlaGxpeEBt
-eGxpbnV4Lm9yZwAKCRAvV48brJ2b6UYBD/9vge2o6Ua2NCjBH+f9j27YK+406T83
-VFHgvczQmmZ5qDYrZbEzm1wHXM3GwFM83mpcM6ItWTMbFRyuu29a0iu27YPCJ2pn
-MwAjaL7i2WMMt2s3xMrd5RGGHznJ19u3LMmO0CtPF85/3tqmKOp5W0Go2ysSKduY
-xiPGJlJdBU5R2Foj910/YCmh1ZQnmrXjRD+S7Xi4/ROLyXqExNYo04LqfjfTmofY
-RlgHR+LrdCS+l4vxpnEkvPhre/FSVRZKVJz/VoKKfY31QEuuO8DCtdiapr5T7qpz
-KJLKpj2Betwb4y8Q1dtuXDDQIFVCetzWFyBhBAS3IDae7RYcRA3Ds3jzwy9oUhVD
-yreWze6GHhBAnYUC1NpMFGXmT6XQG25TMXAmTqxqWvrHV7AKj3eisNYVcXZf5gzW
-kXIWwvmoAjDOFa0/cmoGv8iuTNXXJPIPCzDCJv4iZGBcVoVQMKWnS3J81vWfsmEw
-Ei5O7B9LOkaC7sbUIqJRp5fiTPUl1Wy5ggU17ZslLRdsE1KJtqF5ESJKrH7N2zp+
-eO/JDuPeNLgnxiRgqE+ckdbfNgCGuKXP8NtrJ6EDDCG8o4yDsKcvjJlduTMix8Hd
-Y4EhbBxQ6hvEu4/JYYQz26J+QwkHfQjtkbEa2lto8quDQMDayT2uA271clQkM5cP
-9s8pguwsplpPLg==
-=+i4k
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqV2EATHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6azHD/0ch0niyilf/HJG3RnuYZF64GgX7Gw0
+nx8sonvi0hhH0WugauIVaiG6fBowEpp1hU/OuJDaT/JrsWTPai16xOLXDYF2Mpk1
+42m2FbvWlxJWsqJ+I4lM8/yc+1NzerpUJWlL3TLSzQK9cVa3dyEQ73BxjmE/+GNQ
+jC3AQGO9XbuY3X6K1Cj9iao2kKn1j5iHEjl75AIcb+9yr6BN8eArgx8wndZFMTpU
+ZmrpOZGha0YstJDhtfcNZwpY4Kgx5iZrONXx7djbazjOyEZ7ouNGYRdfNt2qUp77
+KP+UlTkHLlNI2sYa2TmraiRD0k+cKrim53UsMNwkNkVJRjSKH/9YuD842JvKDFR6
+gnCtqXqtujhAIKX/CZRquSLQQLJf6i1nhYJnppiblUJn20qxyW2aS4AyUIwk97VB
+hKwDNclkcNWUep7mQ4aWxJxZiN72pm1nzVIp99AD9YCcVOxzJDdaDrgesGR75FbD
+BMwsfP/y4+csqa5tB/Y6gcfMSSp2wW1JE4hErnnFQFrn/cc4S1rCvN1Nt1LUY7Ww
+xhQtUVVBXKSChX0cIKRgNVBhopztquEeiELzeXFEFXsNqookMv9ZuYqW7hkPMgfI
+yWO4NsoQK8MmBDQIhvwsG+VdBpCiSjDKBcSNKjbQ4LiEGzVuV2UXcUWLQ0GpsITq
+WlQ0E7C6uDukVQ==
+=zoWS
 -----END PGP SIGNATURE-----

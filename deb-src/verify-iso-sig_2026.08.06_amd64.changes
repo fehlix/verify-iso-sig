@@ -1,0 +1,62 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Mon, 31 Aug 2026 15:36:52 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.08.06
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.08.06) mx; urgency=medium
+ .
+   * Get the ISO name from a plain checksum file's own content when
+     needed.
+   * Prefer a clearsigned per-ISO checksum over a direct .sig when
+     resolving a plain checksum, matching bare-ISO auto-discovery.
+   * GUI: the run-once lock now also covers --manage-keys.
+   * GUI: fixed a lock-release gap after a backgrounded child.
+   * GUI: the run-once notification now names whichever window is
+     already open.
+   * GUI: fixed the progress popup not closing when yad is a wrapper
+     script rather than the real binary.
+   * Warn when a checksum relies on MD5 or SHA1.
+Checksums-Sha1:
+ 5e7e3db057b404ae52480531360fdfbd0174bd92 1516 verify-iso-sig_2026.08.06.dsc
+ 774ac072b287dc82a7b518f531bca8fa09d3e286 600820 verify-iso-sig_2026.08.06.tar.xz
+ c71c436b2e7e8afffa63a87c5f434adfe22cd53d 602788 verify-iso-sig_2026.08.06_all.deb
+ afd495c84c54edc418ed41f6766eb8d73da257ad 6302 verify-iso-sig_2026.08.06_amd64.buildinfo
+Checksums-Sha256:
+ f4a2c8c06f09b8906c91886e3ded1d6657150753daca7350178edeca04794fac 1516 verify-iso-sig_2026.08.06.dsc
+ 6ba14b47e47dcd08a4df81ad3876d56e8fb8abfe917856cab76723282a08c208 600820 verify-iso-sig_2026.08.06.tar.xz
+ 487fa95a201f4346e2f0fb0f99b29d25bbba205293aa651978b9d33f978775c2 602788 verify-iso-sig_2026.08.06_all.deb
+ 919ff84f52c1ed8de5bfdc20aa0e673e198804343f758211c5ba2df935b75331 6302 verify-iso-sig_2026.08.06_amd64.buildinfo
+Files:
+ f7581036c5d1b3e7ddd91ae3870ba397 1516 utils optional verify-iso-sig_2026.08.06.dsc
+ f0247650b0cafb721ce3394b2fb68350 600820 utils optional verify-iso-sig_2026.08.06.tar.xz
+ 587a5c665c4a08321f03ffee0522fb8b 602788 utils optional verify-iso-sig_2026.08.06_all.deb
+ 55357ba55a5c1697430c4550c24bd557 6302 utils optional verify-iso-sig_2026.08.06_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqV2EATHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6V7MD/9cndVYH8But148jti1oCwOqYiXLIvU
+NOTik6fQdOWua+dYPytnQ1RvfYnGAogyokWigK9IDc2FE1zmFrR9/IiVqvAxTJDm
+4WmJ03EEBli1NwCEf2WrI5efLw7t9aSYA6VazX8OnsABe1jh2q7RFI5nR9CliewX
+IVzQcAzNcL43wY9/EqkUe3UL1ycbyst1LuvMEWxfRoPG40MwCtkSexJfzhyAn1SJ
+6cs79Lg8qUEQ1YJP4cjWT+lQ/emyVnz4A9WzVqQAEeCzn25oQbNGMYdPrgXE/bxm
+BgS0ztPqPl7RB2kmAJv1+jp6Y3h7pV0vYzgN4p0OvBrTp13yq2qMWqK9EtcLCM0q
+hgloM5Nfb4ull+AqeDoG8Ad3zovD++GnRxKNFo+xyc/KmrWzMz5oWOXtWViOFCzo
+X+9IVjhJbvJ9QHeiOH8wElUQKCdmitY5At8+KDJ4FiIHsGne3VWu3fTLJ1dPj5tI
+yLDgg0Vkn7QBRzCCReaOpoXFNR/sNxgAao7bnE5+tD6BIIYCy6hGx7YpFEsexoEg
+5aLe1DMVp8pBrPtdSbF4LzwyCGR8w2SfdnWGi2Pu6LavAc2G6tEeqK+YuuF9xeFb
+Yw6GvVUJiDVOKs+pVODIkT/KHAJrIxQh+ytN2Q4KHrcz/oy5abDvSwVKmFVHw9dp
+1AkR+vXzg+yZyw==
+=0J7v
+-----END PGP SIGNATURE-----
