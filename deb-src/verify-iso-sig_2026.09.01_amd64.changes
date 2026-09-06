@@ -1,0 +1,64 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Sun, 06 Sep 2026 16:39:17 -0400
+Source: verify-iso-sig
+Binary: verify-iso-sig
+Architecture: source all
+Version: 2026.09.01
+Distribution: mx
+Urgency: medium
+Maintainer: fehlix <fehlix@mxlinux.org>
+Changed-By: fehlix <fehlix@mxlinux.org>
+Description:
+ verify-iso-sig - verify the GPG signature of a downloaded ISO image
+Changes:
+ verify-iso-sig (2026.09.01) mx; urgency=medium
+ .
+   * Take both personal and system-wide keys into account when
+     recognizing a signing key.
+   * Recognize a new signing subkey of an already-known key
+     automatically.
+   * Take key revocation into account more thoroughly, including a
+     revoked subkey.
+   * Add a way to refresh trusted keys for updates.
+   * Add .kbx import support, in addition to .asc and .gpg.
+   * Accept fingerprints to list only specific trusted keys.
+   * Show more detail about a signing key, including its primary key
+     when a subkey signed the ISO.
+   * Adjust the key manager's button and column labels.
+   * Add mx-gpg-keys to Recommends.
+Checksums-Sha1:
+ 2e3816bf5b54f15276d361f79cdd08686cacd438 1516 verify-iso-sig_2026.09.01.dsc
+ c5160a76871f2398b3cf3a84dca0088ed1e9983a 548752 verify-iso-sig_2026.09.01.tar.xz
+ 3b97f84be42c53c391909e406a6a62944cfedec6 550744 verify-iso-sig_2026.09.01_all.deb
+ 0dddd96d1b5e2e42a16fa7c157004f63f63743bf 6302 verify-iso-sig_2026.09.01_amd64.buildinfo
+Checksums-Sha256:
+ fecc32672f98acb6bada289e50ea51796fedc4379beac67fa1aee2d410ef6138 1516 verify-iso-sig_2026.09.01.dsc
+ 90f3f3f02e7d21dabd5db2147f266e98713a99fc74d628bf5f33f1612b4a1b18 548752 verify-iso-sig_2026.09.01.tar.xz
+ d464401f04386a12151f54193e13caa8289bffe411876814add1c2428b6f2bea 550744 verify-iso-sig_2026.09.01_all.deb
+ 976bc384e375165389d6bd9a0b1da06092a6efb190f1836ab3bcda4d954dc01f 6302 verify-iso-sig_2026.09.01_amd64.buildinfo
+Files:
+ cccd55c4769175af0d6c0297f84c6a09 1516 utils optional verify-iso-sig_2026.09.01.dsc
+ 0edc799befd84f204e48a1dce0e35b92 548752 utils optional verify-iso-sig_2026.09.01.tar.xz
+ b6fd41acae726340800a30e65ef04ac5 550744 utils optional verify-iso-sig_2026.09.01_all.deb
+ 16c0d63efc3ac7cf64780e3a8c88a147 6302 utils optional verify-iso-sig_2026.09.01_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJHBAEBCgAxFiEEgRnC8/wKXRM2S0xLL1ePG6ydm+kFAmqd03MTHGZlaGxpeEBt
+eGxpbnV4Lm9yZwAKCRAvV48brJ2b6ZW2EACo8zQJSB0owIeNezvFphSX+hveI8s9
+EkR/j3HbUQh2ymPNFkdSFEwq1V5ONTwWCcy9VehTT1y4+fQuRNTNyc4fWModDaH7
+A5mNRDMsPw8K8+m82riTGjw5p/aLTpWpozVAId/Z1RXYYglRr/+FpAqTXpPPiznu
+WqSSaBnpFxyC/7N49UEH0MG/FTyCvDV365jldDI+epuULwo0TWcA0e54nIhcQ00w
+h3h6HZGMGMJ9wnXSx5k8/BunrJh6+fsO5CCpOtGMDWur40B0MGfOCCSUUL3p/kZV
+77YRNYIMccHqtsUCmv6jSWtwZfMdM5psjI/BavACZpbixBjZyY1E8dfhO+sGJHtG
+nx27Y+VTERZ+P+wwoOmSYVtLY+B3vWEZpfOUDhhpyHF12hWVEUI+ZisP5ykxeXlo
+eS5NQdm5+0WeY14awmnrKcnyWJVwekpzNiIX9cHE++FZCTgTRaqYLj1jCmQ9CvxH
+5XGfelkeBqAhwgCh38CZTx1Xw1tdLoIAvf4XOY51RjxW4/dP7YQANioGvzCXwpzs
+IPaoSr7eH2Hmp4VffWIh+YIEdtShCgzrVzHv1cfhqfZM2VbJuPb7b2shgr3xmwQj
+1Pnc8Se3+wbqNWMR3agdwdklLKBkcl8L9yPLEcSdP9Djm4AxBqkWH9YS2/hdnx5/
+kqsVyEEPo7DkhQ==
+=vhq5
+-----END PGP SIGNATURE-----
