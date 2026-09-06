@@ -1,3 +1,21 @@
+verify-iso-sig (2026.09.01) mx; urgency=medium
+
+  * Take both personal and system-wide keys into account when
+    recognizing a signing key.
+  * Recognize a new signing subkey of an already-known key
+    automatically.
+  * Take key revocation into account more thoroughly, including a
+    revoked subkey.
+  * Add a way to refresh trusted keys for updates.
+  * Add .kbx import support, in addition to .asc and .gpg.
+  * Accept fingerprints to list only specific trusted keys.
+  * Show more detail about a signing key, including its primary key
+    when a subkey signed the ISO.
+  * Adjust the key manager's button and column labels.
+  * Add mx-gpg-keys to Recommends.
+
+ -- fehlix <fehlix@mxlinux.org>  Sun, 06 Sep 2026 16:39:17 -0400
+
 verify-iso-sig (2026.08.06) mx; urgency=medium
 
   * Get the ISO name from a plain checksum file's own content when

@@ -23,7 +23,11 @@ verify-iso-sig - verify the GPG signature of a downloaded ISO image
 
 **verify-iso-sig** **--is-cached** *iso-file* \[*sig-file*\]
 
-**verify-iso-sig** **--list-trusted-keys**
+**verify-iso-sig** **--list-trusted-keys** \[*fingerprint...*\]
+
+**verify-iso-sig** **--refresh-trusted-keys**
+
+**verify-iso-sig** **--show-key-details** *fingerprint* \[*fingerprint...*\]
 
 **verify-iso-sig** **--list-known-keys**
 
@@ -145,7 +149,7 @@ Four signing conventions are supported automatically:
 
 The signing key's fingerprint is read directly out of the signature
 packet - no key material is needed for that step. That fingerprint is
-then checked against three things, any one of which is enough to
+then checked against four things, any one of which is enough to
 consider it recognized:
 
 1. This tool's own built-in list of recognized signing keys - mostly
@@ -154,7 +158,11 @@ consider it recognized:
    independent of the ISO/sig download itself), plus a small number of
    separately-vetted third-party respin keys not on that page. Run
    **--list-known-keys** to print this list directly and offline,
-   without needing to visit the wiki.
+   without needing to visit the wiki. This list is keyed by each
+   signer's *primary* key; any of that primary's own valid signing
+   subkeys (present in `trustedkeys.gpg`/`pubring.kbx`, e.g. after a
+   routine key rotation) is recognized the same way, without needing
+   its own separate entry here.
 2. Whether the key is already cached and usable (valid, or merely
    expired - see below) in `~/.gnupg/trustedkeys.gpg`. Getting a key
    into that keyring already requires a deliberate
@@ -169,16 +177,23 @@ consider it recognized:
    ultimately trusted there - not merely imported, which carries no
    trust signal on its own, but a deliberate trust decision made
    through those tools counts the same as an explicit **--trust-key**.
+4. Whether the key is present in
+   `/usr/share/mx-gpg-keys/mx-gpg-keyring`, a system file installed by
+   the `mx-gpg-keys` package (if present) - the distro itself is the
+   one asserting trust here, the same as rule 1, just backed by real
+   key material instead of a fingerprint-only list.
 
 This matters because without some form of this check, an attacker who
 supplies both a malicious ISO and a matching malicious signature file
 would otherwise be trusted just as readily as the real thing.
 
-A key recognized via rule 3 is automatically copied into
-`~/.gnupg/trustedkeys.gpg` (no flag or prompt needed) - the trust
-decision was already made explicitly by the user elsewhere, so this
-just persists it into the keyring `gpgv` actually reads, the same way
-**--trust-key** does for a key approved through this tool directly.
+A key recognized via rule 3 or rule 4 is automatically copied into
+`~/.gnupg/trustedkeys.gpg` (no flag or prompt needed). For rule 3, the
+trust decision was already made explicitly by the user elsewhere; for
+rule 4, the distro itself is the one asserting trust, same as rule 1. Either
+way this just persists the key into the keyring `gpgv` actually reads,
+the same way **--trust-key** does for a key approved through this tool
+directly.
 
 Before ever touching the network: `~/.gnupg/trustedkeys.gpg` (this
 tool's own dedicated keyring) is checked first and reused if the key
@@ -192,10 +207,30 @@ used normally, with a warning printed and one quiet, best-effort
 attempt to find a renewed copy first (checking `pubring.kbx`, then a
 keyserver, silently updating `trustedkeys.gpg` in place if a
 non-expired copy turns up). `~/.gnupg/pubring.kbx` is checked
-read-only as a fallback - it is never written to. Only if the key is
-missing everywhere, or revoked, does this tool fetch it from a
-keyserver as part of the actual verification, and only with **--keep**
-is that fetched copy saved into `trustedkeys.gpg` for next time.
+read-only as a fallback - it is never written to. If the key is still
+not found there, `/usr/share/mx-gpg-keys/mx-gpg-keyring` (rule 4, if
+present) is checked next, also read-only - a match there is copied
+into `trustedkeys.gpg` automatically, same as rule 3, so a key MX
+ships in that package only ever needs this fallback on its very first
+use, offline included. Only if the key is missing everywhere does this
+tool fetch it from a keyserver as part of the actual verification, and
+only with **--keep** is that fetched copy saved into `trustedkeys.gpg`
+for next time.
+
+Every cached key's status is also actively rechecked locally on every
+run, not just at first encounter - if `pubring.kbx` or `mx-gpg-keyring`
+now shows a key `trustedkeys.gpg` still has as valid or merely expired
+as actually **revoked**, that revocation is copied into
+`trustedkeys.gpg` immediately and the key is refused, with no "verify
+anyway" option. This local recheck never touches the network. Since
+that check only ever looks at a signing key's overall (primary-key)
+status, a signature made specifically with a subkey that's been
+individually revoked - while the primary key itself remains fine - is
+separately caught right at the actual signature check itself, again
+with no "verify anyway" option. See
+**--refresh-trusted-keys** for the on-demand equivalent that also
+checks a keyserver, across every saved key at once, not just the one
+being verified.
 
 # OPTIONS
 
@@ -226,7 +261,8 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     picker's own "Manage Trusted Keys" button). Opens as a GUI window
     when a display is available (respecting a leading
     **--cli**/**--gui**); otherwise prints the equivalent command-line
-    flags (**--list-trusted-keys**, **--untrust-key**,
+    flags (**--list-trusted-keys**, **--refresh-trusted-keys**,
+    **--show-key-details**, **--untrust-key**,
     **--export-trusted-keys**, **--inspect-key-file**,
     **--import-trusted-keys**) and exits.
 
@@ -348,12 +384,13 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     wording before a real run) - not really useful standalone: reads
     the signing key's fingerprint out of the signature file and
     reports, via exit status only (0 = yes, 1 = no), whether that key
-    is already cached and valid in `trustedkeys.gpg` or `pubring.kbx` -
-    i.e. whether a real run would need the network. No recognition
-    check, no fetch, no `gpgv`.
+    is already cached and valid in `trustedkeys.gpg` or `pubring.kbx`,
+    or, on a system with the `mx-gpg-keys` package installed, in
+    `mx-gpg-keyring` - i.e. whether a real run would need the network.
+    No recognition check, no fetch, no `gpgv`.
 
-**--list-trusted-keys**
-:   A separate mode: lists every key currently saved in
+**--list-trusted-keys** \[*fingerprint...*\]
+:   A separate mode: lists key(s) currently saved in
     `~/.gnupg/trustedkeys.gpg`, one per line, as
     *fingerprint*\|*validity*\|*claimed-identity*\|*known*\|*expiration*
     - `known` is the literal word `known` if this fingerprint is also
@@ -362,8 +399,40 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     unrecognized - that recognition doesn't depend on
     `trustedkeys.gpg` at all), empty otherwise. `expiration` is the
     key's expiration date as Unix epoch seconds, empty if it has none.
-    No `trustedkeys.gpg` yet, or nothing saved - no output, exit 0 (an
-    empty list, not an error).
+    Sorted by claimed identity (case-insensitive), not by fingerprint or
+    insertion order. No fingerprint given lists every key (the previous,
+    and still default, behavior); one or more given filters to just
+    those - a
+    fingerprint naming a subkey rather than a primary key is resolved
+    to its owning primary key automatically, same as
+    **--export-trusted-keys**; one not found is a warning, not a hard
+    failure. No `trustedkeys.gpg` yet, or nothing saved/matched - no
+    output, exit 0 (an empty list, not an error).
+
+**--refresh-trusted-keys**
+:   A separate mode: checks every key currently saved in
+    `~/.gnupg/trustedkeys.gpg` against `pubring.kbx`, `mx-gpg-keyring`,
+    and every configured keyserver for anything new - a later expiry,
+    a new subkey or UID, or a revocation - not yet reflected locally.
+    Unlike the automatic, network-free recheck every normal
+    verification already performs (which only ever touches the one key
+    actually being used), this sweeps every saved key, and is the only
+    case where this tool reaches the network on its own initiative -
+    so it never runs implicitly. Anything found is merged into
+    `trustedkeys.gpg` in place and reported; a short summary (keys
+    checked, updated, revoked) is printed at the end.
+
+**--show-key-details** *fingerprint* \[*fingerprint...*\]
+:   A separate, read-only mode: prints gpg's own human-readable
+    `--list-keys` listing (algorithm, creation date, expiry,
+    capabilities, and - for a key with a signing subkey - the
+    subkey's own fingerprint alongside the primary key's) for the
+    given fingerprint(s), which must already be in
+    `~/.gnupg/trustedkeys.gpg`. A fingerprint that isn't found there
+    produces a warning for that key, not a hard failure - unlike
+    `--export-trusted-keys`/`--import-trusted-keys`, at least one
+    fingerprint must be given (there is no "show every key" shorthand
+    here - see `--list-trusted-keys` for that instead).
 
 **--list-known-keys**
 :   A separate mode: lists the built-in signing keys this tool
@@ -375,9 +444,11 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     page (their own label makes this clear). Entirely offline and
     independent of `trustedkeys.gpg`/`pubring.kbx` - unlike
     `--list-trusted-keys`, this is "what does this tool recognize by
-    default", not "what's cached locally". To add a new key, edit the
-    `KNOWN_KEYS`/`KNOWN_THIRD_PARTY_KEYS` arrays near the top of the
-    script itself - there is no runtime way to add to this list.
+    default", not "what's cached locally". One entry per *primary* key
+    - a signing subkey belonging to a listed primary is recognized
+    automatically, no separate entry needed. To add a new primary key,
+    edit the `KNOWN_KEYS`/`KNOWN_THIRD_PARTY_KEYS` arrays near the top
+    of the script itself - there is no runtime way to add to this list.
 
 **--list-keyservers**
 :   A separate mode: prints the actual, already-resolved keyserver list
@@ -398,8 +469,11 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
     separately marked trusted in your own `~/.gnupg` keyring (Seahorse,
     or `gpg --edit-key ... trust`), or anything already cached - all
     the same. Without this, any of those would just get silently
-    re-added the next time it's seen. **--trust-key** clears this
-    override again for that key. Never dies just because the
+    re-added the next time it's seen. Untrusting a primary key also
+    blocks a signing subkey of that same primary, whenever that subkey
+    is resolvable against `trustedkeys.gpg`/`mx-gpg-keyring`/
+    `pubring.kbx` - even one never seen before. **--trust-key** clears
+    this override again for that key. Never dies just because the
     fingerprint isn't currently cached in
     `trustedkeys.gpg` - untrusting ahead of time works too.
 
@@ -424,7 +498,10 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
 **--import-trusted-keys**=*path*, **--import-trusted-keys** *path* \[*fingerprint...*\]
 :   A separate mode: imports key(s) from an external key file (as
     produced by **--export-trusted-keys**, or exported by any other
-    OpenPGP tool) into `~/.gnupg/trustedkeys.gpg`. With no fingerprints
+    OpenPGP tool) into `~/.gnupg/trustedkeys.gpg`. A real GnuPG keyring
+    or keybox file (e.g. a copy of `pubring.kbx`, or
+    `/usr/share/mx-gpg-keys/mx-gpg-keyring` itself) works directly too,
+    not just an already-exported key file. With no fingerprints
     given, imports every key found in the file; a given fingerprint
     that names a subkey rather than a primary key is resolved to its
     owning primary key automatically. Refuses with a clear error if the
@@ -461,7 +538,8 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
 `~/.gnupg/trustedkeys.gpg`
 :   This tool's own keyring of keys explicitly trusted via
     **--keep**/**--trust-key**/**--keep-key**, or copied in
-    automatically from an explicit pubring.kbx trust decision.
+    automatically from an explicit pubring.kbx trust decision or a
+    match in `mx-gpg-keyring`.
 
 `~/.gnupg/verify-iso-sig-untrusted-keys`
 :   Fingerprints **--untrust-key** has durably overridden (one per
@@ -472,6 +550,11 @@ is that fetched copy saved into `trustedkeys.gpg` for next time.
 :   The user's normal GnuPG keyring (e.g. managed by Seahorse/GNOME
     "Passwords & Keys") - checked read-only, never written to by this
     tool directly.
+
+`/usr/share/mx-gpg-keys/mx-gpg-keyring`
+:   Signing keys shipped by the `mx-gpg-keys` package, if installed -
+    checked read-only, never written to by this tool directly. Not
+    present unless that package is; silently skipped either way.
 
 # SEE ALSO
 

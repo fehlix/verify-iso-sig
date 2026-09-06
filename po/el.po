@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verify-iso-sig\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-30 23:06+0200\n"
+"POT-Creation-Date: 2026-09-03 21:09+0200\n"
 "PO-Revision-Date: 2026-07-30 16:10+0200\n"
 "Last-Translator: \n"
 "Language-Team: Greek\n"
@@ -56,11 +56,17 @@ msgstr "Σχετικά με ${ABOUT_TITLE}"
 msgid "Close"
 msgstr "Κλείσιμο"
 
-msgid "Untrust Selected"
-msgstr "Ανάκληση επιλεγμένων"
+msgid "Details"
+msgstr "Λεπτομέρειες"
+
+msgid "Untrust"
+msgstr "Ανάκληση"
 
 msgid "Import Selected"
 msgstr "Εισαγωγή επιλεγμένων"
+
+msgid "Refresh"
+msgstr "Ανανέωση"
 
 msgid "Could not read the list of trusted keys:"
 msgstr "Δεν ήταν δυνατή η ανάγνωση της λίστας έμπιστων κλειδιών:"
@@ -77,11 +83,11 @@ msgstr "Δεν υπάρχουν αποθηκευμένα κλειδιά υπογ
 msgid "A key ends up there after you choose to \"Trust\"/\"Keep\" it while verifying an ISO."
 msgstr "Ένα κλειδί καταλήγει εκεί αφού επιλέξετε να το «εμπιστευτείτε»/«διατηρήσετε» κατά την επαλήθευση ενός ISO."
 
-msgid "Import from File"
-msgstr "Εισαγωγή από αρχείο"
+msgid "Import"
+msgstr "Εισαγωγή"
 
-msgid "Remove"
-msgstr "Αφαίρεση"
+msgid "Select"
+msgstr "Επιλογή"
 
 msgid "Fingerprint"
 msgstr "Αποτύπωμα"
@@ -103,8 +109,8 @@ msgstr "Ημερομηνία λήξης"
 msgid "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to untrust, then click \"${BTN_UNTRUST_SELECTED}\"."
 msgstr "Κλειδιά αποθηκευμένα στο ~/.gnupg/trustedkeys.gpg - επιλέξτε όσα θέλετε να ανακαλέσετε, και μετά κάντε κλικ στο «${BTN_UNTRUST_SELECTED}»."
 
-msgid "Export Selected"
-msgstr "Εξαγωγή επιλεγμένων"
+msgid "Export"
+msgstr "Εξαγωγή"
 
 #. TRANSLATORS: shown as-is in the list's "Status" column (a
 #. gpg key's trust validity), one word each.
@@ -123,6 +129,21 @@ msgstr "ανακληθέν"
 #. no expiration date set.
 msgid "never"
 msgstr "ποτέ"
+
+msgid "No key was checked - nothing to show details for."
+msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς εμφάνιση."
+
+#. TRANSLATORS: ${DETAILS_N}/${DETAILS_TOTAL} are literal numbers - keep placeholders as-is.
+#, sh-format
+msgid "Key ${DETAILS_N} of ${DETAILS_TOTAL}"
+msgstr "Κλειδί ${DETAILS_N} από ${DETAILS_TOTAL}"
+
+#, sh-format
+msgid "(could not read details: ${OUT})"
+msgstr "(δεν ήταν δυνατή η ανάγνωση των λεπτομερειών: ${OUT})"
+
+msgid "Key Details"
+msgstr "Λεπτομέρειες κλειδιού"
 
 msgid "No key was checked - nothing to export."
 msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς εξαγωγή."
@@ -153,9 +174,6 @@ msgstr "Δεν ήταν δυνατή η ανάγνωση αυτού του αρ�
 msgid "No keys were found in that file."
 msgstr "Δεν βρέθηκαν κλειδιά σε αυτό το αρχείο."
 
-msgid "Import"
-msgstr "Εισαγωγή"
-
 #, sh-format
 msgid "Keys found in this file - check any you want to import, then click \"${BTN_IMPORT_SELECTED}\"."
 msgstr "Κλειδιά που βρέθηκαν σε αυτό το αρχείο - επιλέξτε όσα θέλετε να εισαγάγετε, και κάντε κλικ στο «${BTN_IMPORT_SELECTED}»."
@@ -180,6 +198,33 @@ msgstr "Έγινε επεξεργασία ${IMPORT_PROCESSED} κλειδιού/-
 msgid "Could not import keys:"
 msgstr "Δεν ήταν δυνατή η εισαγωγή κλειδιών:"
 
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx, mx-gpg-keyring, and a keyserver - this can take a while..."
+msgstr "Έλεγχος ${REFRESH_COUNT} κλειδιών στο pubring.kbx, στο mx-gpg-keyring και σε έναν διακομιστή κλειδιών - αυτό μπορεί να διαρκέσει λίγο..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx and a keyserver - this can take a while..."
+msgstr "Έλεγχος ${REFRESH_COUNT} κλειδιών στο pubring.kbx και σε έναν διακομιστή κλειδιών - αυτό μπορεί να διαρκέσει λίγο..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against mx-gpg-keyring and a keyserver - this can take a while..."
+msgstr "Έλεγχος ${REFRESH_COUNT} κλειδιών στο mx-gpg-keyring και σε έναν διακομιστή κλειδιών - αυτό μπορεί να διαρκέσει λίγο..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against a keyserver - this can take a while..."
+msgstr "Έλεγχος ${REFRESH_COUNT} κλειδιών σε έναν διακομιστή κλειδιών - αυτό μπορεί να διαρκέσει λίγο..."
+
+#, sh-format
+msgid "Checked ${SWEEP_CHECKED} key(s): ${SWEEP_UPDATED} updated, ${SWEEP_REVOKED} revoked."
+msgstr "Ελέγχθηκαν ${SWEEP_CHECKED} κλειδί(ά): ${SWEEP_UPDATED} ενημερώθηκαν, ${SWEEP_REVOKED} ανακλήθηκαν."
+
+#, sh-format
+msgid "${SWEEP_UNREACHABLE} of ${SWEEP_CHECKED} key(s) could not be checked against any keyserver - results for those may be incomplete."
+msgstr "${SWEEP_UNREACHABLE} από ${SWEEP_CHECKED} κλειδιά δεν ήταν δυνατό να ελεγχθούν σε κανέναν διακομιστή κλειδιών - τα αποτελέσματα γι' αυτά ενδέχεται να είναι ελλιπή."
+
+msgid "Could not refresh trusted keys:"
+msgstr "Δεν ήταν δυνατή η ανανέωση των έμπιστων κλειδιών:"
+
 msgid "No key was checked - nothing to untrust."
 msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς ανάκληση."
 
@@ -190,9 +235,6 @@ msgstr "Ανάκληση ${COUNT} επιλεγμένων κλειδιών;"
 
 msgid "This tool will stop automatically trusting the selected key(s) - whether they're one of its built-in recognized keys, or separately marked trusted in your own GnuPG keyring. This isn't permanent - trust a key again anytime (verify something signed by it and accept it, or import the key again) and it'll be trusted normally from then on."
 msgstr "Αυτό το εργαλείο θα σταματήσει να εμπιστεύεται αυτόματα τα επιλεγμένα κλειδιά - είτε πρόκειται για ενσωματωμένο αναγνωρισμένο κλειδί, είτε για κλειδί που έχετε σημειώσει ως έμπιστο στη δική σας κλειδοθήκη GnuPG. Αυτό δεν είναι μόνιμο - εμπιστευτείτε ξανά ένα κλειδί όποτε θέλετε (επαληθεύστε κάτι υπογεγραμμένο με αυτό και αποδεχτείτε το, ή εισαγάγετε ξανά το κλειδί) και από τότε θα αντιμετωπίζεται κανονικά ως έμπιστο."
-
-msgid "Untrust"
-msgstr "Ανάκληση"
 
 msgid "Some keys could not be removed:"
 msgstr "Ορισμένα κλειδιά δεν ήταν δυνατό να αφαιρεθούν:"
@@ -317,6 +359,9 @@ msgstr "αν χρειαστεί να ανακτηθεί το κλειδί υπο
 msgid "Process was interrupted - the check did not finish, so nothing here has been verified."
 msgstr "Η διαδικασία διακόπηκε - ο έλεγχος δεν ολοκληρώθηκε, οπότε δεν έχει επαληθευτεί τίποτα εδώ."
 
+msgid "Primary key:"
+msgstr "Κύριο κλειδί:"
+
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
 #, sh-format
 msgid "By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID or fingerprint yourself and want to trust and remember this key for future checks."
@@ -386,6 +431,9 @@ msgstr "χρησιμοποιήθηκε ήδη αποθηκευμένο κλει�
 msgid "used a key from your personal keyring (pubring.kbx)"
 msgstr "χρησιμοποιήθηκε κλειδί από την προσωπική σας κλειδοθήκη (pubring.kbx)"
 
+msgid "used a key from mx-gpg-keyring"
+msgstr "χρησιμοποιήθηκε κλειδί από το mx-gpg-keyring"
+
 msgid "key saved locally for faster future checks"
 msgstr "το κλειδί αποθηκεύτηκε τοπικά για ταχύτερους μελλοντικούς ελέγχους"
 
@@ -411,6 +459,12 @@ msgstr "Τίποτα προς έλεγχο"
 
 msgid "Verification FAILED"
 msgstr "Η επαλήθευση ΑΠΕΤΥΧΕ"
+
+msgid "This signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it). Do not trust this file."
+msgstr "Αυτό το κλειδί υπογραφής έχει ανακληθεί - δεν θα χρησιμοποιηθεί, όποιος κι αν είναι ο λόγος (πραγματική διακύβευση του κλειδιού, ή σκόπιμη απόσυρσή του από τον κάτοχο). Μην εμπιστεύεστε αυτό το αρχείο."
+
+msgid "The signing key could not be fetched from any keyserver - this looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Δεν ήταν δυνατή η λήψη του κλειδιού υπογραφής από κανέναν διακομιστή κλειδιών - αυτό μοιάζει με πρόβλημα δικτύου, όχι απαραίτητα με εσφαλμένη υπογραφή. Δοκιμάστε ξανά μόλις υπάρξει σύνδεση."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
 #, sh-format
@@ -450,6 +504,9 @@ msgstr "Δεν βρέθηκε ούτε το «${DISPLAY_ISO_SAFE}» ούτε έ�
 
 msgid "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing, a direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. '.sha512.asc') for this ISO."
 msgstr "Αυτό το αρχείο αθροίσματος ελέγχου δεν είναι υπογεγραμμένο, και το ISO που περιγράφει δεν έχει ούτε αυτό δική του υπογραφή - δεν υπάρχει τίποτα εδώ που αυτό το εργαλείο να μπορεί να επαληθεύσει κρυπτογραφικά. Ελέγξτε αν η διανομή παρέχει μια υπογεγραμμένη λίστα αθροισμάτων ελέγχου, ένα άμεσο αρχείο .sig/.asc/.gpg ή ένα αυτόνομο, αυτο-υπογεγραμμένο άθροισμα ελέγχου (π.χ. '.sha512.asc') για αυτό το ISO."
+
+msgid "The checksum listing's signing key could not be fetched from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Δεν ήταν δυνατή η λήψη του κλειδιού υπογραφής της λίστας αθροισμάτων ελέγχου από κανέναν διακομιστή κλειδιών - τίποτα σε αυτήν δεν ήταν δυνατό να ελεγχθεί. Αυτό μοιάζει με πρόβλημα δικτύου, όχι απαραίτητα με εσφαλμένη υπογραφή. Δοκιμάστε ξανά μόλις υπάρξει σύνδεση."
 
 msgid "The checksum file that lists this ISO's hash failed its own verification (bad/untrusted signature, or its key couldn't be confirmed) - nothing in it can be trusted. Re-download the checksum/signature files (and probably the ISO too), ideally from a different mirror."
 msgstr "Το αρχείο αθροισμάτων ελέγχου που αναφέρει το άθροισμα ελέγχου αυτού του ISO απέτυχε στη δική του επαλήθευση (μη έγκυρη/μη έμπιστη υπογραφή, ή το κλειδί του δεν μπόρεσε να επιβεβαιωθεί) - τίποτα σε αυτό δεν μπορεί να θεωρηθεί έμπιστο. Κατεβάστε ξανά τα αρχεία αθροισμάτων ελέγχου/υπογραφής (και πιθανώς και το ISO), κατά προτίμηση από διαφορετικό διακομιστή αντικατοπτρισμού."
@@ -555,6 +612,15 @@ msgstr "δεν εντοπίστηκε γραφική συνεδρία (ούτε 
 msgid "Manage trusted keys from the command line instead:"
 msgstr "Διαχειριστείτε τα έμπιστα κλειδιά από τη γραμμή εντολών:"
 
+msgid "list key(s) saved in trustedkeys.gpg (all if none given)"
+msgstr "λίστα κλειδιού/-ών αποθηκευμένου/-ων στο trustedkeys.gpg (όλα αν δεν δοθεί κανένα)"
+
+msgid "check every trusted key against pubring.kbx, mx-gpg-keyring, and a keyserver for updates (renewed expiry, new subkeys, or a revocation)"
+msgstr "έλεγχος κάθε έμπιστου κλειδιού στο pubring.kbx, στο mx-gpg-keyring και σε έναν διακομιστή κλειδιών για ενημερώσεις (παρατεταμένη ισχύ, νέα υποκλειδιά ή ανάκληση)"
+
+msgid "show fingerprint/algorithm/dates/subkeys for trusted key(s)"
+msgstr "εμφάνιση αποτυπώματος/αλγορίθμου/ημερομηνιών/υποκλειδιών για τα έμπιστα κλειδιά"
+
 msgid "remove <fpr> from trustedkeys.gpg"
 msgstr "αφαίρεση του <fpr> από το trustedkeys.gpg"
 
@@ -616,6 +682,16 @@ msgstr "για το ${FLAG_KEEP_KEY} απαιτείται ακριβώς ένα 
 msgid "${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex fingerprint, not '${FPR}'"
 msgstr "Το ${FLAG_KEEP_KEY} απαιτεί πλήρες δεκαεξαδικό αποτύπωμα 40 χαρακτήρων (ή 64 χαρακτήρων), όχι '${FPR}'"
 
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "at least one fingerprint argument is required for ${FLAG_SHOW_KEY_DETAILS}"
+msgstr "για το ${FLAG_SHOW_KEY_DETAILS} απαιτείται τουλάχιστον ένα όρισμα αποτυπώματος"
+
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "${FLAG_SHOW_KEY_DETAILS} needs a full 40-character (or 64-character) hex fingerprint, not '${fpr}'"
+msgstr "Το ${FLAG_SHOW_KEY_DETAILS} απαιτεί πλήρες δεκαεξαδικό αποτύπωμα 40 χαρακτήρων (ή 64 χαρακτήρων), όχι '${fpr}'"
+
 msgid "this option takes no extra arguments"
 msgstr "αυτή η επιλογή δεν δέχεται επιπλέον ορίσματα"
 
@@ -655,8 +731,18 @@ msgid "'${SIG}' is a directory, not a file - point this at the actual signature 
 msgstr "Το '${SIG}' είναι φάκελος, όχι αρχείο - υποδείξτε απευθείας το ίδιο το αρχείο υπογραφής."
 
 #, sh-format
+msgid "warning: could not read ${MX_GPG_KEYRING}: ${out}"
+msgstr "προειδοποίηση: δεν ήταν δυνατή η ανάγνωση του ${MX_GPG_KEYRING}: ${out}"
+
+#, sh-format
 msgid "this key expired on ${date_str} - this does not affect the signature check"
 msgstr "αυτό το κλειδί έληξε στις ${date_str} - αυτό δεν επηρεάζει τον έλεγχο της υπογραφής"
+
+msgid "this signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it)"
+msgstr "αυτό το κλειδί υπογραφής έχει ανακληθεί - δεν θα χρησιμοποιηθεί, όποιος κι αν είναι ο λόγος (πραγματική διακύβευση του κλειδιού, ή σκόπιμη απόσυρσή του από τον κάτοχο)"
+
+msgid "this key was found revoked locally - updated the local copy automatically"
+msgstr "αυτό το κλειδί βρέθηκε ανακληθέν τοπικά - το τοπικό αντίγραφο ενημερώθηκε αυτόματα"
 
 msgid "this key's expiry was renewed - updated local copy automatically"
 msgstr "η ισχύς αυτού του κλειδιού ανανεώθηκε - το τοπικό αντίγραφο ενημερώθηκε αυτόματα"
@@ -665,20 +751,12 @@ msgstr "η ισχύς αυτού του κλειδιού ανανεώθηκε - 
 msgid "checking ${ks} for a renewed copy of this key..."
 msgstr "έλεγχος του ${ks} για ανανεωμένο αντίγραφο αυτού του κλειδιού..."
 
+#, sh-format
+msgid "${ks} reports this key as revoked - updated the local copy automatically"
+msgstr "το ${ks} αναφέρει ότι αυτό το κλειδί είναι ανακληθέν - το τοπικό αντίγραφο ενημερώθηκε αυτόματα"
+
 msgid "no renewal found - continuing with the existing (expired) key"
 msgstr "δεν βρέθηκε ανανέωση - συνέχεια με το υπάρχον (ληγμένο) κλειδί"
-
-#, sh-format
-msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
-msgstr "αφαιρέθηκε το ${UNTRUST_KEY} από το ${TRUSTED_GPG}"
-
-#, sh-format
-msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
-msgstr "δεν ήταν δυνατή η αφαίρεση του '${UNTRUST_KEY}' από το ${TRUSTED_GPG}: ${out}"
-
-#, sh-format
-msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
-msgstr "δεν έχουν αποθηκευτεί ακόμη έμπιστα κλειδιά (το ${TRUSTED_GPG} δεν υπάρχει)"
 
 #, sh-format
 msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
@@ -687,6 +765,38 @@ msgstr "προειδοποίηση: το αποτύπωμα '${fpr}' δεν βρ
 #, sh-format
 msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
 msgstr "σημείωση: το '${fpr}' είναι υποκλειδί - επιλύθηκε στο κύριο κλειδί του '${resolved}'"
+
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr "δεν έχουν αποθηκευτεί ακόμη έμπιστα κλειδιά (το ${TRUSTED_GPG} δεν υπάρχει)"
+
+#, sh-format
+msgid "${fpr} (${uid}) is revoked - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}) έχει ανακληθεί - το ${TRUSTED_GPG} ενημερώθηκε"
+
+#, sh-format
+msgid "${fpr} (${uid}) has newer key data - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}) διαθέτει νεότερα δεδομένα κλειδιού - το ${TRUSTED_GPG} ενημερώθηκε"
+
+#, sh-format
+msgid "checked ${checked} key(s): ${updated} updated, ${revoked_found} revoked"
+msgstr "ελέγχθηκαν ${checked} κλειδί(ά): ${updated} ενημερώθηκαν, ${revoked_found} ανακλήθηκαν"
+
+#, sh-format
+msgid "${unreachable} of ${checked} key(s) could not be checked against any keyserver - results for those may be incomplete"
+msgstr "${unreachable} από ${checked} κλειδιά δεν ήταν δυνατό να ελεγχθούν σε κανέναν διακομιστή κλειδιών - τα αποτελέσματα γι' αυτά ενδέχεται να είναι ελλιπή"
+
+#, sh-format
+msgid "warning: could not read details for '${fpr}': ${out}"
+msgstr "προειδοποίηση: δεν ήταν δυνατή η ανάγνωση των λεπτομερειών για το '${fpr}': ${out}"
+
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr "αφαιρέθηκε το ${UNTRUST_KEY} από το ${TRUSTED_GPG}"
+
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
+msgstr "δεν ήταν δυνατή η αφαίρεση του '${UNTRUST_KEY}' από το ${TRUSTED_GPG}: ${out}"
 
 msgid "no matching trusted key(s) to export"
 msgstr "δεν υπάρχουν αντίστοιχα έμπιστα κλειδιά προς εξαγωγή"
@@ -820,6 +930,10 @@ msgid "${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file
 msgstr "Το ${FLAG_CHECKSUM_ALGO} απαιτείται όταν το ${FLAG_CHECKSUM_FILE} αναφέρεται σε αρχείο που δεν βρίσκεται στην ενσωματωμένη λίστα (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)"
 
 #, sh-format
+msgid "could not fetch the signing key for checksum file '${name_base}' from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature - try again once you have a working connection."
+msgstr "δεν ήταν δυνατή η λήψη του κλειδιού υπογραφής για το αρχείο αθροισμάτων ελέγχου '${name_base}' από κανέναν διακομιστή κλειδιών - τίποτα σε αυτό δεν ήταν δυνατό να ελεγχθεί. Αυτό μοιάζει με πρόβλημα δικτύου, όχι απαραίτητα με εσφαλμένη υπογραφή - δοκιμάστε ξανά μόλις υπάρξει σύνδεση."
+
+#, sh-format
 msgid "the checksum file '${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror."
 msgstr "Το αρχείο αθροίσματος ελέγχου '${name_base}' απέτυχε στη δική του επαλήθευση υπογραφής - δεν μπορεί να θεωρηθεί έμπιστο, οπότε ούτε το άθροισμα ελέγχου του ISO που περιέχει μπορεί να θεωρηθεί έμπιστο. Κατεβάστε ξανά το ISO και τα αρχεία αθροισμάτων ελέγχου/υπογραφής, κατά προτίμηση από διαφορετικό διακομιστή αντικατοπτρισμού."
 
@@ -897,8 +1011,11 @@ msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
 msgstr "αναγνωρίστηκε: το κλειδί είναι ήδη αποθηκευμένο και έμπιστο στο ${TRUSTED_GPG}"
 
 #, sh-format
-msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
-msgstr "αναγνωρίστηκε: το κλειδί υπάρχει ήδη στο ${PUBRING_KBX} και έχει επισημανθεί ρητά ως έμπιστο εκεί"
+msgid "recognized: key found in mx-gpg-keyring - ${mx_uid}"
+msgstr "αναγνωρίστηκε: το κλειδί βρέθηκε στο mx-gpg-keyring - ${mx_uid}"
+
+msgid "recognized: key found in mx-gpg-keyring"
+msgstr "αναγνωρίστηκε: το κλειδί βρέθηκε στο mx-gpg-keyring"
 
 #, sh-format
 msgid "kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
@@ -907,6 +1024,10 @@ msgstr "διατηρήθηκε το ${FPR} στο ${TRUSTED_GPG} - οι μελλ
 #, sh-format
 msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
 msgstr "προειδοποίηση: δεν ήταν δυνατή η αποθήκευση του κλειδιού στο ${TRUSTED_GPG}: ${out}"
+
+#, sh-format
+msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
+msgstr "αναγνωρίστηκε: το κλειδί υπάρχει ήδη στο ${PUBRING_KBX} και έχει επισημανθεί ρητά ως έμπιστο εκεί"
 
 #, sh-format
 msgid "${FPR} has been explicitly untrusted - you've told this tool not to auto-trust it anymore, whatever the reason it would otherwise be recognized. Pass ${FLAG_TRUST_KEY} again if you've changed your mind"
@@ -946,6 +1067,9 @@ msgstr "το κλειδί υπάρχει ήδη και είναι έγκυρο �
 msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
 msgstr "το κλειδί στο ${PUBRING_KBX} είναι ${pr_status}, το αποθηκευμένο αντίγραφο αγνοείται"
 
+msgid "key already present and valid in mx-gpg-keyring"
+msgstr "το κλειδί υπάρχει ήδη και είναι έγκυρο στο mx-gpg-keyring"
+
 #, sh-format
 msgid "fetching ${FPR} from ${ks}"
 msgstr "ανάκτηση του ${FPR} από το ${ks}"
@@ -961,6 +1085,10 @@ msgstr "το ${ks} επέστρεψε το ${FPR} χωρίς κανένα χρη
 #, sh-format
 msgid "could not fetch from ${ks}, trying next..."
 msgstr "δεν ήταν δυνατή η ανάκτηση από το ${ks}, δοκιμή του επόμενου..."
+
+#, sh-format
+msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS}) - this looks like a network problem, not necessarily an invalid signature. Try again once you have a working connection."
+msgstr "δεν ήταν δυνατή η λήψη του κλειδιού ${FPR} από κανέναν διακομιστή κλειδιών (δοκιμάστηκαν: ${TRIED_KEYSERVERS}) - αυτό μοιάζει με πρόβλημα δικτύου, όχι απαραίτητα με μη έγκυρη υπογραφή. Δοκιμάστε ξανά μόλις υπάρξει σύνδεση."
 
 #, sh-format
 msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
@@ -997,6 +1125,10 @@ msgstr "OK - η υπογραφή επαληθεύτηκε"
 msgid "claimed identity: ${CLAIMED_UID}"
 msgstr "δηλωμένη ταυτότητα: ${CLAIMED_UID}"
 
+#, sh-format
+msgid "primary key: ${PRIMARY_FPR}"
+msgstr "κύριο κλειδί: ${PRIMARY_FPR}"
+
 msgid "FAILED - signature did NOT verify"
 msgstr "ΑΠΟΤΥΧΙΑ - η υπογραφή ΔΕΝ επαληθεύτηκε"
 
@@ -1009,8 +1141,28 @@ msgstr "iso;sig;gpg;υπογραφή;"
 msgid "Verify with Drag & Drop"
 msgstr "Επαλήθευση με μεταφορά και απόθεση"
 
-#~ msgid "No key was checked - nothing to forget."
-#~ msgstr "Δεν επιλέχθηκε κανένα κλειδί - τίποτα προς λήθη."
+#~ msgid "Refresh Trusted Keys"
+#~ msgstr "Ανανέωση έμπιστων κλειδιών"
+
+#, sh-format
+#~ msgid "recognized: key found in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "αναγνωρίστηκε: το κλειδί βρέθηκε στο δικό του πακέτο κλειδιών υπογραφής αυτού του συστήματος (${MX_GPG_KEYRING})"
+
+#, sh-format
+#~ msgid "key already present and valid in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "το κλειδί υπάρχει ήδη και είναι έγκυρο στο δικό του πακέτο κλειδιών υπογραφής αυτού του συστήματος (${MX_GPG_KEYRING})"
+
+#~ msgid "Untrust Selected"
+#~ msgstr "Ανάκληση επιλεγμένων"
+
+#~ msgid "Import from File"
+#~ msgstr "Εισαγωγή από αρχείο"
+
+#~ msgid "Export Selected"
+#~ msgstr "Εξαγωγή επιλεγμένων"
+
+#~ msgid "Remove"
+#~ msgstr "Αφαίρεση"
 
 #, sh-format
 #~ msgid "If any of them is also one of this tool's built-in recognized keys (run '${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized automatically next time - this only removes the local cache entry, not that recognition."

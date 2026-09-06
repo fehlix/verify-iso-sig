@@ -19,7 +19,8 @@ Depends: ${misc:Depends},
          shared-mime-info
 Recommends: wmctrl,
             xdg-utils,
-            libnotify-bin
+            libnotify-bin,
+            mx-gpg-keys
 Description: verify the GPG signature of a downloaded ISO image
  A beginner-friendly tool to check whether a downloaded ISO image's GPG
  signature is genuine, with built-in recognition of the documented

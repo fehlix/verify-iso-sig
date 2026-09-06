@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verify-iso-sig\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-30 23:06+0200\n"
+"POT-Creation-Date: 2026-09-03 21:09+0200\n"
 "PO-Revision-Date: 2026-07-30 23:30+0200\n"
 "Last-Translator: \n"
 "Language-Team: Swedish\n"
@@ -56,11 +56,17 @@ msgstr "Om ${ABOUT_TITLE}"
 msgid "Close"
 msgstr "Stäng"
 
-msgid "Untrust Selected"
-msgstr "Återkalla markerade"
+msgid "Details"
+msgstr "Detaljer"
+
+msgid "Untrust"
+msgstr "Återkalla"
 
 msgid "Import Selected"
 msgstr "Importera markerade"
+
+msgid "Refresh"
+msgstr "Uppdatera"
 
 msgid "Could not read the list of trusted keys:"
 msgstr "Det gick inte att läsa listan över betrodda nycklar:"
@@ -77,11 +83,11 @@ msgstr "Inga signeringsnycklar är för närvarande sparade i trustedkeys.gpg."
 msgid "A key ends up there after you choose to \"Trust\"/\"Keep\" it while verifying an ISO."
 msgstr "En nyckel hamnar där efter att du väljer att ”lita på” eller ”behålla” den vid verifiering av en ISO."
 
-msgid "Import from File"
-msgstr "Importera från fil"
+msgid "Import"
+msgstr "Importera"
 
-msgid "Remove"
-msgstr "Ta bort"
+msgid "Select"
+msgstr "Välj"
 
 msgid "Fingerprint"
 msgstr "Fingeravtryck"
@@ -103,8 +109,8 @@ msgstr "Utgångsdatum"
 msgid "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to untrust, then click \"${BTN_UNTRUST_SELECTED}\"."
 msgstr "Nycklar sparade i ~/.gnupg/trustedkeys.gpg - markera de du vill återkalla och klicka sedan på \"${BTN_UNTRUST_SELECTED}\"."
 
-msgid "Export Selected"
-msgstr "Exportera markerade"
+msgid "Export"
+msgstr "Exportera"
 
 #. TRANSLATORS: shown as-is in the list's "Status" column (a
 #. gpg key's trust validity), one word each.
@@ -123,6 +129,21 @@ msgstr "återkallad"
 #. no expiration date set.
 msgid "never"
 msgstr "aldrig"
+
+msgid "No key was checked - nothing to show details for."
+msgstr "Ingen nyckel markerades - inget att visa."
+
+#. TRANSLATORS: ${DETAILS_N}/${DETAILS_TOTAL} are literal numbers - keep placeholders as-is.
+#, sh-format
+msgid "Key ${DETAILS_N} of ${DETAILS_TOTAL}"
+msgstr "Nyckel ${DETAILS_N} av ${DETAILS_TOTAL}"
+
+#, sh-format
+msgid "(could not read details: ${OUT})"
+msgstr "(det gick inte att läsa detaljerna: ${OUT})"
+
+msgid "Key Details"
+msgstr "Nyckeldetaljer"
 
 msgid "No key was checked - nothing to export."
 msgstr "Ingen nyckel markerades - inget att exportera."
@@ -153,9 +174,6 @@ msgstr "Den nyckelfilen kunde inte läsas:"
 msgid "No keys were found in that file."
 msgstr "Inga nycklar hittades i den filen."
 
-msgid "Import"
-msgstr "Importera"
-
 #, sh-format
 msgid "Keys found in this file - check any you want to import, then click \"${BTN_IMPORT_SELECTED}\"."
 msgstr "Nycklar som hittades i den här filen - markera de du vill importera, klicka sedan på ”${BTN_IMPORT_SELECTED}”."
@@ -180,6 +198,33 @@ msgstr "${IMPORT_PROCESSED} nyckel/nycklar bearbetade: ${IMPORT_NEW} nya, ${IMPO
 msgid "Could not import keys:"
 msgstr "Nycklarna kunde inte importeras:"
 
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx, mx-gpg-keyring, and a keyserver - this can take a while..."
+msgstr "Kontrollerar ${REFRESH_COUNT} nyckel/nycklar mot pubring.kbx, mx-gpg-keyring och en nyckelserver - detta kan ta ett tag..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx and a keyserver - this can take a while..."
+msgstr "Kontrollerar ${REFRESH_COUNT} nyckel/nycklar mot pubring.kbx och en nyckelserver - detta kan ta ett tag..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against mx-gpg-keyring and a keyserver - this can take a while..."
+msgstr "Kontrollerar ${REFRESH_COUNT} nyckel/nycklar mot mx-gpg-keyring och en nyckelserver - detta kan ta ett tag..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against a keyserver - this can take a while..."
+msgstr "Kontrollerar ${REFRESH_COUNT} nyckel/nycklar mot en nyckelserver - detta kan ta ett tag..."
+
+#, sh-format
+msgid "Checked ${SWEEP_CHECKED} key(s): ${SWEEP_UPDATED} updated, ${SWEEP_REVOKED} revoked."
+msgstr "${SWEEP_CHECKED} nyckel/nycklar kontrollerad(e): ${SWEEP_UPDATED} uppdaterad(e), ${SWEEP_REVOKED} återkallad(e)."
+
+#, sh-format
+msgid "${SWEEP_UNREACHABLE} of ${SWEEP_CHECKED} key(s) could not be checked against any keyserver - results for those may be incomplete."
+msgstr "${SWEEP_UNREACHABLE} av ${SWEEP_CHECKED} nyckel/nycklar kunde inte kontrolleras mot någon nyckelserver - resultaten för dessa kan vara ofullständiga."
+
+msgid "Could not refresh trusted keys:"
+msgstr "Det gick inte att uppdatera betrodda nycklar:"
+
 msgid "No key was checked - nothing to untrust."
 msgstr "Ingen nyckel markerades - inget att återkalla."
 
@@ -190,9 +235,6 @@ msgstr "Återkalla ${COUNT} markerad(e) nyckel/nycklar?"
 
 msgid "This tool will stop automatically trusting the selected key(s) - whether they're one of its built-in recognized keys, or separately marked trusted in your own GnuPG keyring. This isn't permanent - trust a key again anytime (verify something signed by it and accept it, or import the key again) and it'll be trusted normally from then on."
 msgstr "Det här verktyget slutar lita automatiskt på de markerade nycklarna - vare sig det är en av dess inbyggda igenkända nycklar eller en som separat markerats som betrodd i din egen GnuPG-nyckelring. Det är inte permanent - lita på en nyckel igen när du vill (verifiera något som signerats med den och godkänn den, eller importera nyckeln igen) så behandlas den normalt som betrodd igen från och med då."
-
-msgid "Untrust"
-msgstr "Återkalla"
 
 msgid "Some keys could not be removed:"
 msgstr "Vissa nycklar kunde inte tas bort:"
@@ -317,6 +359,9 @@ msgstr "om signeringsnyckeln behöver hämtas från en nyckelserver..."
 msgid "Process was interrupted - the check did not finish, so nothing here has been verified."
 msgstr "Processen avbröts - kontrollen slutfördes inte, så inget här har verifierats."
 
+msgid "Primary key:"
+msgstr "Primärnyckel:"
+
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
 #, sh-format
 msgid "By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID or fingerprint yourself and want to trust and remember this key for future checks."
@@ -386,6 +431,9 @@ msgstr "använde en redan cachad nyckel, inget nätverk behövdes"
 msgid "used a key from your personal keyring (pubring.kbx)"
 msgstr "använde en nyckel från din personliga nyckelring (pubring.kbx)"
 
+msgid "used a key from mx-gpg-keyring"
+msgstr "använde en nyckel från mx-gpg-keyring"
+
 msgid "key saved locally for faster future checks"
 msgstr "nyckeln sparad lokalt för snabbare framtida kontroller"
 
@@ -411,6 +459,12 @@ msgstr "Inget att kontrollera"
 
 msgid "Verification FAILED"
 msgstr "Verifiering MISSLYCKADES"
+
+msgid "This signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it). Do not trust this file."
+msgstr "Denna signeringsnyckel har återkallats - den kommer inte att användas, oavsett anledning (en verklig nyckelkompromettering eller att ägaren medvetet pensionerat den). Lita inte på denna fil."
+
+msgid "The signing key could not be fetched from any keyserver - this looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Signeringsnyckeln kunde inte hämtas från någon nyckelserver - detta ser ut som ett nätverksproblem, inte nödvändigtvis en felaktig signatur. Försök igen när du har en fungerande anslutning."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
 #, sh-format
@@ -450,6 +504,9 @@ msgstr "Varken '${DISPLAY_ISO_SAFE}' eller en signaturfil för den hittades i de
 
 msgid "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing, a direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. '.sha512.asc') for this ISO."
 msgstr "Denna kontrollsummefil är inte signerad, och ISO:n den beskriver har inte heller någon egen signatur - det finns inget här som detta verktyg kan verifiera kryptografiskt. Kontrollera om distributionen tillhandahåller en signerad kontrollsummelista, en direkt .sig-/.asc-/.gpg-fil, eller en fristående, självsignerad kontrollsumma (t.ex. ”.sha512.asc”) för denna ISO."
+
+msgid "The checksum listing's signing key could not be fetched from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Kontrollsummelistans signeringsnyckel kunde inte hämtas från någon nyckelserver - inget i den kunde kontrolleras. Detta ser ut som ett nätverksproblem, inte nödvändigtvis en felaktig signatur. Försök igen när du har en fungerande anslutning."
 
 msgid "The checksum file that lists this ISO's hash failed its own verification (bad/untrusted signature, or its key couldn't be confirmed) - nothing in it can be trusted. Re-download the checksum/signature files (and probably the ISO too), ideally from a different mirror."
 msgstr "Kontrollsummefilen som listar denna ISO:s hash misslyckades med sin egen verifiering (felaktig/opålitlig signatur, eller dess nyckel kunde inte bekräftas) - inget i den kan litas på. Ladda ner kontrollsumme-/signaturfilerna igen (och förmodligen även ISO:n), helst från en annan spegelserver."
@@ -555,6 +612,15 @@ msgstr "ingen grafisk session hittades (varken ${ENV_DISPLAY} eller ${ENV_WAYLAN
 msgid "Manage trusted keys from the command line instead:"
 msgstr "Hantera betrodda nycklar från kommandoraden istället:"
 
+msgid "list key(s) saved in trustedkeys.gpg (all if none given)"
+msgstr "lista nyckel/nycklar sparade i trustedkeys.gpg (alla om inget anges)"
+
+msgid "check every trusted key against pubring.kbx, mx-gpg-keyring, and a keyserver for updates (renewed expiry, new subkeys, or a revocation)"
+msgstr "kontrollera varje betrodd nyckel mot pubring.kbx, mx-gpg-keyring och en nyckelserver efter uppdateringar (förnyad giltighet, nya undernycklar eller en återkallelse)"
+
+msgid "show fingerprint/algorithm/dates/subkeys for trusted key(s)"
+msgstr "visa fingeravtryck/algoritm/datum/undernycklar för betrodda nycklar"
+
 msgid "remove <fpr> from trustedkeys.gpg"
 msgstr "ta bort <fpr> från trustedkeys.gpg"
 
@@ -616,6 +682,16 @@ msgstr "${FLAG_KEEP_KEY} kräver exakt ett fingeravtrycksargument"
 msgid "${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex fingerprint, not '${FPR}'"
 msgstr "${FLAG_KEEP_KEY} kräver ett fullständigt hexadecimalt fingeravtryck på 40 tecken (eller 64 tecken), inte '${FPR}'"
 
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "at least one fingerprint argument is required for ${FLAG_SHOW_KEY_DETAILS}"
+msgstr "${FLAG_SHOW_KEY_DETAILS} kräver minst ett fingeravtrycksargument"
+
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "${FLAG_SHOW_KEY_DETAILS} needs a full 40-character (or 64-character) hex fingerprint, not '${fpr}'"
+msgstr "${FLAG_SHOW_KEY_DETAILS} kräver ett fullständigt hexadecimalt fingeravtryck på 40 tecken (eller 64 tecken), inte '${fpr}'"
+
 msgid "this option takes no extra arguments"
 msgstr "detta alternativ tar inga extra argument"
 
@@ -655,8 +731,18 @@ msgid "'${SIG}' is a directory, not a file - point this at the actual signature 
 msgstr "”${SIG}” är en mapp, inte en fil - peka direkt på själva signaturfilen."
 
 #, sh-format
+msgid "warning: could not read ${MX_GPG_KEYRING}: ${out}"
+msgstr "varning: det gick inte att läsa ${MX_GPG_KEYRING}: ${out}"
+
+#, sh-format
 msgid "this key expired on ${date_str} - this does not affect the signature check"
 msgstr "den här nyckeln gick ut ${date_str} - detta påverkar inte signaturkontrollen"
+
+msgid "this signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it)"
+msgstr "denna signeringsnyckel har återkallats - den kommer inte att användas, oavsett anledning (en verklig nyckelkompromettering eller att ägaren medvetet pensionerat den)"
+
+msgid "this key was found revoked locally - updated the local copy automatically"
+msgstr "denna nyckel hittades återkallad lokalt - lokal kopia uppdaterades automatiskt"
 
 msgid "this key's expiry was renewed - updated local copy automatically"
 msgstr "denna nyckels giltighet har förnyats - lokal kopia uppdaterades automatiskt"
@@ -665,20 +751,12 @@ msgstr "denna nyckels giltighet har förnyats - lokal kopia uppdaterades automat
 msgid "checking ${ks} for a renewed copy of this key..."
 msgstr "kontrollerar ${ks} efter en förnyad kopia av den här nyckeln..."
 
+#, sh-format
+msgid "${ks} reports this key as revoked - updated the local copy automatically"
+msgstr "${ks} rapporterar att denna nyckel är återkallad - lokal kopia uppdaterades automatiskt"
+
 msgid "no renewal found - continuing with the existing (expired) key"
 msgstr "ingen förnyelse hittades - fortsätter med den befintliga (utgångna) nyckeln"
-
-#, sh-format
-msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
-msgstr "tog bort ${UNTRUST_KEY} från ${TRUSTED_GPG}"
-
-#, sh-format
-msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
-msgstr "det gick inte att ta bort ”${UNTRUST_KEY}” från ${TRUSTED_GPG}: ${out}"
-
-#, sh-format
-msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
-msgstr "inga betrodda nycklar sparade än (${TRUSTED_GPG} finns inte)"
 
 #, sh-format
 msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
@@ -687,6 +765,38 @@ msgstr "varning: fingeravtrycket ”${fpr}” hittades inte i ${TRUSTED_GPG}, ho
 #, sh-format
 msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
 msgstr "obs: ”${fpr}” är en undernyckel - matchad till dess primärnyckel ”${resolved}”"
+
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr "inga betrodda nycklar sparade än (${TRUSTED_GPG} finns inte)"
+
+#, sh-format
+msgid "${fpr} (${uid}) is revoked - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}) är återkallad - ${TRUSTED_GPG} uppdaterad"
+
+#, sh-format
+msgid "${fpr} (${uid}) has newer key data - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}) har nyare nyckeldata - ${TRUSTED_GPG} uppdaterad"
+
+#, sh-format
+msgid "checked ${checked} key(s): ${updated} updated, ${revoked_found} revoked"
+msgstr "${checked} nyckel/nycklar kontrollerad(e): ${updated} uppdaterad(e), ${revoked_found} återkallad(e)"
+
+#, sh-format
+msgid "${unreachable} of ${checked} key(s) could not be checked against any keyserver - results for those may be incomplete"
+msgstr "${unreachable} av ${checked} nyckel/nycklar kunde inte kontrolleras mot någon nyckelserver - resultaten för dessa kan vara ofullständiga"
+
+#, sh-format
+msgid "warning: could not read details for '${fpr}': ${out}"
+msgstr "varning: det gick inte att läsa detaljerna för ”${fpr}”: ${out}"
+
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr "tog bort ${UNTRUST_KEY} från ${TRUSTED_GPG}"
+
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
+msgstr "det gick inte att ta bort ”${UNTRUST_KEY}” från ${TRUSTED_GPG}: ${out}"
 
 msgid "no matching trusted key(s) to export"
 msgstr "inga matchande betrodda nycklar att exportera"
@@ -820,6 +930,10 @@ msgid "${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file
 msgstr "${FLAG_CHECKSUM_ALGO} krävs när ${FLAG_CHECKSUM_FILE} anger en fil som inte finns i den inbyggda listan (SHA512SUMS, SHA256SUMS, sha256sum.txt, …)"
 
 #, sh-format
+msgid "could not fetch the signing key for checksum file '${name_base}' from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature - try again once you have a working connection."
+msgstr "kunde inte hämta signeringsnyckeln för kontrollsummefilen '${name_base}' från någon nyckelserver - inget i den kunde kontrolleras. Detta ser ut som ett nätverksproblem, inte nödvändigtvis en felaktig signatur - försök igen när du har en fungerande anslutning."
+
+#, sh-format
 msgid "the checksum file '${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror."
 msgstr "kontrollsummefilen ”${name_base}” klarade inte sin egen signaturkontroll - den kan inte litas på, så ISO-hashen i den kan inte heller litas på. Ladda ner ISO:n och kontrollsumme-/signaturfilerna igen, helst från en annan spegelserver."
 
@@ -897,8 +1011,11 @@ msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
 msgstr "kände igen: nyckeln är redan cachad och betrodd i ${TRUSTED_GPG}"
 
 #, sh-format
-msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
-msgstr "kände igen: nyckeln finns redan i ${PUBRING_KBX} och är där uttryckligen markerad som betrodd"
+msgid "recognized: key found in mx-gpg-keyring - ${mx_uid}"
+msgstr "kände igen: nyckeln hittades i mx-gpg-keyring - ${mx_uid}"
+
+msgid "recognized: key found in mx-gpg-keyring"
+msgstr "kände igen: nyckeln hittades i mx-gpg-keyring"
 
 #, sh-format
 msgid "kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
@@ -907,6 +1024,10 @@ msgstr "behöll ${FPR} i ${TRUSTED_GPG} - framtida körningar kommer att känna 
 #, sh-format
 msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
 msgstr "varning: det gick inte att spara nyckeln i ${TRUSTED_GPG}: ${out}"
+
+#, sh-format
+msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
+msgstr "kände igen: nyckeln finns redan i ${PUBRING_KBX} och är där uttryckligen markerad som betrodd"
 
 #, sh-format
 msgid "${FPR} has been explicitly untrusted - you've told this tool not to auto-trust it anymore, whatever the reason it would otherwise be recognized. Pass ${FLAG_TRUST_KEY} again if you've changed your mind"
@@ -946,6 +1067,9 @@ msgstr "nyckeln finns redan och är giltig i ${PUBRING_KBX}"
 msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
 msgstr "nyckeln i ${PUBRING_KBX} är ${pr_status}, ignorerar cachad kopia"
 
+msgid "key already present and valid in mx-gpg-keyring"
+msgstr "nyckeln finns redan och är giltig i mx-gpg-keyring"
+
 #, sh-format
 msgid "fetching ${FPR} from ${ks}"
 msgstr "hämtar ${FPR} från ${ks}"
@@ -961,6 +1085,10 @@ msgstr "${ks} returnerade ${FPR} utan något användbart nyckelmaterial (trolige
 #, sh-format
 msgid "could not fetch from ${ks}, trying next..."
 msgstr "det gick inte att hämta från ${ks}, försöker nästa..."
+
+#, sh-format
+msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS}) - this looks like a network problem, not necessarily an invalid signature. Try again once you have a working connection."
+msgstr "kunde inte hämta nyckeln ${FPR} från någon nyckelserver (försökte: ${TRIED_KEYSERVERS}) - detta ser ut som ett nätverksproblem, inte nödvändigtvis en ogiltig signatur. Försök igen när du har en fungerande anslutning."
 
 #, sh-format
 msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
@@ -997,6 +1125,10 @@ msgstr "OK - signaturen verifierad"
 msgid "claimed identity: ${CLAIMED_UID}"
 msgstr "uppgiven identitet: ${CLAIMED_UID}"
 
+#, sh-format
+msgid "primary key: ${PRIMARY_FPR}"
+msgstr "primärnyckel: ${PRIMARY_FPR}"
+
 msgid "FAILED - signature did NOT verify"
 msgstr "MISSLYCKADES - signaturen verifierades INTE"
 
@@ -1009,8 +1141,28 @@ msgstr "iso;sig;gpg;signatur;"
 msgid "Verify with Drag & Drop"
 msgstr "Verifiera med dra och släpp"
 
-#~ msgid "No key was checked - nothing to forget."
-#~ msgstr "Ingen nyckel markerades - inget att glömma."
+#~ msgid "Refresh Trusted Keys"
+#~ msgstr "Uppdatera betrodda nycklar"
+
+#, sh-format
+#~ msgid "recognized: key found in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "kände igen: nyckeln hittades i detta systems eget signeringsnyckelpaket (${MX_GPG_KEYRING})"
+
+#, sh-format
+#~ msgid "key already present and valid in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "nyckeln finns redan och är giltig i detta systems eget signeringsnyckelpaket (${MX_GPG_KEYRING})"
+
+#~ msgid "Untrust Selected"
+#~ msgstr "Återkalla markerade"
+
+#~ msgid "Import from File"
+#~ msgstr "Importera från fil"
+
+#~ msgid "Export Selected"
+#~ msgstr "Exportera markerade"
+
+#~ msgid "Remove"
+#~ msgstr "Ta bort"
 
 #, sh-format
 #~ msgid "If any of them is also one of this tool's built-in recognized keys (run '${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized automatically next time - this only removes the local cache entry, not that recognition."

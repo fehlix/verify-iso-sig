@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-30 23:06+0200\n"
+"POT-Creation-Date: 2026-09-06 14:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,10 +63,16 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-msgid "Untrust Selected"
+msgid "Details"
+msgstr ""
+
+msgid "Untrust"
 msgstr ""
 
 msgid "Import Selected"
+msgstr ""
+
+msgid "Refresh"
 msgstr ""
 
 msgid "Could not read the list of trusted keys:"
@@ -86,10 +92,10 @@ msgid ""
 "verifying an ISO."
 msgstr ""
 
-msgid "Import from File"
+msgid "Import"
 msgstr ""
 
-msgid "Remove"
+msgid "Select"
 msgstr ""
 
 msgid "Fingerprint"
@@ -114,7 +120,7 @@ msgid ""
 "click \"${BTN_UNTRUST_SELECTED}\"."
 msgstr ""
 
-msgid "Export Selected"
+msgid "Export"
 msgstr ""
 
 #. TRANSLATORS: shown as-is in the list's "Status" column (a
@@ -133,6 +139,21 @@ msgstr ""
 #. TRANSLATORS: shown in the "Expires" column when the key has
 #. no expiration date set.
 msgid "never"
+msgstr ""
+
+msgid "No key was checked - nothing to show details for."
+msgstr ""
+
+#. TRANSLATORS: ${DETAILS_N}/${DETAILS_TOTAL} are literal numbers - keep placeholders as-is.
+#, sh-format
+msgid "Key ${DETAILS_N} of ${DETAILS_TOTAL}"
+msgstr ""
+
+#, sh-format
+msgid "(could not read details: ${OUT})"
+msgstr ""
+
+msgid "Key Details"
 msgstr ""
 
 msgid "No key was checked - nothing to export."
@@ -164,9 +185,6 @@ msgstr ""
 msgid "No keys were found in that file."
 msgstr ""
 
-msgid "Import"
-msgstr ""
-
 #, sh-format
 msgid ""
 "Keys found in this file - check any you want to import, then click "
@@ -195,6 +213,45 @@ msgstr ""
 msgid "Could not import keys:"
 msgstr ""
 
+#, sh-format
+msgid ""
+"Checking ${REFRESH_COUNT} key(s) against pubring.kbx, mx-gpg-keyring, and a "
+"keyserver - this can take a while..."
+msgstr ""
+
+#, sh-format
+msgid ""
+"Checking ${REFRESH_COUNT} key(s) against pubring.kbx and a keyserver - this "
+"can take a while..."
+msgstr ""
+
+#, sh-format
+msgid ""
+"Checking ${REFRESH_COUNT} key(s) against mx-gpg-keyring and a keyserver - "
+"this can take a while..."
+msgstr ""
+
+#, sh-format
+msgid ""
+"Checking ${REFRESH_COUNT} key(s) against a keyserver - this can take a "
+"while..."
+msgstr ""
+
+#, sh-format
+msgid ""
+"Checked ${SWEEP_CHECKED} key(s): ${SWEEP_UPDATED} updated, ${SWEEP_REVOKED} "
+"revoked."
+msgstr ""
+
+#, sh-format
+msgid ""
+"${SWEEP_UNREACHABLE} of ${SWEEP_CHECKED} key(s) could not be checked against "
+"any keyserver - results for those may be incomplete."
+msgstr ""
+
+msgid "Could not refresh trusted keys:"
+msgstr ""
+
 msgid "No key was checked - nothing to untrust."
 msgstr ""
 
@@ -209,9 +266,6 @@ msgid ""
 "your own GnuPG keyring. This isn't permanent - trust a key again anytime "
 "(verify something signed by it and accept it, or import the key again) and "
 "it'll be trusted normally from then on."
-msgstr ""
-
-msgid "Untrust"
 msgstr ""
 
 msgid "Some keys could not be removed:"
@@ -359,6 +413,9 @@ msgid ""
 "verified."
 msgstr ""
 
+msgid "Primary key:"
+msgstr ""
+
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
 #, sh-format
 msgid ""
@@ -454,6 +511,9 @@ msgstr ""
 msgid "used a key from your personal keyring (pubring.kbx)"
 msgstr ""
 
+msgid "used a key from mx-gpg-keyring"
+msgstr ""
+
 msgid "key saved locally for faster future checks"
 msgstr ""
 
@@ -480,6 +540,18 @@ msgid "Nothing to verify"
 msgstr ""
 
 msgid "Verification FAILED"
+msgstr ""
+
+msgid ""
+"This signing key has been revoked - refusing to use it, whatever the reason "
+"(a real key compromise, or the owner deliberately retiring it). Do not trust "
+"this file."
+msgstr ""
+
+msgid ""
+"The signing key could not be fetched from any keyserver - this looks like a "
+"network problem, not necessarily a bad signature. Try again once you have a "
+"working connection."
 msgstr ""
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
@@ -550,6 +622,12 @@ msgid ""
 "verify. Check whether the distro provides a signed checksum listing, a "
 "direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. "
 "'.sha512.asc') for this ISO."
+msgstr ""
+
+msgid ""
+"The checksum listing's signing key could not be fetched from any keyserver - "
+"nothing in it could be checked. This looks like a network problem, not "
+"necessarily a bad signature. Try again once you have a working connection."
 msgstr ""
 
 msgid ""
@@ -697,6 +775,17 @@ msgstr ""
 msgid "Manage trusted keys from the command line instead:"
 msgstr ""
 
+msgid "list key(s) saved in trustedkeys.gpg (all if none given)"
+msgstr ""
+
+msgid ""
+"check every trusted key against pubring.kbx, mx-gpg-keyring, and a keyserver "
+"for updates (renewed expiry, new subkeys, or a revocation)"
+msgstr ""
+
+msgid "show fingerprint/algorithm/dates/subkeys for trusted key(s)"
+msgstr ""
+
 msgid "remove <fpr> from trustedkeys.gpg"
 msgstr ""
 
@@ -774,6 +863,19 @@ msgid ""
 "fingerprint, not '${FPR}'"
 msgstr ""
 
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid ""
+"at least one fingerprint argument is required for ${FLAG_SHOW_KEY_DETAILS}"
+msgstr ""
+
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid ""
+"${FLAG_SHOW_KEY_DETAILS} needs a full 40-character (or 64-character) hex "
+"fingerprint, not '${fpr}'"
+msgstr ""
+
 msgid "this option takes no extra arguments"
 msgstr ""
 
@@ -832,8 +934,21 @@ msgid ""
 msgstr ""
 
 #, sh-format
+msgid "warning: could not read ${MX_GPG_KEYRING}: ${out}"
+msgstr ""
+
+#, sh-format
 msgid ""
 "this key expired on ${date_str} - this does not affect the signature check"
+msgstr ""
+
+msgid ""
+"this signing key has been revoked - refusing to use it, whatever the reason "
+"(a real key compromise, or the owner deliberately retiring it)"
+msgstr ""
+
+msgid ""
+"this key was found revoked locally - updated the local copy automatically"
 msgstr ""
 
 msgid "this key's expiry was renewed - updated local copy automatically"
@@ -843,19 +958,12 @@ msgstr ""
 msgid "checking ${ks} for a renewed copy of this key..."
 msgstr ""
 
+#, sh-format
+msgid ""
+"${ks} reports this key as revoked - updated the local copy automatically"
+msgstr ""
+
 msgid "no renewal found - continuing with the existing (expired) key"
-msgstr ""
-
-#, sh-format
-msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
-msgstr ""
-
-#, sh-format
-msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
-msgstr ""
-
-#, sh-format
-msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
 msgstr ""
 
 #, sh-format
@@ -864,6 +972,40 @@ msgstr ""
 
 #, sh-format
 msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
+msgstr ""
+
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr ""
+
+#, sh-format
+msgid "${fpr} (${uid}) is revoked - updated ${TRUSTED_GPG}"
+msgstr ""
+
+#, sh-format
+msgid "${fpr} (${uid}) has newer key data - updated ${TRUSTED_GPG}"
+msgstr ""
+
+#, sh-format
+msgid "checked ${checked} key(s): ${updated} updated, ${revoked_found} revoked"
+msgstr ""
+
+#, sh-format
+msgid ""
+"${unreachable} of ${checked} key(s) could not be checked against any "
+"keyserver - results for those may be incomplete"
+msgstr ""
+
+#, sh-format
+msgid "warning: could not read details for '${fpr}': ${out}"
+msgstr ""
+
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr ""
+
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
 msgstr ""
 
 msgid "no matching trusted key(s) to export"
@@ -1039,6 +1181,14 @@ msgstr ""
 
 #, sh-format
 msgid ""
+"could not fetch the signing key for checksum file '${name_base}' from any "
+"keyserver - nothing in it could be checked. This looks like a network "
+"problem, not necessarily a bad signature - try again once you have a working "
+"connection."
+msgstr ""
+
+#, sh-format
+msgid ""
 "the checksum file '${name_base}' failed its own signature check - it cannot "
 "be trusted, so the ISO hash inside it cannot be trusted either. Re-download "
 "the ISO and the checksum/signature files, ideally from a different mirror."
@@ -1134,9 +1284,10 @@ msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
 msgstr ""
 
 #, sh-format
-msgid ""
-"recognized: key already present in ${PUBRING_KBX} and explicitly marked "
-"trusted there"
+msgid "recognized: key found in mx-gpg-keyring - ${mx_uid}"
+msgstr ""
+
+msgid "recognized: key found in mx-gpg-keyring"
 msgstr ""
 
 #, sh-format
@@ -1146,6 +1297,12 @@ msgstr ""
 
 #, sh-format
 msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
+msgstr ""
+
+#, sh-format
+msgid ""
+"recognized: key already present in ${PUBRING_KBX} and explicitly marked "
+"trusted there"
 msgstr ""
 
 #, sh-format
@@ -1200,6 +1357,9 @@ msgstr ""
 msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
 msgstr ""
 
+msgid "key already present and valid in mx-gpg-keyring"
+msgstr ""
+
 #, sh-format
 msgid "fetching ${FPR} from ${ks}"
 msgstr ""
@@ -1218,6 +1378,13 @@ msgstr ""
 
 #, sh-format
 msgid "could not fetch from ${ks}, trying next..."
+msgstr ""
+
+#, sh-format
+msgid ""
+"could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS}) - "
+"this looks like a network problem, not necessarily an invalid signature. Try "
+"again once you have a working connection."
 msgstr ""
 
 #, sh-format
@@ -1256,6 +1423,10 @@ msgstr ""
 
 #, sh-format
 msgid "claimed identity: ${CLAIMED_UID}"
+msgstr ""
+
+#, sh-format
+msgid "primary key: ${PRIMARY_FPR}"
 msgstr ""
 
 msgid "FAILED - signature did NOT verify"

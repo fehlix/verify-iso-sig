@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verify-iso-sig\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-30 23:06+0200\n"
+"POT-Creation-Date: 2026-09-03 21:09+0200\n"
 "PO-Revision-Date: 2026-07-30 16:10+0200\n"
 "Last-Translator: \n"
 "Language-Team: Finnish\n"
@@ -56,11 +56,17 @@ msgstr "Tietoja – ${ABOUT_TITLE}"
 msgid "Close"
 msgstr "Sulje"
 
-msgid "Untrust Selected"
-msgstr "Kumoa valitut"
+msgid "Details"
+msgstr "Tiedot"
+
+msgid "Untrust"
+msgstr "Kumoa"
 
 msgid "Import Selected"
 msgstr "Tuo valitut"
+
+msgid "Refresh"
+msgstr "Päivitä"
 
 msgid "Could not read the list of trusted keys:"
 msgstr "Luotettujen avainten luetteloa ei voitu lukea:"
@@ -77,11 +83,11 @@ msgstr "Tiedostossa trustedkeys.gpg ei ole tällä hetkellä tallennettuja allek
 msgid "A key ends up there after you choose to \"Trust\"/\"Keep\" it while verifying an ISO."
 msgstr "Avain päätyy sinne, kun valitset ISO-tiedoston tarkistuksen yhteydessä ”Luota”- tai ”Säilytä”-toiminnon."
 
-msgid "Import from File"
-msgstr "Tuo tiedostosta"
+msgid "Import"
+msgstr "Tuo"
 
-msgid "Remove"
-msgstr "Poista"
+msgid "Select"
+msgstr "Valitse"
 
 msgid "Fingerprint"
 msgstr "Sormenjälki"
@@ -103,8 +109,8 @@ msgstr "Vanhenemispäivä"
 msgid "Keys saved in ~/.gnupg/trustedkeys.gpg - check any you want to untrust, then click \"${BTN_UNTRUST_SELECTED}\"."
 msgstr "Tiedostoon ~/.gnupg/trustedkeys.gpg tallennetut avaimet - valitse ne, joiden luottamuksen haluat kumota, ja napsauta sitten \"${BTN_UNTRUST_SELECTED}\"."
 
-msgid "Export Selected"
-msgstr "Vie valitut"
+msgid "Export"
+msgstr "Vie"
 
 #. TRANSLATORS: shown as-is in the list's "Status" column (a
 #. gpg key's trust validity), one word each.
@@ -123,6 +129,21 @@ msgstr "kumottu"
 #. no expiration date set.
 msgid "never"
 msgstr "ei koskaan"
+
+msgid "No key was checked - nothing to show details for."
+msgstr "Yhtään avainta ei valittu - ei mitään näytettävää."
+
+#. TRANSLATORS: ${DETAILS_N}/${DETAILS_TOTAL} are literal numbers - keep placeholders as-is.
+#, sh-format
+msgid "Key ${DETAILS_N} of ${DETAILS_TOTAL}"
+msgstr "Avain ${DETAILS_N}/${DETAILS_TOTAL}"
+
+#, sh-format
+msgid "(could not read details: ${OUT})"
+msgstr "(tietoja ei voitu lukea: ${OUT})"
+
+msgid "Key Details"
+msgstr "Avaimen tiedot"
 
 msgid "No key was checked - nothing to export."
 msgstr "Yhtään avainta ei valittu - ei mitään vietävää."
@@ -153,9 +174,6 @@ msgstr "Tätä avaintiedostoa ei voitu lukea:"
 msgid "No keys were found in that file."
 msgstr "Tästä tiedostosta ei löytynyt avaimia."
 
-msgid "Import"
-msgstr "Tuo"
-
 #, sh-format
 msgid "Keys found in this file - check any you want to import, then click \"${BTN_IMPORT_SELECTED}\"."
 msgstr "Tästä tiedostosta löytyneet avaimet - valitse ne, jotka haluat tuoda, ja napsauta sitten ”${BTN_IMPORT_SELECTED}”."
@@ -180,6 +198,33 @@ msgstr "${IMPORT_PROCESSED} avainta käsitelty: ${IMPORT_NEW} uutta, ${IMPORT_UP
 msgid "Could not import keys:"
 msgstr "Avaimia ei voitu tuoda:"
 
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx, mx-gpg-keyring, and a keyserver - this can take a while..."
+msgstr "Tarkistetaan ${REFRESH_COUNT} avainta pubring.kbx:ää, mx-gpg-keyringiä ja avainpalvelinta vasten - tämä voi kestää hetken..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against pubring.kbx and a keyserver - this can take a while..."
+msgstr "Tarkistetaan ${REFRESH_COUNT} avainta pubring.kbx:ää ja avainpalvelinta vasten - tämä voi kestää hetken..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against mx-gpg-keyring and a keyserver - this can take a while..."
+msgstr "Tarkistetaan ${REFRESH_COUNT} avainta mx-gpg-keyringiä ja avainpalvelinta vasten - tämä voi kestää hetken..."
+
+#, sh-format
+msgid "Checking ${REFRESH_COUNT} key(s) against a keyserver - this can take a while..."
+msgstr "Tarkistetaan ${REFRESH_COUNT} avainta avainpalvelinta vasten - tämä voi kestää hetken..."
+
+#, sh-format
+msgid "Checked ${SWEEP_CHECKED} key(s): ${SWEEP_UPDATED} updated, ${SWEEP_REVOKED} revoked."
+msgstr "Tarkistettu ${SWEEP_CHECKED} avain(ta): ${SWEEP_UPDATED} päivitetty, ${SWEEP_REVOKED} kumottu."
+
+#, sh-format
+msgid "${SWEEP_UNREACHABLE} of ${SWEEP_CHECKED} key(s) could not be checked against any keyserver - results for those may be incomplete."
+msgstr "${SWEEP_UNREACHABLE}/${SWEEP_CHECKED} avainta ei voitu tarkistaa mistään avainpalvelimesta - näiden tulokset voivat olla puutteellisia."
+
+msgid "Could not refresh trusted keys:"
+msgstr "Luotettuja avaimia ei voitu päivittää:"
+
 msgid "No key was checked - nothing to untrust."
 msgstr "Yhtään avainta ei valittu - ei mitään kumottavaa."
 
@@ -190,9 +235,6 @@ msgstr "Kumotaanko ${COUNT} valitun avaimen luottamus?"
 
 msgid "This tool will stop automatically trusting the selected key(s) - whether they're one of its built-in recognized keys, or separately marked trusted in your own GnuPG keyring. This isn't permanent - trust a key again anytime (verify something signed by it and accept it, or import the key again) and it'll be trusted normally from then on."
 msgstr "Tämä työkalu lakkaa luottamasta valittuihin avaimiin automaattisesti - olipa kyseessä sisäänrakennettu tunnistettu avain tai avain, jonka olet erikseen merkinnyt luotetuksi omassa GnuPG-avainnipussasi. Tämä ei ole pysyvää - voit luottaa avaimeen taas milloin tahansa (tarkista sillä allekirjoitettu tiedosto ja hyväksy se, tai tuo avain uudelleen), ja siitä lähtien sitä kohdellaan taas normaalisti luotettuna."
-
-msgid "Untrust"
-msgstr "Kumoa"
 
 msgid "Some keys could not be removed:"
 msgstr "Joitakin avaimia ei voitu poistaa:"
@@ -317,6 +359,9 @@ msgstr "jos allekirjoitusavain täytyy hakea avainpalvelimelta..."
 msgid "Process was interrupted - the check did not finish, so nothing here has been verified."
 msgstr "Toiminto keskeytettiin - tarkistus ei valmistunut, joten mitään ei ole vahvistettu."
 
+msgid "Primary key:"
+msgstr "Pääavain:"
+
 #. TRANSLATORS: ${BTN_TRUST_THIS_KEY} is the translated button label - keep the placeholder as-is.
 #, sh-format
 msgid "By clicking \"${BTN_TRUST_THIS_KEY}\" you confirm you've checked the Key ID or fingerprint yourself and want to trust and remember this key for future checks."
@@ -386,6 +431,9 @@ msgstr "käytettiin jo välimuistissa olevaa avainta, verkkoyhteyttä ei tarvitt
 msgid "used a key from your personal keyring (pubring.kbx)"
 msgstr "käytettiin avainta henkilökohtaisesta avainnipustasi (pubring.kbx)"
 
+msgid "used a key from mx-gpg-keyring"
+msgstr "käytettiin avainta tiedostosta mx-gpg-keyring"
+
 msgid "key saved locally for faster future checks"
 msgstr "avain tallennettu paikallisesti nopeampia tulevia tarkistuksia varten"
 
@@ -411,6 +459,12 @@ msgstr "Ei tarkistettavaa"
 
 msgid "Verification FAILED"
 msgstr "Tarkistus EPÄONNISTUI"
+
+msgid "This signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it). Do not trust this file."
+msgstr "Tämä allekirjoitusavain on kumottu - sitä ei käytetä, syystä riippumatta (todellinen avaimen vaarantuminen tai omistajan tarkoituksellinen käytöstä poistaminen). Älä luota tähän tiedostoon."
+
+msgid "The signing key could not be fetched from any keyserver - this looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Allekirjoitusavainta ei voitu noutaa mistään avainpalvelimesta - tämä vaikuttaa verkko-ongelmalta, ei välttämättä virheelliseltä allekirjoitukselta. Yritä uudelleen, kun yhteys toimii."
 
 #. TRANSLATORS: ${BTN_CHECK_ANOTHER_FILE}/${BTN_TRUST_THIS_KEY} are translated button labels - keep placeholders as-is.
 #, sh-format
@@ -450,6 +504,9 @@ msgstr "Kansiosta ei löytynyt tiedostoa ${DISPLAY_ISO_SAFE} eikä sen allekirjo
 
 msgid "This checksum file isn't signed, and the ISO it describes has no signature of its own either - there's nothing here this tool can cryptographically verify. Check whether the distro provides a signed checksum listing, a direct .sig/.asc/.gpg file, or a self-contained clearsigned checksum (e.g. '.sha512.asc') for this ISO."
 msgstr "Tätä tarkistussummatiedostoa ei ole allekirjoitettu, eikä sen kuvaamalla ISO-tiedostolla ole myöskään omaa allekirjoitusta - täällä ei ole mitään, minkä tämä työkalu voisi kryptografisesti varmentaa. Tarkista, tarjoaako jakelu allekirjoitetun tarkistussummaluettelon, suoran .sig-/.asc-/.gpg-tiedoston tai itsenäisen, itseallekirjoitetun tarkistussumman (esim. '.sha512.asc') tälle ISO-tiedostolle."
+
+msgid "The checksum listing's signing key could not be fetched from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature. Try again once you have a working connection."
+msgstr "Tarkistussummaluettelon allekirjoitusavainta ei voitu noutaa mistään avainpalvelimesta - mitään siinä ei voitu tarkistaa. Tämä vaikuttaa verkko-ongelmalta, ei välttämättä virheelliseltä allekirjoitukselta. Yritä uudelleen, kun yhteys toimii."
 
 msgid "The checksum file that lists this ISO's hash failed its own verification (bad/untrusted signature, or its key couldn't be confirmed) - nothing in it can be trusted. Re-download the checksum/signature files (and probably the ISO too), ideally from a different mirror."
 msgstr "Tarkistussummatiedosto, joka luettelee tämän ISO-tiedoston tiivisteen, epäonnistui omassa tarkistuksessaan (virheellinen/ei-luotettu allekirjoitus, tai sen avainta ei voitu vahvistaa) - mikään siinä ei ole luotettavaa. Lataa tarkistussumma-/allekirjoitustiedostot (ja todennäköisesti myös ISO-tiedosto) uudelleen, mieluiten toisesta peilipalvelimesta."
@@ -555,6 +612,15 @@ msgstr "graafista istuntoa ei havaittu (${ENV_DISPLAY}-muuttujaa eikä ${ENV_WAY
 msgid "Manage trusted keys from the command line instead:"
 msgstr "Hallitse luotettuja avaimia sen sijaan komentoriviltä:"
 
+msgid "list key(s) saved in trustedkeys.gpg (all if none given)"
+msgstr "luettele tiedostoon trustedkeys.gpg tallennetut avaimet (kaikki, jos yhtään ei anneta)"
+
+msgid "check every trusted key against pubring.kbx, mx-gpg-keyring, and a keyserver for updates (renewed expiry, new subkeys, or a revocation)"
+msgstr "tarkista jokainen luotettu avain pubring.kbx:stä, mx-gpg-keyringistä ja avainpalvelimelta päivitysten varalta (pidennetty voimassaolo, uudet aliavaimet tai kumoaminen)"
+
+msgid "show fingerprint/algorithm/dates/subkeys for trusted key(s)"
+msgstr "näytä luotettujen avainten sormenjälki/algoritmi/päivämäärät/aliavaimet"
+
 msgid "remove <fpr> from trustedkeys.gpg"
 msgstr "poista <fpr> tiedostosta trustedkeys.gpg"
 
@@ -616,6 +682,16 @@ msgstr "${FLAG_KEEP_KEY} vaatii tasan yhden sormenjälki-argumentin"
 msgid "${FLAG_KEEP_KEY} needs a full 40-character (or 64-character) hex fingerprint, not '${FPR}'"
 msgstr "${FLAG_KEEP_KEY} vaatii täyden 40-merkkisen (tai 64-merkkisen) heksadesimaalisen sormenjäljen, ei '${FPR}'"
 
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "at least one fingerprint argument is required for ${FLAG_SHOW_KEY_DETAILS}"
+msgstr "${FLAG_SHOW_KEY_DETAILS} vaatii vähintään yhden sormenjälki-argumentin"
+
+#. TRANSLATORS: ${FLAG_SHOW_KEY_DETAILS} is a literal flag name - keep the placeholder as-is.
+#, sh-format
+msgid "${FLAG_SHOW_KEY_DETAILS} needs a full 40-character (or 64-character) hex fingerprint, not '${fpr}'"
+msgstr "${FLAG_SHOW_KEY_DETAILS} vaatii täyden 40-merkkisen (tai 64-merkkisen) heksadesimaalisen sormenjäljen, ei '${fpr}'"
+
 msgid "this option takes no extra arguments"
 msgstr "tämä valinta ei ota vastaan ylimääräisiä argumentteja"
 
@@ -655,8 +731,18 @@ msgid "'${SIG}' is a directory, not a file - point this at the actual signature 
 msgstr "'${SIG}' on kansio, ei tiedosto - osoita tämä suoraan varsinaiseen allekirjoitustiedostoon."
 
 #, sh-format
+msgid "warning: could not read ${MX_GPG_KEYRING}: ${out}"
+msgstr "varoitus: kohdetta ${MX_GPG_KEYRING} ei voitu lukea: ${out}"
+
+#, sh-format
 msgid "this key expired on ${date_str} - this does not affect the signature check"
 msgstr "tämä avain vanheni ${date_str} - tämä ei vaikuta allekirjoituksen tarkistukseen"
+
+msgid "this signing key has been revoked - refusing to use it, whatever the reason (a real key compromise, or the owner deliberately retiring it)"
+msgstr "tämä allekirjoitusavain on kumottu - sitä ei käytetä, syystä riippumatta (todellinen avaimen vaarantuminen tai omistajan tarkoituksellinen käytöstä poistaminen)"
+
+msgid "this key was found revoked locally - updated the local copy automatically"
+msgstr "tämä avain havaittiin kumotuksi paikallisesti - paikallinen kopio päivitettiin automaattisesti"
 
 msgid "this key's expiry was renewed - updated local copy automatically"
 msgstr "tämän avaimen voimassaolo uusittiin - paikallinen kopio päivitettiin automaattisesti"
@@ -665,20 +751,12 @@ msgstr "tämän avaimen voimassaolo uusittiin - paikallinen kopio päivitettiin 
 msgid "checking ${ks} for a renewed copy of this key..."
 msgstr "tarkistetaan, onko palvelimella ${ks} uusittu kopio tästä avaimesta..."
 
+#, sh-format
+msgid "${ks} reports this key as revoked - updated the local copy automatically"
+msgstr "${ks} ilmoittaa tämän avaimen olevan kumottu - paikallinen kopio päivitettiin automaattisesti"
+
 msgid "no renewal found - continuing with the existing (expired) key"
 msgstr "uusintaa ei löytynyt - jatketaan olemassa olevalla (vanhentuneella) avaimella"
-
-#, sh-format
-msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
-msgstr "poistettiin ${UNTRUST_KEY} tiedostosta ${TRUSTED_GPG}"
-
-#, sh-format
-msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
-msgstr "avainta '${UNTRUST_KEY}' ei voitu poistaa tiedostosta ${TRUSTED_GPG}: ${out}"
-
-#, sh-format
-msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
-msgstr "luotettuja avaimia ei ole vielä tallennettu (${TRUSTED_GPG} ei ole olemassa)"
 
 #, sh-format
 msgid "warning: fingerprint '${fpr}' not found in ${TRUSTED_GPG}, skipping"
@@ -687,6 +765,38 @@ msgstr "varoitus: sormenjälkeä '${fpr}' ei löytynyt tiedostosta ${TRUSTED_GPG
 #, sh-format
 msgid "note: '${fpr}' is a subkey - resolved to its primary key '${resolved}'"
 msgstr "huomautus: '${fpr}' on alaavain - ratkaistiin sen pääavaimeksi '${resolved}'"
+
+#, sh-format
+msgid "no trusted keys saved yet (${TRUSTED_GPG} doesn't exist)"
+msgstr "luotettuja avaimia ei ole vielä tallennettu (${TRUSTED_GPG} ei ole olemassa)"
+
+#, sh-format
+msgid "${fpr} (${uid}) is revoked - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}) on kumottu - ${TRUSTED_GPG} päivitetty"
+
+#, sh-format
+msgid "${fpr} (${uid}) has newer key data - updated ${TRUSTED_GPG}"
+msgstr "${fpr} (${uid}): saatavilla uudempaa avaindataa - ${TRUSTED_GPG} päivitetty"
+
+#, sh-format
+msgid "checked ${checked} key(s): ${updated} updated, ${revoked_found} revoked"
+msgstr "tarkistettu ${checked} avain(ta): ${updated} päivitetty, ${revoked_found} kumottu"
+
+#, sh-format
+msgid "${unreachable} of ${checked} key(s) could not be checked against any keyserver - results for those may be incomplete"
+msgstr "${unreachable}/${checked} avainta ei voitu tarkistaa mistään avainpalvelimesta - näiden tulokset voivat olla puutteellisia"
+
+#, sh-format
+msgid "warning: could not read details for '${fpr}': ${out}"
+msgstr "varoitus: kohteen '${fpr}' tietoja ei voitu lukea: ${out}"
+
+#, sh-format
+msgid "removed ${UNTRUST_KEY} from ${TRUSTED_GPG}"
+msgstr "poistettiin ${UNTRUST_KEY} tiedostosta ${TRUSTED_GPG}"
+
+#, sh-format
+msgid "could not remove '${UNTRUST_KEY}' from ${TRUSTED_GPG}: ${out}"
+msgstr "avainta '${UNTRUST_KEY}' ei voitu poistaa tiedostosta ${TRUSTED_GPG}: ${out}"
 
 msgid "no matching trusted key(s) to export"
 msgstr "ei vastaavia luotettuja avaimia vietäväksi"
@@ -820,6 +930,10 @@ msgid "${FLAG_CHECKSUM_ALGO} is required when ${FLAG_CHECKSUM_FILE} names a file
 msgstr "${FLAG_CHECKSUM_ALGO} vaaditaan, kun ${FLAG_CHECKSUM_FILE} nimeää tiedoston, joka ei ole sisäänrakennetussa luettelossa (SHA512SUMS, SHA256SUMS, sha256sum.txt, ...)"
 
 #, sh-format
+msgid "could not fetch the signing key for checksum file '${name_base}' from any keyserver - nothing in it could be checked. This looks like a network problem, not necessarily a bad signature - try again once you have a working connection."
+msgstr "tarkistussummatiedoston '${name_base}' allekirjoitusavainta ei voitu noutaa mistään avainpalvelimesta - mitään siinä ei voitu tarkistaa. Tämä vaikuttaa verkko-ongelmalta, ei välttämättä virheelliseltä allekirjoitukselta - yritä uudelleen, kun yhteys toimii."
+
+#, sh-format
 msgid "the checksum file '${name_base}' failed its own signature check - it cannot be trusted, so the ISO hash inside it cannot be trusted either. Re-download the ISO and the checksum/signature files, ideally from a different mirror."
 msgstr "tarkistussummatiedosto '${name_base}' epäonnistui omassa allekirjoituksen tarkistuksessaan - siihen ei voi luottaa, joten myöskään sen sisältämään ISO-tiivisteeseen ei voi luottaa. Lataa ISO-tiedosto sekä tarkistussumma-/allekirjoitustiedostot uudelleen, mieluiten toisesta peilipalvelimesta."
 
@@ -897,8 +1011,11 @@ msgid "recognized: key already cached and trusted in ${TRUSTED_GPG}"
 msgstr "tunnistettu: avain on jo välimuistissa ja luotettu tiedostossa ${TRUSTED_GPG}"
 
 #, sh-format
-msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
-msgstr "tunnistettu: avain on jo tiedostossa ${PUBRING_KBX} ja merkitty siellä nimenomaisesti luotetuksi"
+msgid "recognized: key found in mx-gpg-keyring - ${mx_uid}"
+msgstr "tunnistettu: avain löytyi tiedostosta mx-gpg-keyring - ${mx_uid}"
+
+msgid "recognized: key found in mx-gpg-keyring"
+msgstr "tunnistettu: avain löytyi tiedostosta mx-gpg-keyring"
 
 #, sh-format
 msgid "kept ${FPR} in ${TRUSTED_GPG} - future runs will recognize it automatically"
@@ -907,6 +1024,10 @@ msgstr "säilytettiin ${FPR} tiedostossa ${TRUSTED_GPG} - tulevat ajokerrat tunn
 #, sh-format
 msgid "warning: could not save key into ${TRUSTED_GPG}: ${out}"
 msgstr "varoitus: avainta ei voitu tallentaa tiedostoon ${TRUSTED_GPG}: ${out}"
+
+#, sh-format
+msgid "recognized: key already present in ${PUBRING_KBX} and explicitly marked trusted there"
+msgstr "tunnistettu: avain on jo tiedostossa ${PUBRING_KBX} ja merkitty siellä nimenomaisesti luotetuksi"
 
 #, sh-format
 msgid "${FPR} has been explicitly untrusted - you've told this tool not to auto-trust it anymore, whatever the reason it would otherwise be recognized. Pass ${FLAG_TRUST_KEY} again if you've changed your mind"
@@ -946,6 +1067,9 @@ msgstr "avain on jo olemassa ja voimassa tiedostossa ${PUBRING_KBX}"
 msgid "key in ${PUBRING_KBX} is ${pr_status}, ignoring cached copy"
 msgstr "tiedostossa ${PUBRING_KBX} oleva avain on ${pr_status}, ohitetaan välimuistissa oleva kopio"
 
+msgid "key already present and valid in mx-gpg-keyring"
+msgstr "avain on jo olemassa ja voimassa tiedostossa mx-gpg-keyring"
+
 #, sh-format
 msgid "fetching ${FPR} from ${ks}"
 msgstr "haetaan ${FPR} palvelimelta ${ks}"
@@ -961,6 +1085,10 @@ msgstr "${ks} palautti avaimen ${FPR} ilman käyttökelpoista avainaineistoa (to
 #, sh-format
 msgid "could not fetch from ${ks}, trying next..."
 msgstr "haku palvelimelta ${ks} epäonnistui, kokeillaan seuraavaa..."
+
+#, sh-format
+msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS}) - this looks like a network problem, not necessarily an invalid signature. Try again once you have a working connection."
+msgstr "avainta ${FPR} ei voitu noutaa mistään avainpalvelimesta (yritettiin: ${TRIED_KEYSERVERS}) - tämä vaikuttaa verkko-ongelmalta, ei välttämättä virheelliseltä allekirjoitukselta. Yritä uudelleen, kun yhteys toimii."
 
 #, sh-format
 msgid "could not fetch key ${FPR} from any keyserver (tried: ${TRIED_KEYSERVERS})"
@@ -997,6 +1125,10 @@ msgstr "OK - allekirjoitus varmennettu"
 msgid "claimed identity: ${CLAIMED_UID}"
 msgstr "ilmoitettu henkilöllisyys: ${CLAIMED_UID}"
 
+#, sh-format
+msgid "primary key: ${PRIMARY_FPR}"
+msgstr "pääavain: ${PRIMARY_FPR}"
+
 msgid "FAILED - signature did NOT verify"
 msgstr "EPÄONNISTUI - allekirjoitusta EI varmennettu"
 
@@ -1009,8 +1141,28 @@ msgstr "iso;sig;gpg;allekirjoitus;"
 msgid "Verify with Drag & Drop"
 msgstr "Tarkista vetämällä ja pudottamalla"
 
-#~ msgid "No key was checked - nothing to forget."
-#~ msgstr "Yhtään avainta ei valittu - ei mitään unohdettavaa."
+#~ msgid "Refresh Trusted Keys"
+#~ msgstr "Päivitä luotetut avaimet"
+
+#, sh-format
+#~ msgid "recognized: key found in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "tunnistettu: avain löytyi tämän järjestelmän omasta allekirjoitusavainpaketista (${MX_GPG_KEYRING})"
+
+#, sh-format
+#~ msgid "key already present and valid in this system's own signing-key package (${MX_GPG_KEYRING})"
+#~ msgstr "avain on jo olemassa ja voimassa tämän järjestelmän omassa allekirjoitusavainpaketissa (${MX_GPG_KEYRING})"
+
+#~ msgid "Untrust Selected"
+#~ msgstr "Kumoa valitut"
+
+#~ msgid "Import from File"
+#~ msgstr "Tuo tiedostosta"
+
+#~ msgid "Export Selected"
+#~ msgstr "Vie valitut"
+
+#~ msgid "Remove"
+#~ msgstr "Poista"
 
 #, sh-format
 #~ msgid "If any of them is also one of this tool's built-in recognized keys (run '${CMD_LIST_KNOWN_KEYS}' to see the full list), it will still be recognized automatically next time - this only removes the local cache entry, not that recognition."
